@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Editar' if registro else 'Novo' }} Registro - Painel de Certificados{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="mb-0">{{ 'Editar' if registro else 'Novo' }} Registro</h2>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label for="nome" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="nome" name="nome" value="{{ registro.nome if registro else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="origem" class="form-label">Origem</label>
+            <input type="text" class="form-control" id="origem" name="origem" value="{{ registro.origem if registro else '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo</label>
+            <select class="form-select" id="tipo" name="tipo" required>
+              <option value="">Selecione...</option>
+              <option value="certificado" {% if registro and registro.tipo == 'certificado' %}selected{% endif %}>Certificado</option>
+              <option value="senha" {% if registro and registro.tipo == 'senha' %}selected{% endif %}>Senha</option>
+              <option value="licenca" {% if registro and registro.tipo == 'licenca' %}selected{% endif %}>Licença</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="data_vencimento" class="form-label">Data de Vencimento</label>
+            <input type="date" class="form-control" id="data_vencimento" name="data_vencimento" value="{{ registro.data_vencimento.strftime('%Y-%m-%d') if registro else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="responsaveis" class="form-label">Responsáveis</label>
+            <select class="form-select" id="responsaveis" name="responsaveis" multiple required>
+              {% for resp in todos_responsaveis %}
+                <option value="{{ resp.id }}" {% if registro and resp in registro.responsaveis %}selected{% endif %}>{{ resp.nome }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Segure Ctrl para selecionar múltiplos.</div>
+          </div>
+          <div class="mb-3">
+            <label for="tempo_alerta" class="form-label">Tempo de Alerta (dias)</label>
+            <input type="number" class="form-control" id="tempo_alerta" name="tempo_alerta" value="{{ registro.tempo_alerta if registro else 7 }}" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label for="observacoes" class="form-label">Observações</label>
+            <textarea class="form-control" id="observacoes" name="observacoes" rows="2">{{ registro.observacoes if registro else '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <a href="/registros" class="btn btn-secondary">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

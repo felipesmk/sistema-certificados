@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard de Atividade - Painel de Certificados{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2 class="mb-0"><i class="bi bi-activity"></i> Dashboard de Atividade</h2>
+      </div>
+      <div class="card-body">
+        <!-- Cards de Resumo -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ ultimos_registros|length }}</h4>
+                    <p class="card-text">Últimos Registros</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-file-earmark-plus fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ registros_30_dias }}</h4>
+                    <p class="card-text">Registros (30 dias)</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-calendar-month fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ usuarios_ativos }}</h4>
+                    <p class="card-text">Usuários Ativos</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-person-check fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ ultimas_alteracoes|length }}</h4>
+                    <p class="card-text">Alterações Recentes</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-pencil-square fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico de Atividade -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Atividade dos Últimos 7 Dias</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="atividadeChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline e Listas -->
+        <div class="row">
+          <!-- Últimos Registros -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Últimos Registros Criados</h5>
+              </div>
+              <div class="card-body">
+                {% if ultimos_registros %}
+                  <div class="timeline">
+                    {% for registro in ultimos_registros %}
+                    <div class="timeline-item">
+                      <div class="timeline-marker bg-primary"></div>
+                      <div class="timeline-content">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 class="mb-1">{{ registro.nome }}</h6>
+                            <p class="text-muted mb-1">
+                              <i class="bi bi-tag"></i> {{ registro.tipo }}
+                              <span class="badge bg-primary ms-2">{{ registro.origem }}</span>
+                            </p>
+                            <small class="text-muted">
+                              <i class="bi bi-calendar"></i> Vence: {{ registro.data_vencimento.strftime('%d/%m/%Y') }}
+                            </small>
+                          </div>
+                          <div class="text-end">
+                            {% if registro.regularizado %}
+                              <span class="badge bg-success">Regularizado</span>
+                            {% else %}
+                              <span class="badge bg-warning">Pendente</span>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhum registro encontrado.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Últimas Alterações -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Últimas Alterações</h5>
+              </div>
+              <div class="card-body">
+                {% if ultimas_alteracoes %}
+                  <div class="timeline">
+                    {% for registro in ultimas_alteracoes %}
+                    <div class="timeline-item">
+                      <div class="timeline-marker bg-warning"></div>
+                      <div class="timeline-content">
+                        <div class="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 class="mb-1">{{ registro.nome }}</h6>
+                            <p class="text-muted mb-1">
+                              <i class="bi bi-tag"></i> {{ registro.tipo }}
+                              <span class="badge bg-info ms-2">{{ registro.origem }}</span>
+                            </p>
+                            <small class="text-muted">
+                              <i class="bi bi-calendar"></i> Vence: {{ registro.data_vencimento.strftime('%d/%m/%Y') }}
+                            </small>
+                          </div>
+                          <div class="text-end">
+                            {% if registro.regularizado %}
+                              <span class="badge bg-success">Regularizado</span>
+                            {% else %}
+                              <span class="badge bg-warning">Pendente</span>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhuma alteração encontrada.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estatísticas Detalhadas -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Estatísticas de Atividade</h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <h3 class="text-primary">{{ ultimos_registros|length }}</h3>
+                      <p class="text-muted">Registros Criados Recentemente</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <h3 class="text-success">{{ registros_30_dias }}</h3>
+                      <p class="text-muted">Total de Registros (30 dias)</p>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="text-center">
+                      <h3 class="text-warning">{{ usuarios_ativos }}</h3>
+                      <p class="text-muted">Usuários Ativos no Sistema</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Estilo para timeline */
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -35px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 3px #dee2e6;
+}
+
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: -29px;
+  top: 17px;
+  width: 2px;
+  height: calc(100% + 3px);
+  background-color: #dee2e6;
+}
+
+.timeline-content {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+  padding: 15px;
+  border-left: 3px solid #0d6efd;
+}
+
+[data-bs-theme="dark"] .timeline-content {
+  background-color: #343a40;
+  border-left-color: #0d6efd;
+}
+
+[data-bs-theme="dark"] .timeline-marker {
+  box-shadow: 0 0 0 3px #495057;
+}
+
+[data-bs-theme="dark"] .timeline-item:not(:last-child)::after {
+  background-color: #495057;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Dados para o gráfico de atividade
+const atividadeData = {
+  labels: {{ datas_atividade|tojson }},
+  datasets: [{
+    label: 'Atividade',
+    data: {{ contagem_atividade|tojson }},
+    borderColor: '#0d6efd',
+    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+    borderWidth: 3,
+    fill: true,
+    tension: 0.4,
+    pointBackgroundColor: '#0d6efd',
+    pointBorderColor: '#fff',
+    pointBorderWidth: 2,
+    pointRadius: 6
+  }]
+};
+
+// Configuração do gráfico de atividade
+const atividadeConfig = {
+  type: 'line',
+  data: atividadeData,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          title: function(context) {
+            return 'Data: ' + context[0].label;
+          },
+          label: function(context) {
+            return 'Atividade: ' + context.parsed.y + ' ações';
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Data'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Quantidade de Ações'
+        },
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  }
+};
+
+// Criar o gráfico de atividade
+document.addEventListener('DOMContentLoaded', function() {
+  new Chart(document.getElementById('atividadeChart'), atividadeConfig);
+});
+</script>
+{% endblock %} 

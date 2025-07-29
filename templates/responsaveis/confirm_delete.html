@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Excluir Responsável - Painel de Certificados{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="mb-0">Excluir Responsável</h2>
+      </div>
+      <div class="card-body">
+        <p>Tem certeza que deseja excluir o responsável <strong>{{ responsavel.nome }}</strong>?</p>
+        <form method="POST">
+          <button type="submit" class="btn btn-danger">Excluir</button>
+          <a href="/responsaveis" class="btn btn-secondary">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

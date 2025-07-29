@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Perfis</h2>
+<a href="{{ url_for('novo_perfil') }}" class="btn btn-success mb-2">Novo Perfil</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Permissões</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for perfil in perfis %}
+        <tr>
+            <td>{{ perfil.id }}</td>
+            <td>{{ perfil.nome }}</td>
+            <td>{{ perfil.descricao }}</td>
+            <td>
+                {% for perm in perfil.permissions %}
+                    <span class="badge bg-info">{{ perm.nome }}</span>
+                {% else %}
+                    <span class="text-muted">Nenhuma</span>
+                {% endfor %}
+            </td>
+            <td>
+                <a href="{{ url_for('editar_perfil', perfil_id=perfil.id) }}" class="btn btn-primary btn-sm">Editar</a>
+                <a href="{{ url_for('excluir_perfil', perfil_id=perfil.id) }}" class="btn btn-danger btn-sm">Excluir</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %} 

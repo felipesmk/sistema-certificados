@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Painel de Certificados{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2 class="mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h2>
+      </div>
+      <div class="card-body">
+        <!-- Cards de Resumo -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ total_registros }}</h4>
+                    <p class="card-text">Total de Registros</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-files fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ validos }}</h4>
+                    <p class="card-text">Válidos</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-check-circle fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ vencendo }}</h4>
+                    <p class="card-text">Em Alerta</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ vencidos }}</h4>
+                    <p class="card-text">Vencidos</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-x-circle fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Distribuição por Status</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="statusChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Distribuição por Tipo</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="tipoChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Dados para os gráficos
+const statusData = {
+  labels: ['Válidos', 'Em Alerta', 'Vencidos'],
+  datasets: [{
+    data: [{{ validos }}, {{ vencendo }}, {{ vencidos }}],
+    backgroundColor: [
+      '#198754', // verde
+      '#ffc107', // amarelo
+      '#dc3545'  // vermelho
+    ],
+    borderWidth: 2,
+    borderColor: '#fff'
+  }]
+};
+
+const tipoData = {
+  labels: ['Certificados', 'Senhas', 'Licenças'],
+  datasets: [{
+    label: 'Quantidade',
+    data: [{{ certificados }}, {{ senhas }}, {{ licencas }}],
+    backgroundColor: [
+      '#0d6efd', // azul
+      '#6f42c1', // roxo
+      '#fd7e14'  // laranja
+    ],
+    borderWidth: 1,
+    borderColor: '#fff'
+  }]
+};
+
+// Configuração dos gráficos
+const statusConfig = {
+  type: 'pie',
+  data: statusData,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom'
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((context.parsed / total) * 100).toFixed(1);
+            return `${context.label}: ${context.parsed} (${percentage}%)`;
+          }
+        }
+      }
+    }
+  }
+};
+
+const tipoConfig = {
+  type: 'bar',
+  data: tipoData,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  }
+};
+
+// Criar os gráficos
+document.addEventListener('DOMContentLoaded', function() {
+  new Chart(document.getElementById('statusChart'), statusConfig);
+  new Chart(document.getElementById('tipoChart'), tipoConfig);
+});
+</script>
+{% endblock %} 

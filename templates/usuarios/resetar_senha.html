@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Resetar Senha de {{ usuario.nome }}</h2>
+<form method="post">
+    <div class="form-group">
+        <label for="nova_senha">Nova Senha</label>
+        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Salvar Nova Senha</button>
+    <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %} 

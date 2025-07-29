@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Editar' if responsavel else 'Novo' }} Responsável - Painel de Certificados{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="mb-0">{{ 'Editar' if responsavel else 'Novo' }} Responsável</h2>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label for="nome" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="nome" name="nome" value="{{ responsavel.nome if responsavel else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">E-mail</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ responsavel.email if responsavel else '' }}" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <a href="/responsaveis" class="btn btn-secondary">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

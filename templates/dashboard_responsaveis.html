@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard de Responsáveis - Painel de Certificados{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2 class="mb-0"><i class="bi bi-people"></i> Dashboard de Responsáveis</h2>
+      </div>
+      <div class="card-body">
+        <!-- Cards de Resumo -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ responsaveis_stats|length }}</h4>
+                    <p class="card-text">Total de Responsáveis</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-people fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ responsaveis_stats|selectattr('total_itens', 'gt', 0)|list|length }}</h4>
+                    <p class="card-text">Com Itens</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-check-circle fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ responsaveis_com_vencidos|length }}</h4>
+                    <p class="card-text">Com Itens Vencidos</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="card-title">{{ responsaveis_stats|map(attribute='total_itens')|sum }}</h4>
+                    <p class="card-text">Total de Itens</p>
+                  </div>
+                  <div class="align-self-center">
+                    <i class="bi bi-files fs-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico e Ranking -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Distribuição por Responsável (Top 10)</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="responsaveisChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Top 5 Responsáveis</h5>
+              </div>
+              <div class="card-body">
+                {% if top_5 %}
+                  <div class="list-group">
+                    {% for stat in top_5 %}
+                    {% set i = loop.index0 %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-1">
+                          {% if i == 0 %}🥇{% elif i == 1 %}🥈{% elif i == 2 %}🥉{% else %}{{ i + 1 }}.{% endif %}
+                          {{ stat.responsavel.nome }}
+                        </h6>
+                        <small class="text-muted">{{ stat.responsavel.email }}</small>
+                      </div>
+                      <div class="text-end">
+                        <span class="badge bg-primary rounded-pill">{{ stat.total_itens }} itens</span>
+                        <br>
+                        <small class="text-muted">
+                          {% if stat.itens_vencidos > 0 %}
+                            <span class="text-danger">{{ stat.itens_vencidos }} vencidos</span>
+                          {% endif %}
+                          {% if stat.itens_alerta > 0 %}
+                            <span class="text-warning">{{ stat.itens_alerta }} em alerta</span>
+                          {% endif %}
+                        </small>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhum responsável encontrado.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Responsáveis com Itens Vencidos -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Responsáveis com Itens Vencidos</h5>
+              </div>
+              <div class="card-body">
+                {% if responsaveis_com_vencidos %}
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Responsável</th>
+                          <th>Email</th>
+                          <th>Total de Itens</th>
+                          <th>Vencidos</th>
+                          <th>Em Alerta</th>
+                          <th>Válidos</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for stat in responsaveis_com_vencidos %}
+                        <tr>
+                          <td>
+                            <strong>{{ stat.responsavel.nome }}</strong>
+                          </td>
+                          <td>{{ stat.responsavel.email }}</td>
+                          <td>
+                            <span class="badge bg-primary">{{ stat.total_itens }}</span>
+                          </td>
+                          <td>
+                            <span class="badge bg-danger">{{ stat.itens_vencidos }}</span>
+                          </td>
+                          <td>
+                            {% if stat.itens_alerta > 0 %}
+                              <span class="badge bg-warning text-dark">{{ stat.itens_alerta }}</span>
+                            {% else %}
+                              <span class="badge bg-secondary">0</span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            {% if stat.itens_validos > 0 %}
+                              <span class="badge bg-success">{{ stat.itens_validos }}</span>
+                            {% else %}
+                              <span class="badge bg-secondary">0</span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            {% if stat.itens_vencidos > stat.itens_validos %}
+                              <span class="badge bg-danger">Crítico</span>
+                            {% elif stat.itens_alerta > 0 %}
+                              <span class="badge bg-warning text-dark">Atenção</span>
+                            {% else %}
+                              <span class="badge bg-success">OK</span>
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhum responsável com itens vencidos.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista Completa de Responsáveis -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Todos os Responsáveis</h5>
+              </div>
+              <div class="card-body">
+                {% if responsaveis_stats %}
+                  <div class="table-responsive">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Responsável</th>
+                          <th>Email</th>
+                          <th>Total</th>
+                          <th>Válidos</th>
+                          <th>Em Alerta</th>
+                          <th>Vencidos</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for stat in responsaveis_stats %}
+                        {% set i = loop.index0 %}
+                        <tr>
+                          <td>{{ i + 1 }}</td>
+                          <td>{{ stat.responsavel.nome }}</td>
+                          <td>{{ stat.responsavel.email }}</td>
+                          <td>
+                            <span class="badge bg-primary">{{ stat.total_itens }}</span>
+                          </td>
+                          <td>
+                            {% if stat.itens_validos > 0 %}
+                              <span class="badge bg-success">{{ stat.itens_validos }}</span>
+                            {% else %}
+                              <span class="badge bg-secondary">0</span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            {% if stat.itens_alerta > 0 %}
+                              <span class="badge bg-warning text-dark">{{ stat.itens_alerta }}</span>
+                            {% else %}
+                              <span class="badge bg-secondary">0</span>
+                            {% endif %}
+                          </td>
+                          <td>
+                            {% if stat.itens_vencidos > 0 %}
+                              <span class="badge bg-danger">{{ stat.itens_vencidos }}</span>
+                            {% else %}
+                              <span class="badge bg-secondary">0</span>
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhum responsável encontrado.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Dados para o gráfico de responsáveis
+const responsaveisData = {
+  labels: {{ top_10_nomes|tojson }},
+  datasets: [{
+    data: {{ top_10_quantidades|tojson }},
+    backgroundColor: [
+      '#0d6efd', '#6f42c1', '#fd7e14', '#20c997', '#dc3545',
+      '#198754', '#ffc107', '#0dcaf0', '#6c757d', '#d63384'
+    ],
+    borderWidth: 2,
+    borderColor: '#fff'
+  }]
+};
+
+// Configuração do gráfico de responsáveis
+const responsaveisConfig = {
+  type: 'pie',
+  data: responsaveisData,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((context.parsed / total) * 100).toFixed(1);
+            return `${context.label}: ${context.parsed} itens (${percentage}%)`;
+          }
+        }
+      }
+    }
+  }
+};
+
+// Criar o gráfico de responsáveis
+document.addEventListener('DOMContentLoaded', function() {
+  new Chart(document.getElementById('responsaveisChart'), responsaveisConfig);
+});
+</script>
+{% endblock %} 

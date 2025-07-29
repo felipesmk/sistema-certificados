@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% block title %}Registros - Painel de Certificados{% endblock %}
+
+{% block head %}
+<style>
+/* Melhorias para modo escuro */
+@media (prefers-color-scheme: dark) {
+  .card.bg-light {
+    background-color: var(--bs-dark) !important;
+    border-color: var(--bs-gray-600);
+  }
+  
+  .form-label {
+    color: var(--bs-light);
+  }
+  
+  .form-control, .form-select {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-600);
+    color: var(--bs-light);
+  }
+  
+  .form-control:focus, .form-select:focus {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  
+  .form-control::placeholder {
+    color: var(--bs-gray-500);
+  }
+  
+  .form-select option {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+  }
+  
+  .text-dark {
+    color: var(--bs-light) !important;
+  }
+  
+  .table {
+    color: var(--bs-light);
+  }
+  
+  .table thead th {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-600);
+    color: var(--bs-light);
+  }
+  
+  .table tbody tr {
+    background-color: var(--bs-dark);
+  }
+  
+  .table tbody tr:hover {
+    background-color: var(--bs-gray-800);
+  }
+  
+  .table td {
+    border-color: var(--bs-gray-600);
+  }
+}
+
+/* Melhorias gerais */
+.card.bg-light {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.375rem;
+}
+
+.form-control, .form-select {
+  border-radius: 0.375rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="mb-0"><i class="bi bi-files"></i> 📋 Registros</h2>
+        <a href="/registros/novo" class="btn btn-success">
+          <i class="bi bi-plus-circle me-2"></i>Novo Registro
+        </a>
+      </div>
+      <div class="card-body">
+        <!-- Filtros -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card bg-light">
+              <div class="card-body">
+                <form class="row g-3 align-items-end" method="get">
+                  <div class="col-md-3">
+                    <label for="busca_nome" class="form-label">
+                      <i class="bi bi-search me-1"></i>Nome
+                    </label>
+                    <input type="text" class="form-control" id="busca_nome" name="busca_nome" value="{{ request.args.get('busca_nome', '') }}" placeholder="Buscar por nome...">
+                  </div>
+                  <div class="col-md-2">
+                    <label for="busca_tipo" class="form-label">
+                      <i class="bi bi-tag me-1"></i>Tipo
+                    </label>
+                    <select class="form-select" id="busca_tipo" name="busca_tipo">
+                      <option value="">Todos</option>
+                      <option value="certificado" {% if request.args.get('busca_tipo') == 'certificado' %}selected{% endif %}>📜 Certificado</option>
+                      <option value="senha" {% if request.args.get('busca_tipo') == 'senha' %}selected{% endif %}>🔐 Senha</option>
+                      <option value="licenca" {% if request.args.get('busca_tipo') == 'licenca' %}selected{% endif %}>📄 Licença</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="busca_responsavel" class="form-label">
+                      <i class="bi bi-person me-1"></i>Responsável
+                    </label>
+                    <input type="text" class="form-control" id="busca_responsavel" name="busca_responsavel" value="{{ request.args.get('busca_responsavel', '') }}" placeholder="Buscar por responsável...">
+                  </div>
+                  <div class="col-md-2">
+                    <label for="busca_status" class="form-label">
+                      <i class="bi bi-check-circle me-1"></i>Status
+                    </label>
+                    <select class="form-select" id="busca_status" name="busca_status">
+                      <option value="">Todos</option>
+                      <option value="sim" {% if request.args.get('busca_status') == 'sim' %}selected{% endif %}>✅ Regularizado</option>
+                      <option value="nao" {% if request.args.get('busca_status') == 'nao' %}selected{% endif %}>❌ Não regularizado</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="bi bi-funnel me-2"></i>Filtrar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>
+                  <a href="?sort=nome&order={{ 'desc' if sort == 'nome' and order == 'asc' else 'asc' }}" class="text-decoration-none text-dark">
+                    <i class="bi bi-sort-alpha-down me-1"></i>Nome
+                    {% if sort == 'nome' %}
+                      {% if order == 'asc' %}<i class="bi bi-arrow-up text-primary"></i>{% else %}<i class="bi bi-arrow-down text-primary"></i>{% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th>
+                  <a href="?sort=tipo&order={{ 'desc' if sort == 'tipo' and order == 'asc' else 'asc' }}" class="text-decoration-none text-dark">
+                    <i class="bi bi-tag me-1"></i>Tipo
+                    {% if sort == 'tipo' %}
+                      {% if order == 'asc' %}<i class="bi bi-arrow-up text-primary"></i>{% else %}<i class="bi bi-arrow-down text-primary"></i>{% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th>
+                  <a href="?sort=data_vencimento&order={{ 'desc' if sort == 'data_vencimento' and order == 'asc' else 'asc' }}" class="text-decoration-none text-dark">
+                    <i class="bi bi-calendar me-1"></i>Data de Vencimento
+                    {% if sort == 'data_vencimento' %}
+                      {% if order == 'asc' %}<i class="bi bi-arrow-up text-primary"></i>{% else %}<i class="bi bi-arrow-down text-primary"></i>{% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th><i class="bi bi-people me-1"></i>Responsáveis</th>
+                <th>
+                  <a href="?sort=regularizado&order={{ 'desc' if sort == 'regularizado' and order == 'asc' else 'asc' }}" class="text-decoration-none text-dark">
+                    <i class="bi bi-check-circle me-1"></i>Status
+                    {% if sort == 'regularizado' %}
+                      {% if order == 'asc' %}<i class="bi bi-arrow-up text-primary"></i>{% else %}<i class="bi bi-arrow-down text-primary"></i>{% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th><i class="bi bi-gear me-1"></i>Ações</th>
+              </tr>
+            </thead>
+                      <tbody>
+            {% for registro in registros %}
+            <tr>
+              <td><strong>{{ registro.nome }}</strong></td>
+              <td>
+                {% if registro.tipo == 'certificado' %}
+                  <span class="badge bg-info">📜 Certificado</span>
+                {% elif registro.tipo == 'senha' %}
+                  <span class="badge bg-warning text-dark">🔐 Senha</span>
+                {% elif registro.tipo == 'licenca' %}
+                  <span class="badge bg-secondary">📄 Licença</span>
+                {% endif %}
+              </td>
+              <td>
+                {% set dias_para_vencer = (registro.data_vencimento - hoje).days %}
+                <span class="fw-bold">{{ registro.data_vencimento.strftime('%d/%m/%Y') }}</span>
+                {% if dias_para_vencer < 0 %}
+                  <br><small class="text-danger">Vencido há {{ abs(dias_para_vencer) }} dias</small>
+                {% elif dias_para_vencer <= 7 %}
+                  <br><small class="text-warning">Vence em {{ dias_para_vencer }} dias</small>
+                {% else %}
+                  <br><small class="text-success">Vence em {{ dias_para_vencer }} dias</small>
+                {% endif %}
+              </td>
+              <td>
+                {% for resp in registro.responsaveis %}
+                  <span class="badge bg-primary me-1">{{ resp.nome }}</span>
+                {% endfor %}
+              </td>
+              <td>
+                {% if registro.regularizado %}
+                  <span class="badge bg-success">✅ Regularizado</span>
+                {% else %}
+                  <span class="badge bg-danger">❌ Pendente</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <a href="/registros/{{ registro.id }}/editar" class="btn btn-sm btn-primary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a href="/registros/{{ registro.id }}/excluir" class="btn btn-sm btn-danger" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                  {% set dias_para_vencer = (registro.data_vencimento - hoje).days %}
+                {% if not registro.regularizado and dias_para_vencer <= registro.tempo_alerta %}
+                  <form method="POST" action="/registros/{{ registro.id }}/regularizar" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-success">Regularizar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

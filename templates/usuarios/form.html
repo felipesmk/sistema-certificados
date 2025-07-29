@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{% if usuario %}Editar Usuário{% else %}Novo Usuário{% endif %}</h2>
+<form method="post">
+    <div class="form-group">
+        <label for="username">Usuário</label>
+        <input type="text" class="form-control" id="username" name="username" required value="{{ usuario.username if usuario else '' }}">
+    </div>
+    <div class="form-group">
+        <label for="nome">Nome</label>
+        <input type="text" class="form-control" id="nome" name="nome" required value="{{ usuario.nome if usuario else '' }}">
+    </div>
+    <div class="form-group">
+        <label for="email">E-mail</label>
+        <input type="email" class="form-control" id="email" name="email" required value="{{ usuario.email if usuario else '' }}">
+    </div>
+    <div class="form-group">
+        <label for="password">Senha {% if usuario %}(deixe em branco para não alterar){% endif %}</label>
+        <input type="password" class="form-control" id="password" name="password" {% if not usuario %}required{% endif %}>
+    </div>
+    {% if roles and (not usuario or usuario.username != 'admin') %}
+    <div class="form-group mb-3">
+        <label for="role_id">Perfil</label>
+        <select class="form-control" id="role_id" name="role_id" required>
+            <option value="">Selecione...</option>
+            {% for role in roles %}
+                <option value="{{ role.id }}" {% if usuario and usuario.role_id == role.id %}selected{% endif %}>{{ role.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %} 

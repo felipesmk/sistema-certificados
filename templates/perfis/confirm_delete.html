@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Excluir Perfil</h2>
+<p>Tem certeza que deseja excluir o perfil <strong>{{ perfil.nome }}</strong>?</p>
+<form method="post">
+    <button type="submit" class="btn btn-danger">Excluir</button>
+    <a href="{{ url_for('listar_perfis') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %} 
