@@ -1,0 +1,806 @@
+{% extends 'base.html' %}
+{% block title %}Configuração - {{ system_config.nome_sistema }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2 class="mb-0"><i class="bi bi-gear"></i> ⚙️ Configurações do Sistema</h2>
+        <p class="mb-0 text-muted">Configure cada seção individualmente e salve quando necessário</p>
+      </div>
+    </div>
+
+    <!-- Seção: Autenticação -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white" style="cursor: pointer;" onclick="toggleSection('auth-section')">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-shield-lock"></i> 🔐 Configurações de Autenticação</h5>
+          <i class="bi bi-chevron-down" id="auth-section-icon"></i>
+        </div>
+      </div>
+      <div class="card-body" id="auth-section" style="display: none;">
+        <form id="auth-form">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="auth_mode" class="form-label">
+                  <i class="bi bi-person-check me-1"></i>Modo de Autenticação
+                </label>
+                <select class="form-select" id="auth_mode" name="auth_mode" onchange="toggleLdapConfig()">
+                  <option value="banco" {% if auth_mode == 'banco' %}selected{% endif %}>🏢 Banco de Dados</option>
+                  <option value="ldap" {% if auth_mode == 'ldap' %}selected{% endif %}>🏢 LDAP/Active Directory</option>
+                </select>
+                <div class="form-text">Escolha como os usuários serão autenticados no sistema</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-info border-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Nota:</strong> O usuário admin sempre pode autenticar via banco de dados, independente da configuração.
+              </div>
+            </div>
+          </div>
+          
+          <!-- Configurações LDAP (inicialmente ocultas) -->
+          <div id="ldap-config" class="row" style="display: none;">
+            <div class="col-12">
+              <hr>
+              <h6 class="mb-3"><i class="bi bi-server"></i> Configurações do Servidor LDAP</h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_server" class="form-label">
+                      <i class="bi bi-hdd-network me-1"></i>Servidor LDAP
+                    </label>
+                    <input type="text" class="form-control" id="ldap_server" name="ldap_server" 
+                           value="{{ ldap_config.ldap_server if ldap_config else 'ldap://seu-servidor-ldap' }}" 
+                           placeholder="ldap://servidor.empresa.com">
+                    <div class="form-text">URL do servidor LDAP (ex: ldap://dc.empresa.com)</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_port" class="form-label">
+                      <i class="bi bi-123 me-1"></i>Porta
+                    </label>
+                    <input type="number" class="form-control" id="ldap_port" name="ldap_port" 
+                           value="{{ ldap_config.ldap_port if ldap_config else 389 }}" 
+                           placeholder="389">
+                    <div class="form-text">Porta do servidor LDAP (389 para LDAP, 636 para LDAPS)</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_base_dn" class="form-label">
+                      <i class="bi bi-diagram-3 me-1"></i>Base DN
+                    </label>
+                    <input type="text" class="form-control" id="ldap_base_dn" name="ldap_base_dn" 
+                           value="{{ ldap_config.ldap_base_dn if ldap_config else 'dc=empresa,dc=com,dc=br' }}" 
+                           placeholder="dc=empresa,dc=com,dc=br">
+                    <div class="form-text">DN base da árvore LDAP</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_user_dn" class="form-label">
+                      <i class="bi bi-people me-1"></i>User DN
+                    </label>
+                    <input type="text" class="form-control" id="ldap_user_dn" name="ldap_user_dn" 
+                           value="{{ ldap_config.ldap_user_dn if ldap_config else 'ou=usuarios' }}" 
+                           placeholder="ou=usuarios">
+                    <div class="form-text">OU onde estão os usuários</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_user_attr" class="form-label">
+                      <i class="bi bi-person-badge me-1"></i>Atributo de Usuário
+                    </label>
+                    <input type="text" class="form-control" id="ldap_user_attr" name="ldap_user_attr" 
+                           value="{{ ldap_config.ldap_user_attr if ldap_config else 'sAMAccountName' }}" 
+                           placeholder="sAMAccountName">
+                    <div class="form-text">Atributo usado para login (ex: sAMAccountName, uid)</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_email_attr" class="form-label">
+                      <i class="bi bi-envelope me-1"></i>Atributo de Email
+                    </label>
+                    <input type="text" class="form-control" id="ldap_email_attr" name="ldap_email_attr" 
+                           value="{{ ldap_config.ldap_email_attr if ldap_config else 'mail' }}" 
+                           placeholder="mail">
+                    <div class="form-text">Atributo que contém o email do usuário</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_bind_dn" class="form-label">
+                      <i class="bi bi-key me-1"></i>Bind DN (Opcional)
+                    </label>
+                    <input type="text" class="form-control" id="ldap_bind_dn" name="ldap_bind_dn" 
+                           value="{{ ldap_config.ldap_bind_dn if ldap_config else '' }}" 
+                           placeholder="cn=admin,dc=empresa,dc=com">
+                    <div class="form-text">DN para autenticação no LDAP (deixe vazio para anônimo)</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="ldap_bind_password" class="form-label">
+                      <i class="bi bi-lock me-1"></i>Bind Password (Opcional)
+                    </label>
+                    <input type="password" class="form-control" id="ldap_bind_password" name="ldap_bind_password" 
+                           value="{{ ldap_config.ldap_bind_password if ldap_config else '' }}" 
+                           placeholder="Senha do Bind DN">
+                    <div class="form-text">Senha do Bind DN</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-12">
+                  <div class="alert alert-warning border-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Teste LDAP:</strong> Use o botão abaixo para testar a conexão LDAP antes de salvar.
+                  </div>
+                  <button type="button" class="btn btn-outline-warning" onclick="testarLdap()">
+                    <i class="bi bi-server me-2"></i>Testar Conexão LDAP
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Botão Salvar Individual -->
+          <div class="text-center mt-3">
+            <button type="button" class="btn btn-primary" onclick="salvarSecao('auth')">
+              <i class="bi bi-check-circle me-2"></i>Salvar Autenticação
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Seção: Email -->
+    <div class="card mb-4">
+      <div class="card-header bg-info text-white" style="cursor: pointer;" onclick="toggleSection('email-section')">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-envelope"></i> 📧 Configurações de Email</h5>
+          <i class="bi bi-chevron-down" id="email-section-icon"></i>
+        </div>
+      </div>
+      <div class="card-body" id="email-section" style="display: none;">
+        <form id="email-form">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mail_server" class="form-label">
+                  <i class="bi bi-server me-1"></i>Servidor SMTP
+                </label>
+                <input type="text" class="form-control" id="mail_server" name="mail_server" 
+                       value="{{ config.mail_server if config else 'smtp.gmail.com' }}" 
+                       placeholder="smtp.gmail.com">
+                <div class="form-text">Servidor SMTP para envio de emails</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mail_port" class="form-label">
+                  <i class="bi bi-123 me-1"></i>Porta
+                </label>
+                <input type="number" class="form-control" id="mail_port" name="mail_port" 
+                       value="{{ config.mail_port if config else 587 }}" 
+                       placeholder="587">
+                <div class="form-text">Porta do servidor SMTP</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mail_username" class="form-label">
+                  <i class="bi bi-person me-1"></i>Usuário
+                </label>
+                <input type="text" class="form-control" id="mail_username" name="mail_username" 
+                       value="{{ config.mail_username if config else '' }}" 
+                       placeholder="seu-email@gmail.com">
+                <div class="form-text">Email ou usuário para autenticação SMTP</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mail_password" class="form-label">
+                  <i class="bi bi-lock me-1"></i>Senha
+                </label>
+                <input type="password" class="form-control" id="mail_password" name="mail_password" 
+                       value="{{ config.mail_password if config else '' }}" 
+                       placeholder="Senha ou senha de aplicação">
+                <div class="form-text">Senha ou senha de aplicação</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mail_use_tls" class="form-label">
+                  <i class="bi bi-shield-check me-1"></i>Tipo de Segurança
+                </label>
+                <select class="form-select" id="mail_use_tls" name="mail_use_tls">
+                  <option value="tls" {% if config and config.mail_use_tls == 'tls' %}selected{% endif %}>🔒 TLS</option>
+                  <option value="ssl" {% if config and config.mail_use_tls == 'ssl' %}selected{% endif %}>🔒 SSL</option>
+                  <option value="none" {% if config and config.mail_use_tls == 'none' %}selected{% endif %}>❌ Nenhuma</option>
+                </select>
+                <div class="form-text">Tipo de criptografia para conexão SMTP</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="mail_default_sender" class="form-label">
+                  <i class="bi bi-envelope-paper me-1"></i>Remetente Padrão
+                </label>
+                <input type="email" class="form-control" id="mail_default_sender" name="mail_default_sender" 
+                       value="{{ config.mail_default_sender if config else '' }}" 
+                       placeholder="sistema@empresa.com">
+                <div class="form-text">Email que aparecerá como remetente</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Configurações Pré-definidas -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="alert alert-info border-info">
+                <i class="bi bi-lightning me-2"></i>
+                <strong>Configurações Rápidas:</strong> Clique em uma das opções abaixo para preencher automaticamente.
+              </div>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary" onclick="setGmailConfig()">Gmail</button>
+                <button type="button" class="btn btn-outline-primary" onclick="setOutlookConfig()">Outlook</button>
+                <button type="button" class="btn btn-outline-primary" onclick="setOffice365Config()">Office 365</button>
+                <button type="button" class="btn btn-outline-primary" onclick="setExchangeConfig()">Exchange</button>
+                <button type="button" class="btn btn-outline-primary" onclick="setSMTP4DevConfig()">SMTP4Dev</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-12 text-center">
+              <button type="button" class="btn btn-outline-info btn-lg me-2" onclick="testarEmail()">
+                <i class="bi bi-envelope-paper me-2"></i>Testar Configuração
+              </button>
+              <button type="button" class="btn btn-info btn-lg" onclick="salvarSecao('email')">
+                <i class="bi bi-check-circle me-2"></i>Salvar Email
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Seção: Agendamento -->
+    <div class="card mb-4">
+      <div class="card-header bg-warning text-dark" style="cursor: pointer;" onclick="toggleSection('agendamento-section')">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-clock"></i> ⏰ Configurações de Agendamento</h5>
+          <i class="bi bi-chevron-down" id="agendamento-section-icon"></i>
+        </div>
+      </div>
+      <div class="card-body" id="agendamento-section" style="display: none;">
+        <form id="agendamento-form">
+          <!-- Toggle de Ativação -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="agendamento_ativo" name="agendamento_ativo" 
+                       {% if config and config.agendamento_ativo %}checked{% endif %} 
+                       onchange="toggleAgendamento()">
+                <label class="form-check-label" for="agendamento_ativo">
+                  <i class="bi bi-toggle-on me-2"></i><strong>Agendamento Automático Ativo</strong>
+                </label>
+              </div>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i>
+                Quando ativado, os alertas serão enviados automaticamente conforme o agendamento. 
+                O envio manual continua funcionando independente desta configuração.
+              </div>
+            </div>
+          </div>
+          
+          <div class="row" id="config-agendamento">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="dia_semana" class="form-label">
+                  <i class="bi bi-calendar-week me-1"></i>Dia da Semana
+                </label>
+                <select class="form-select" id="dia_semana" name="dia_semana">
+                  <option value="mon" {% if config and config.dia_semana == 'mon' %}selected{% endif %}>📅 Segunda-feira</option>
+                  <option value="tue" {% if config and config.dia_semana == 'tue' %}selected{% endif %}>📅 Terça-feira</option>
+                  <option value="wed" {% if config and config.dia_semana == 'wed' %}selected{% endif %}>📅 Quarta-feira</option>
+                  <option value="thu" {% if config and config.dia_semana == 'thu' %}selected{% endif %}>📅 Quinta-feira</option>
+                  <option value="fri" {% if config and config.dia_semana == 'fri' %}selected{% endif %}>📅 Sexta-feira</option>
+                  <option value="sat" {% if config and config.dia_semana == 'sat' %}selected{% endif %}>📅 Sábado</option>
+                  <option value="sun" {% if config and config.dia_semana == 'sun' %}selected{% endif %}>📅 Domingo</option>
+                </select>
+                <div class="form-text">Dia da semana para envio dos alertas</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="hora" class="form-label">
+                  <i class="bi bi-hourglass-split me-1"></i>Hora
+                </label>
+                <input type="number" class="form-control" id="hora" name="hora" 
+                       value="{{ config.hora if config else 14 }}" min="0" max="23">
+                <div class="form-text">Hora do dia para envio (0-23)</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="minuto" class="form-label">
+                  <i class="bi bi-clock-history me-1"></i>Minuto
+                </label>
+                <input type="number" class="form-control" id="minuto" name="minuto" 
+                       value="{{ config.minuto if config else 0 }}" min="0" max="59">
+                <div class="form-text">Minuto da hora para envio (0-59)</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Botão Salvar Individual -->
+          <div class="text-center mt-3">
+            <button type="button" class="btn btn-warning" onclick="salvarSecao('agendamento')">
+              <i class="bi bi-check-circle me-2"></i>Salvar Agendamento
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Seção: Personalização -->
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white" style="cursor: pointer;" onclick="toggleSection('personalizacao-section')">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-palette"></i> 🎨 Personalização do Sistema</h5>
+          <i class="bi bi-chevron-down" id="personalizacao-section-icon"></i>
+        </div>
+      </div>
+      <div class="card-body" id="personalizacao-section" style="display: none;">
+        <form id="personalizacao-form">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="nome_sistema" class="form-label">
+                  <i class="bi bi-tag me-1"></i>Nome do Sistema
+                </label>
+                <input type="text" class="form-control" id="nome_sistema" name="nome_sistema" 
+                       value="{{ config.nome_sistema if config else 'Sistema de Certificados' }}" 
+                       placeholder="Nome do Sistema">
+                <div class="form-text">Nome que aparecerá no cabeçalho e emails</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="equipe_ti" class="form-label">
+                  <i class="bi bi-people me-1"></i>Equipe de TI
+                </label>
+                <input type="text" class="form-control" id="equipe_ti" name="equipe_ti" 
+                       value="{{ config.equipe_ti if config else 'Equipe de TI' }}" 
+                       placeholder="Equipe de TI">
+                <div class="form-text">Nome da equipe de TI para contato</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="email_ti" class="form-label">
+                  <i class="bi bi-envelope me-1"></i>Email da TI
+                </label>
+                <input type="email" class="form-control" id="email_ti" name="email_ti" 
+                       value="{{ config.email_ti if config else 'ti@empresa.com' }}" 
+                       placeholder="ti@empresa.com">
+                <div class="form-text">Email de contato da equipe de TI</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="telefone_ti" class="form-label">
+                  <i class="bi bi-telephone me-1"></i>Telefone da TI
+                </label>
+                <input type="text" class="form-control" id="telefone_ti" name="telefone_ti" 
+                       value="{{ config.telefone_ti if config else '(11) 99999-9999' }}" 
+                       placeholder="(11) 99999-9999">
+                <div class="form-text">Telefone de contato da equipe de TI</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="logo_url" class="form-label">
+                  <i class="bi bi-image me-1"></i>URL do Logo (Opcional)
+                </label>
+                <input type="url" class="form-control" id="logo_url" name="logo_url" 
+                       value="{{ config.logo_url if config else '' }}" 
+                       placeholder="https://exemplo.com/logo.png">
+                <div class="form-text">URL da imagem do logo da empresa</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-info border-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Personalização:</strong> Configure o nome do sistema, equipe de TI e informações de contato.
+              </div>
+            </div>
+          </div>
+          
+          <div class="alert alert-success border-success">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>Personalização Ativa!</strong> As alterações aqui serão aplicadas em todo o sistema, 
+            incluindo cabeçalhos, emails e interface.
+          </div>
+          
+          <!-- Botão Salvar Individual -->
+          <div class="text-center mt-3">
+            <button type="button" class="btn btn-success" onclick="salvarSecao('personalizacao')">
+              <i class="bi bi-check-circle me-2"></i>Salvar Personalização
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Melhorias para modo escuro */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-600);
+  }
+  
+  .card-body {
+    background-color: var(--bs-dark);
+  }
+  
+  .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: var(--bs-info);
+    color: var(--bs-info);
+  }
+  
+  .alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: var(--bs-warning);
+    color: var(--bs-warning);
+  }
+  
+  .form-text {
+    color: var(--bs-gray-400);
+  }
+  
+  .form-label {
+    color: var(--bs-light);
+  }
+  
+  .form-control, .form-select {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-600);
+    color: var(--bs-light);
+  }
+  
+  .form-control:focus, .form-select:focus {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  
+  .form-control::placeholder {
+    color: var(--bs-gray-500);
+  }
+}
+
+/* Melhorias gerais */
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.alert {
+  border-radius: 0.375rem;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* Animação para seções colapsáveis */
+.card-body {
+  transition: all 0.3s ease;
+}
+
+.card-header i {
+  transition: transform 0.3s ease;
+}
+
+.card-header.collapsed i {
+  transform: rotate(-90deg);
+}
+</style>
+
+<script>
+// Função para alternar seções
+function toggleSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  const icon = document.getElementById(sectionId + '-icon');
+  
+  if (section.style.display === 'none') {
+    section.style.display = 'block';
+    icon.classList.remove('bi-chevron-down');
+    icon.classList.add('bi-chevron-up');
+  } else {
+    section.style.display = 'none';
+    icon.classList.remove('bi-chevron-up');
+    icon.classList.add('bi-chevron-down');
+  }
+}
+
+// Função para salvar seção individual
+function salvarSecao(secao) {
+  const form = document.getElementById(secao + '-form');
+  const formData = new FormData(form);
+  
+  // Mostrar loading
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Salvando...';
+  btn.disabled = true;
+  
+  // Fazer requisição AJAX
+  fetch(`/configuracao/salvar-secao/${secao}`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      // Mostrar mensagem de sucesso
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-success alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        ${data.message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      // Inserir no topo da página
+      const container = document.querySelector('.row.justify-content-center');
+      if (container) {
+        container.insertBefore(alertDiv, container.firstChild);
+      } else {
+        // Fallback: inserir no body
+        document.body.insertBefore(alertDiv, document.body.firstChild);
+      }
+      
+      // Remover alerta após 5 segundos
+      setTimeout(() => {
+        alertDiv.remove();
+      }, 5000);
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  })
+  .catch(error => {
+    console.error('Erro ao salvar:', error);
+    alert(`❌ Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
+  })
+  .finally(() => {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  });
+}
+
+// Funções existentes
+function toggleLdapConfig() {
+  const authMode = document.getElementById('auth_mode').value;
+  const ldapConfig = document.getElementById('ldap-config');
+  
+  if (authMode === 'ldap') {
+    ldapConfig.style.display = 'block';
+  } else {
+    ldapConfig.style.display = 'none';
+  }
+}
+
+function toggleAgendamento() {
+  const agendamentoAtivo = document.getElementById('agendamento_ativo').checked;
+  const configAgendamento = document.getElementById('config-agendamento');
+  
+  if (agendamentoAtivo) {
+    configAgendamento.style.display = 'block';
+  } else {
+    configAgendamento.style.display = 'none';
+  }
+}
+
+// Funções para configurações pré-definidas de email
+function setGmailConfig() {
+  document.getElementById('mail_server').value = 'smtp.gmail.com';
+  document.getElementById('mail_port').value = '587';
+  document.getElementById('mail_use_tls').value = 'tls';
+  alert('Configuração Gmail aplicada! Lembre-se de usar senha de aplicação.');
+}
+
+function setOutlookConfig() {
+  document.getElementById('mail_server').value = 'smtp-mail.outlook.com';
+  document.getElementById('mail_port').value = '587';
+  document.getElementById('mail_use_tls').value = 'tls';
+  alert('Configuração Outlook aplicada!');
+}
+
+function setOffice365Config() {
+  document.getElementById('mail_server').value = 'smtp.office365.com';
+  document.getElementById('mail_port').value = '587';
+  document.getElementById('mail_use_tls').value = 'tls';
+  alert('Configuração Office 365 aplicada!');
+}
+
+function setExchangeConfig() {
+  document.getElementById('mail_server').value = 'smtp.office365.com';
+  document.getElementById('mail_port').value = '587';
+  document.getElementById('mail_use_tls').value = 'tls';
+  alert('Configuração Exchange aplicada! Use o mesmo servidor do Office 365.');
+}
+
+function setSMTP4DevConfig() {
+  document.getElementById('mail_server').value = 'localhost';
+  document.getElementById('mail_port').value = '3000';
+  document.getElementById('mail_use_tls').value = 'none';
+  document.getElementById('mail_username').value = '';
+  document.getElementById('mail_password').value = '';
+  document.getElementById('mail_default_sender').value = 'teste@sistema.com';
+  alert('Configuração SMTP4Dev aplicada! Certifique-se de que o SMTP4Dev está rodando na porta 3000.');
+}
+
+function testarEmail() {
+  const mailServer = document.getElementById('mail_server').value;
+  const mailPort = document.getElementById('mail_port').value;
+  const mailUsername = document.getElementById('mail_username').value;
+  const mailPassword = document.getElementById('mail_password').value;
+  const mailUseTls = document.getElementById('mail_use_tls').value;
+  const mailDefaultSender = document.getElementById('mail_default_sender').value;
+  
+  if (!mailServer || !mailPort || !mailUsername || !mailPassword) {
+    alert('Preencha todos os campos obrigatórios de email!');
+    return;
+  }
+  
+  // Mostrar loading
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Testando...';
+  btn.disabled = true;
+  
+  // Preparar dados
+  const formData = new FormData();
+  formData.append('mail_server', mailServer);
+  formData.append('mail_port', mailPort);
+  formData.append('mail_username', mailUsername);
+  formData.append('mail_password', mailPassword);
+  formData.append('mail_use_tls', mailUseTls);
+  formData.append('mail_default_sender', mailDefaultSender);
+  
+  // Fazer requisição AJAX
+  fetch('/testar-email', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      alert(`✅ ${data.message}`);
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  })
+  .catch(error => {
+    alert(`❌ Erro ao testar email: ${error.message}`);
+  })
+  .finally(() => {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  });
+}
+
+function testarLdap() {
+  const ldapServer = document.getElementById('ldap_server').value;
+  const ldapPort = document.getElementById('ldap_port').value;
+  const ldapBaseDn = document.getElementById('ldap_base_dn').value;
+  const ldapUserDn = document.getElementById('ldap_user_dn').value;
+  const ldapUserAttr = document.getElementById('ldap_user_attr').value;
+  const ldapBindDn = document.getElementById('ldap_bind_dn').value;
+  const ldapBindPassword = document.getElementById('ldap_bind_password').value;
+  const ldapEmailAttr = document.getElementById('ldap_email_attr').value;
+  
+  if (!ldapServer || !ldapPort || !ldapBaseDn) {
+    alert('Preencha os campos obrigatórios do LDAP!');
+    return;
+  }
+  
+  // Mostrar loading
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Testando...';
+  btn.disabled = true;
+  
+  // Preparar dados
+  const formData = new FormData();
+  formData.append('ldap_server', ldapServer);
+  formData.append('ldap_port', ldapPort);
+  formData.append('ldap_base_dn', ldapBaseDn);
+  formData.append('ldap_user_dn', ldapUserDn);
+  formData.append('ldap_user_attr', ldapUserAttr);
+  formData.append('ldap_bind_dn', ldapBindDn);
+  formData.append('ldap_bind_password', ldapBindPassword);
+  formData.append('ldap_email_attr', ldapEmailAttr);
+  
+  // Fazer requisição AJAX
+  fetch('/testar-ldap', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      alert(`✅ ${data.message}`);
+    } else {
+      alert(`❌ ${data.message}`);
+    }
+  })
+  .catch(error => {
+    alert(`❌ Erro ao testar LDAP: ${error.message}`);
+  })
+  .finally(() => {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  });
+}
+
+// Inicializar estado do formulário
+document.addEventListener('DOMContentLoaded', function() {
+  toggleLdapConfig();
+  toggleAgendamento();
+});
+</script>
+{% endblock %} 

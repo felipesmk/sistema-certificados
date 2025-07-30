@@ -30,13 +30,15 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Toggle de Ativação** - Ativar/desativar agendamento
 - **Configurações LDAP** - Integração com Active Directory
 - **Teste de Conexão** - Validação de configurações LDAP
+- **Personalização Simplificada** - Nome do sistema, equipe de TI e informações de contato
 
 ### 🎨 **Interface Moderna**
-- **Bootstrap 5** - Design responsivo e moderno
+- **Bootstrap 5** - Design responsivo e moderno com gradientes
 - **Modo Escuro** - Suporte completo com toggle
 - **Chart.js** - Gráficos interativos e dinâmicos
 - **Bootstrap Icons** - Ícones consistentes
 - **Navegação Intuitiva** - Menus dropdown organizados
+- **Design Limpo** - Interface simplificada sem configurações de cor desnecessárias
 
 ## 🚀 Funcionalidades Detalhadas
 
@@ -88,6 +90,14 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **ldap3** - Integração LDAP/Active Directory
 - **Chart.js** - Gráficos interativos (via CDN)
 - **Bootstrap 5** - Framework CSS (via CDN)
+
+## 📝 Mudanças Recentes
+
+### **v2.1.0 - Interface Simplificada**
+- ✅ **Removidas configurações de cor** - Interface mais limpa e consistente
+- ✅ **Personalização simplificada** - Foco em informações essenciais
+- ✅ **Design otimizado** - Gradientes Bootstrap padrão para melhor consistência
+- ✅ **Código limpo** - Remoção de funcionalidades desnecessárias
 
 ## 🚀 Instalação e Configuração
 

@@ -64,6 +64,72 @@ def setup_logging():
 # Configurar logging
 setup_logging()
 
+from utils.cache import cached
+
+@cached(ttl_seconds=300)  # Cache por 5 minutos
+def get_system_config():
+    """Obtém as configurações do sistema para uso global."""
+    try:
+        with app.app_context():
+            config = Configuracao.query.first()
+            if not config:
+                # Criar configuração padrão se não existir
+                config = Configuracao()
+                db.session.add(config)
+                db.session.commit()
+            # Fazer uma cópia dos dados para evitar problemas de sessão
+            config_data = {
+                'id': config.id,
+                'dia_semana': config.dia_semana,
+                'hora': config.hora,
+                'minuto': config.minuto,
+                'agendamento_ativo': config.agendamento_ativo,
+                'mail_server': config.mail_server,
+                'mail_port': config.mail_port,
+                'mail_username': config.mail_username,
+                'mail_password': config.mail_password,
+                'mail_use_tls': config.mail_use_tls,
+                'mail_default_sender': config.mail_default_sender,
+                'nome_sistema': config.nome_sistema,
+                'equipe_ti': config.equipe_ti,
+                'email_ti': config.email_ti,
+                'telefone_ti': config.telefone_ti,
+                'logo_url': config.logo_url,
+
+            }
+            return type('Configuracao', (), config_data)()
+    except Exception as e:
+        logger.error(f"Erro ao obter configurações do sistema: {e}")
+        # Retornar configurações padrão em caso de erro
+        return type('Configuracao', (), {
+            'nome_sistema': 'Sistema de Certificados',
+            'equipe_ti': 'Equipe de TI',
+            'email_ti': 'ti@empresa.com',
+            'telefone_ti': '(11) 99999-9999',
+            
+        })()
+
+# Context processor para disponibilizar configurações em todos os templates
+@app.context_processor
+def inject_system_config():
+    """Injeta as configurações do sistema em todos os templates."""
+    try:
+        return {
+            'system_config': get_system_config()
+        }
+    except Exception as e:
+        logger.error(f"Erro no context processor: {e}")
+        # Retornar configurações padrão em caso de erro
+        return {
+            'system_config': type('Configuracao', (), {
+                'nome_sistema': 'Sistema de Certificados',
+                'equipe_ti': 'Equipe de TI',
+                'email_ti': 'ti@empresa.com',
+                'telefone_ti': '(11) 99999-9999',
+
+            })()
+        }
+
 # Configurações do Flask com suporte a variáveis de ambiente
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_urlsafe(32))
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///certificados.db')
@@ -90,13 +156,9 @@ app.config['AUTH_MODE'] = os.environ.get('AUTH_MODE', 'banco')  # 'banco' ou 'ld
 
 mail = Mail(app)
 
-from models import db, Registro, Responsavel
+from models import db, Registro, Responsavel, User, Configuracao
 db.init_app(app)
-import users
 from flask_login import UserMixin
-from models import db
-from models import User
-from models import Configuracao
 
 # Logger configurado para produção
 logger = logging.getLogger(__name__)
@@ -624,6 +686,14 @@ def configuracao():
         config.mail_use_tls = request.form.get('mail_use_tls', 'tls')
         config.mail_default_sender = request.form.get('mail_default_sender', '')
         
+        # Salvar configurações de personalização (simplificadas)
+        config.nome_sistema = request.form.get('nome_sistema', 'Sistema de Certificados')
+        config.equipe_ti = request.form.get('equipe_ti', 'Equipe de TI')
+        config.email_ti = request.form.get('email_ti', 'ti@empresa.com')
+        config.telefone_ti = request.form.get('telefone_ti', '(11) 99999-9999')
+        config.logo_url = request.form.get('logo_url', '')
+
+        
         # Atualizar modo de autenticação
         auth_mode = request.form.get('auth_mode', 'banco')
         app.config['AUTH_MODE'] = auth_mode
@@ -648,11 +718,86 @@ def configuracao():
         flash('Configuração atualizada com sucesso!', 'success')
         return redirect(url_for('configuracao'))
     
-    return render_template('configuracao/form.html', 
-                         config=config, 
-                         auth_mode=app.config.get('AUTH_MODE', 'banco'),
-                         ldap_config=ldap_config,
-                         email_config=email_config)
+    # Retorno para método GET
+    return render_template('configuracao/form_colapsavel.html', 
+                          config=config, 
+                          auth_mode=app.config.get('AUTH_MODE', 'banco'),
+                          ldap_config=ldap_config,
+                          email_config=email_config)
+
+@app.route('/configuracao/salvar-secao/<secao>', methods=['POST'])
+@permission_required('manage_config')
+@login_required
+def salvar_secao_configuracao(secao):
+    """Salva uma seção específica da configuração."""
+    try:
+        config = Configuracao.query.first()
+        if not config:
+            config = Configuracao()
+            db.session.add(config)
+        
+        if secao == 'auth':
+            # Salvar configurações de autenticação
+            auth_mode = request.form.get('auth_mode', 'banco')
+            app.config['AUTH_MODE'] = auth_mode
+            
+            # Salvar configurações LDAP se for LDAP
+            if auth_mode == 'ldap':
+                os.environ['LDAP_SERVER'] = request.form.get('ldap_server', 'ldap://seu-servidor-ldap')
+                os.environ['LDAP_PORT'] = request.form.get('ldap_port', '389')
+                os.environ['LDAP_BASE_DN'] = request.form.get('ldap_base_dn', 'dc=empresa,dc=com,dc=br')
+                os.environ['LDAP_USER_DN'] = request.form.get('ldap_user_dn', 'ou=usuarios')
+                os.environ['LDAP_USER_ATTR'] = request.form.get('ldap_user_attr', 'sAMAccountName')
+                os.environ['LDAP_BIND_DN'] = request.form.get('ldap_bind_dn', '')
+                os.environ['LDAP_BIND_PASSWORD'] = request.form.get('ldap_bind_password', '')
+                os.environ['LDAP_EMAIL_ATTR'] = request.form.get('ldap_email_attr', 'mail')
+            
+            mensagem = 'Configurações de autenticação salvas com sucesso!'
+            
+        elif secao == 'email':
+            # Salvar configurações de email
+            config.mail_server = request.form.get('mail_server', 'smtp.gmail.com')
+            config.mail_port = int(request.form.get('mail_port', 587))
+            config.mail_username = request.form.get('mail_username', '')
+            config.mail_password = request.form.get('mail_password', '')
+            config.mail_use_tls = request.form.get('mail_use_tls', 'tls')
+            config.mail_default_sender = request.form.get('mail_default_sender', '')
+            
+            mensagem = 'Configurações de email salvas com sucesso!'
+            
+        elif secao == 'agendamento':
+            # Salvar configurações de agendamento
+            agendamento_ativo = 'agendamento_ativo' in request.form
+            config.agendamento_ativo = agendamento_ativo
+            
+            if agendamento_ativo:
+                config.dia_semana = request.form.get('dia_semana', 'fri')
+                config.hora = int(request.form.get('hora', 14))
+                config.minuto = int(request.form.get('minuto', 0))
+                recarregar_agendamento()
+            
+            mensagem = 'Configurações de agendamento salvas com sucesso!'
+            
+        elif secao == 'personalizacao':
+            # Salvar configurações de personalização (simplificadas)
+            config.nome_sistema = request.form.get('nome_sistema', 'Sistema de Certificados')
+            config.equipe_ti = request.form.get('equipe_ti', 'Equipe de TI')
+            config.email_ti = request.form.get('email_ti', 'ti@empresa.com')
+            config.telefone_ti = request.form.get('telefone_ti', '(11) 99999-9999')
+            config.logo_url = request.form.get('logo_url', '')
+
+            
+            mensagem = 'Configurações de personalização salvas com sucesso!'
+        
+        else:
+            return jsonify({'success': False, 'message': 'Seção inválida'}), 400
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': mensagem})
+        
+    except Exception as e:
+        logger.error(f"Erro ao salvar seção {secao}: {e}")
+        return jsonify({'success': False, 'message': f'Erro ao salvar: {str(e)}'}), 500
 
 @app.route('/testar-ldap', methods=['POST'])
 @permission_required('manage_config')
@@ -693,22 +838,27 @@ def testar_ldap():
             search_base = f"{ldap_user_dn},{ldap_base_dn}"
             conn.search(search_base, f"({ldap_user_attr}=*)", attributes=[ldap_user_attr])
             
-            return jsonify({
-                'success': True,
-                'message': f'Conexão LDAP bem-sucedida! Encontrados {len(conn.entries)} usuários.',
-                'users_found': len(conn.entries)
-            })
+            if conn.entries:
+                return jsonify({
+                    'success': True, 
+                    'message': f'Conexão LDAP bem-sucedida! Encontrados {len(conn.entries)} usuários.'
+                })
+            else:
+                return jsonify({
+                    'success': True, 
+                    'message': 'Conexão LDAP bem-sucedida, mas nenhum usuário encontrado com os critérios especificados.'
+                })
         else:
             return jsonify({
-                'success': False,
-                'message': 'Falha na conexão LDAP: Não foi possível fazer bind.'
+                'success': False, 
+                'message': 'Falha na conexão LDAP. Verifique as credenciais e configurações.'
             })
             
     except Exception as e:
         logger.error(f"Erro ao testar LDAP: {e}")
         return jsonify({
             'success': False,
-            'message': f'Erro na conexão LDAP: {str(e)}'
+            'message': f'Erro ao testar LDAP: {str(e)}'
         })
 
 @app.route('/testar-email', methods=['POST'])
@@ -747,23 +897,25 @@ def testar_email():
         
         # Tentar enviar email de teste
         with test_app.app_context():
+            # Renderizar template HTML
+            html_content = render_template('emails/email_teste.html',
+                                         config={
+                                             'mail_server': mail_server,
+                                             'mail_port': mail_port,
+                                             'mail_username': mail_username,
+                                             'mail_use_tls': mail_use_tls,
+                                             'mail_default_sender': mail_default_sender or mail_username
+                                         },
+                                         momento_teste=datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+                                         destinatario=mail_username,
+                                         system_config=get_system_config(),
+                                         subject='Teste de Configuração - Sistema de Certificados')
+            
             msg = Message(
-                subject='Teste de Configuração - Painel de Certificados',
+                subject='Teste de Configuração - Sistema de Certificados',
                 recipients=[mail_username],
-                body=f'''Olá!
-
-Este é um email de teste para verificar se a configuração SMTP está funcionando corretamente.
-
-Configurações testadas:
-- Servidor: {mail_server}
-- Porta: {mail_port}
-- Segurança: {mail_use_tls.upper()}
-- Usuário: {mail_username}
-
-Se você recebeu este email, a configuração está funcionando perfeitamente!
-
-Sistema de Certificados
-'''
+                html=html_content,
+                sender=mail_default_sender or mail_username
             )
             test_mail.send(msg)
         
@@ -792,6 +944,65 @@ def enviar_alertas_manual():
         logger.error(f"Erro ao enviar alertas: {e}")
         flash('Erro ao enviar alertas.', 'danger')
     return redirect(url_for('dashboard'))
+
+@app.route('/enviar-resumos')
+@permission_required('send_alerts')
+@login_required
+def enviar_resumos_manual():
+    """Envia emails de resumo para responsáveis manualmente."""
+    try:
+        emails_enviados = enviar_email_resumo_responsaveis()
+        flash(f'Resumos enviados com sucesso! ({emails_enviados} emails)', 'success')
+        logger.info(f"Resumos enviados manualmente: {emails_enviados} emails")
+    except Exception as e:
+        logger.error(f"Erro ao enviar resumos: {e}")
+        flash('Erro ao enviar resumos.', 'danger')
+    return redirect(url_for('dashboard'))
+
+@app.route('/enviar-resumo-responsavel/<int:responsavel_id>')
+@permission_required('send_alerts')
+@login_required
+def enviar_resumo_individual(responsavel_id):
+    """Envia email de resumo para um responsável específico."""
+    try:
+        responsavel = Responsavel.query.get_or_404(responsavel_id)
+        
+        if not responsavel.email:
+            flash('Este responsável não possui email cadastrado.', 'warning')
+            return redirect(url_for('listar_responsaveis'))
+        
+        # Buscar certificados deste responsável (relação N:N)
+        certificados = Registro.query.filter(Registro.responsaveis.contains(responsavel)).all()
+        
+        if not certificados:
+            flash(f'O responsável {responsavel.nome} não possui certificados cadastrados.', 'info')
+            return redirect(url_for('listar_responsaveis'))
+        
+        # Renderizar template HTML
+        html_content = render_template('emails/email_responsaveis.html',
+                                     responsavel=responsavel,
+                                     certificados=certificados,
+                                     hoje=date.today(),
+                                     timedelta=timedelta,
+                                     system_config=get_system_config(),
+                                     subject=f"Resumo de Certificados - {responsavel.nome}")
+        
+        msg = Message(
+            subject=f"Resumo de Certificados - {responsavel.nome}",
+            recipients=[responsavel.email],
+            html=html_content,
+            sender=app.config['MAIL_DEFAULT_SENDER']
+        )
+        
+        mail.send(msg)
+        flash(f'Resumo enviado com sucesso para {responsavel.nome} ({responsavel.email})!', 'success')
+        logger.info(f"Resumo individual enviado para {responsavel.email}")
+        
+    except Exception as e:
+        logger.error(f"Erro ao enviar resumo individual: {e}")
+        flash(f'Erro ao enviar resumo: {str(e)}', 'danger')
+    
+    return redirect(url_for('listar_responsaveis'))
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
@@ -878,10 +1089,18 @@ def enviar_email_responsaveis(registro):
         email = resp.email
         if email:
             try:
+                # Renderizar template HTML
+                html_content = render_template('emails/alerta_vencimento.html',
+                                             registro=registro,
+                                             dias_restantes=dias_para_vencer,
+                                             system_config=get_system_config(),
+                                             subject=f"Alerta de Vencimento - {registro.nome}")
+                
                 msg = Message(
                     subject=f"[Alerta] {registro.tipo.title()} '{registro.nome}' vence em {dias_para_vencer} dias",
                     recipients=[email],
-                    body=f"Olá {nome},\n\nO {registro.tipo} '{registro.nome}' vence em {dias_para_vencer} dias (Data de vencimento: {registro.data_vencimento}).\n\nObservações: {registro.observacoes or '-'}\n\nPor favor, regularize o quanto antes.\n\nSistema de Certificados"
+                    html=html_content,
+                    sender=app.config['MAIL_DEFAULT_SENDER']
                 )
                 mail.send(msg)
                 logger.info(f"Alerta enviado para {email} sobre {registro.nome}")
@@ -902,7 +1121,58 @@ def enviar_alertas_vencimento():
             logger.info(f"Enviando alerta para {registro.nome} (vence em {dias_para_vencer} dias)")
             enviar_email_responsaveis(registro)
         else:
-            logger.debug(f"Registro {registro.nome} não está no período de alerta ({dias_para_vencer} dias > {registro.tempo_alerta})") 
+            logger.debug(f"Registro {registro.nome} não está no período de alerta ({dias_para_vencer} dias > {registro.tempo_alerta})")
+
+def enviar_email_resumo_responsaveis():
+    """Envia email de resumo para todos os responsáveis com seus certificados."""
+    try:
+        hoje = date.today()
+        
+        # Buscar todos os responsáveis que têm certificados
+        responsaveis = Responsavel.query.join(Registro).distinct().all()
+        
+        emails_enviados = 0
+        
+        for responsavel in responsaveis:
+            if not responsavel.email:
+                continue
+                
+            # Buscar certificados deste responsável (relação N:N)
+            certificados = Registro.query.filter(Registro.responsaveis.contains(responsavel)).all()
+            
+            if not certificados:
+                continue
+            
+            try:
+                # Renderizar template HTML
+                html_content = render_template('emails/email_responsaveis.html',
+                                             responsavel=responsavel,
+                                             certificados=certificados,
+                                             hoje=hoje,
+                                             timedelta=timedelta,
+                                             system_config=get_system_config(),
+                                             subject=f"Resumo de Certificados - {responsavel.nome}")
+                
+                msg = Message(
+                    subject=f"Resumo de Certificados - {responsavel.nome}",
+                    recipients=[responsavel.email],
+                    html=html_content,
+                    sender=app.config['MAIL_DEFAULT_SENDER']
+                )
+                
+                mail.send(msg)
+                emails_enviados += 1
+                logger.info(f"Email de resumo enviado para {responsavel.email}")
+                
+            except Exception as e:
+                logger.error(f"Erro ao enviar email de resumo para {responsavel.email}: {str(e)}")
+        
+        logger.info(f"Enviados {emails_enviados} emails de resumo")
+        return emails_enviados
+        
+    except Exception as e:
+        logger.error(f"Erro ao enviar emails de resumo: {str(e)}")
+        return 0 
 
 @app.route('/usuarios/novo', methods=['GET', 'POST'])
 @permission_required('manage_access')

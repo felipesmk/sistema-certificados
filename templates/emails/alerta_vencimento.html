@@ -1,0 +1,71 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<div class="alert alert-warning">
+    <strong>⚠️ Alerta de Vencimento</strong><br>
+    O certificado abaixo está próximo do vencimento e requer atenção imediata.
+</div>
+
+<div class="card">
+    <div class="card-title">📋 Detalhes do Certificado</div>
+    <table class="table">
+        <tr>
+            <th>Nome/Descrição:</th>
+            <td>{{ registro.nome }}</td>
+        </tr>
+        <tr>
+            <th>Tipo:</th>
+            <td>{{ registro.tipo }}</td>
+        </tr>
+        <tr>
+            <th>Data de Vencimento:</th>
+            <td>
+                <span class="badge badge-danger">
+                    {{ registro.data_vencimento.strftime('%d/%m/%Y') }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <th>Dias Restantes:</th>
+            <td>
+                <span class="badge badge-warning">
+                    {{ dias_restantes }} dias
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <th>Responsável:</th>
+            <td>{{ registro.responsavel.nome if registro.responsavel else 'Não definido' }}</td>
+        </tr>
+        <tr>
+            <th>Status:</th>
+            <td>
+                {% if registro.regularizado %}
+                    <span class="badge badge-success">Regularizado</span>
+                {% else %}
+                    <span class="badge badge-danger">Pendente</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="card">
+    <div class="card-title">🚨 Ações Necessárias</div>
+    <ul style="margin-left: 20px; margin-bottom: 15px;">
+        <li>Verificar se o certificado ainda é necessário</li>
+        <li>Iniciar processo de renovação se aplicável</li>
+        <li>Atualizar informações no sistema após renovação</li>
+        <li>Marcar como regularizado após conclusão</li>
+    </ul>
+    
+    <p style="margin-bottom: 15px;">
+        <strong>Importante:</strong> Certificados vencidos podem causar interrupções nos serviços.
+    </p>
+</div>
+
+<div class="alert alert-info" style="margin-top: 20px;">
+    <strong>💡 Dica:</strong> Configure alertas automáticos no sistema para receber notificações 
+    com antecedência e evitar vencimentos inesperados.
+</div>
+{% endblock %} 

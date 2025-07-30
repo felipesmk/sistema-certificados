@@ -25,6 +25,9 @@
               <td>
                 <a href="/responsaveis/{{ responsavel.id }}/editar" class="btn btn-sm btn-primary">Editar</a>
                 <a href="/responsaveis/{{ responsavel.id }}/excluir" class="btn btn-sm btn-danger">Excluir</a>
+                {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'send_alerts')|list) and responsavel.email %}
+                  <a href="/enviar-resumo-responsavel/{{ responsavel.id }}" class="btn btn-sm btn-info">📧 Enviar Resumo</a>
+                {% endif %}
               </td>
             </tr>
             {% endfor %}

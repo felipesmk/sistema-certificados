@@ -1,0 +1,131 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<div class="alert alert-info">
+    <strong>📊 Resumo de Certificados</strong><br>
+    Relatório de certificados sob sua responsabilidade que requerem atenção.
+</div>
+
+<div class="card">
+    <div class="card-title">👤 Responsável: {{ responsavel.nome }}</div>
+    <table class="table">
+        <tr>
+            <th>Email:</th>
+            <td>{{ responsavel.email }}</td>
+        </tr>
+        <tr>
+            <th>Total de Certificados:</th>
+            <td><strong>{{ certificados|length }}</strong></td>
+        </tr>
+    </table>
+</div>
+
+{% if certificados %}
+    <div class="card">
+        <div class="card-title">📋 Certificados que Requerem Atenção</div>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome/Descrição</th>
+                    <th>Tipo</th>
+                    <th>Vencimento</th>
+                    <th>Dias Restantes</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for certificado in certificados %}
+                <tr>
+                    <td>
+                        <strong>{{ certificado.nome }}</strong>
+                        {% if certificado.observacoes %}
+                            <br><small style="color: #6c757d;">{{ certificado.observacoes[:50] }}{% if certificado.observacoes|length > 50 %}...{% endif %}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ certificado.tipo }}</td>
+                    <td>
+                        <span class="badge badge-danger">
+                            {{ certificado.data_vencimento.strftime('%d/%m/%Y') }}
+                        </span>
+                    </td>
+                    <td>
+                        {% set dias = (certificado.data_vencimento - hoje).days %}
+                        {% if dias < 0 %}
+                            <span class="badge badge-danger">Vencido há {{ abs(dias) }} dias</span>
+                        {% elif dias <= 7 %}
+                            <span class="badge badge-danger">{{ dias }} dias</span>
+                        {% elif dias <= 30 %}
+                            <span class="badge badge-warning">{{ dias }} dias</span>
+                        {% else %}
+                            <span class="badge badge-success">{{ dias }} dias</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if certificado.regularizado %}
+                            <span class="badge badge-success">Regularizado</span>
+                        {% else %}
+                            <span class="badge badge-danger">Pendente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">📈 Resumo por Status</div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 150px;">
+                <div style="text-align: center; padding: 15px; background-color: #dc3545; color: white; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold;">
+                        {{ certificados|selectattr('regularizado', 'equalto', false)|list|length }}
+                    </div>
+                    <div style="font-size: 14px;">Pendentes</div>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <div style="text-align: center; padding: 15px; background-color: #28a745; color: white; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold;">
+                        {{ certificados|selectattr('regularizado', 'equalto', true)|list|length }}
+                    </div>
+                    <div style="font-size: 14px;">Regularizados</div>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <div style="text-align: center; padding: 15px; background-color: #ffc107; color: #212529; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold;">
+                        {{ certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje)|list|length }}
+                    </div>
+                    <div style="font-size: 14px;">Vencem em 30 dias</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🚨 Ações Prioritárias</div>
+        <ul style="margin-left: 20px; margin-bottom: 15px;">
+            <li><strong>Urgente:</strong> Renovar certificados vencidos ou próximos do vencimento</li>
+            <li><strong>Importante:</strong> Verificar certificados que vencem nos próximos 30 dias</li>
+            <li><strong>Recomendado:</strong> Atualizar informações no sistema após renovações</li>
+            <li><strong>Preventivo:</strong> Configurar lembretes para próximos vencimentos</li>
+        </ul>
+    </div>
+
+
+
+{% else %}
+    <div class="card">
+        <div class="card-title">✅ Parabéns!</div>
+        <p>Você não possui certificados que requerem atenção imediata.</p>
+        <p>Continue mantendo seus certificados atualizados para evitar surpresas.</p>
+    </div>
+{% endif %}
+
+<div class="alert alert-info" style="margin-top: 20px;">
+    <strong>💡 Dica:</strong> Acesse regularmente o sistema para verificar o status de seus certificados 
+    e configure alertas automáticos para receber notificações com antecedência.
+</div>
+{% endblock %} 
