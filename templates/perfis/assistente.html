@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Assistente de Criação de Perfis{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-magic me-2"></i>Assistente de Criação de Perfis</h2>
+        <p class="mb-0 text-muted">Crie perfis rapidamente baseados em cenários pré-definidos</p>
+      </div>
+      <div class="card-body">
+
+        <!-- Introdução -->
+        <div class="alert alert-info">
+          <h5><i class="bi bi-lightbulb me-2"></i>Como funciona?</h5>
+          <p class="mb-0">Selecione um dos cenários abaixo que melhor se adapta às suas necessidades. 
+          O assistente criará automaticamente um perfil com as permissões apropriadas, 
+          que você poderá personalizar posteriormente.</p>
+        </div>
+
+        <form action="{{ url_for('criar_perfil_cenario') }}" method="POST" id="assistenteForm">
+          <!-- Seleção de Cenário -->
+          <h5><i class="bi bi-list-check me-2"></i>Escolha um cenário:</h5>
+          <div class="row mb-4">
+            {% for scenario in scenarios %}
+            <div class="col-md-6 mb-3">
+              <div class="card h-100 scenario-card" data-scenario="{{ scenario.id }}">
+                <div class="card-body">
+                  <div class="form-check">
+                    <input class="form-check-input" 
+                           type="radio" 
+                           name="scenario" 
+                           value="{{ scenario.id }}" 
+                           id="scenario_{{ scenario.id }}"
+                           required>
+                    <label class="form-check-label w-100" for="scenario_{{ scenario.id }}">
+                      <div class="d-flex align-items-start">
+                        <i class="bi bi-{{ scenario.icone }} me-3" 
+                           style="font-size: 2rem; color: {{ scenario.cor }};"></i>
+                        <div class="flex-grow-1">
+                          <h6 class="card-title mb-2">{{ scenario.nome }}</h6>
+                          <p class="card-text text-muted mb-2">{{ scenario.descricao }}</p>
+                          <div class="mt-2">
+                            <small class="text-muted">
+                              <i class="bi bi-shield-check me-1"></i>
+                              {{ scenario.permissions|length }} permissões incluídas
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Personalização -->
+          <div id="personalizacao" style="display: none;">
+            <h5><i class="bi bi-palette me-2"></i>Personalização (opcional):</h5>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="nome" class="form-label">
+                    <i class="bi bi-tag me-1"></i>Nome do Perfil
+                  </label>
+                  <input type="text" 
+                         class="form-control" 
+                         id="nome" 
+                         name="nome" 
+                         placeholder="Deixe vazio para usar nome automático">
+                  <div class="form-text">Se não especificado, será gerado automaticamente</div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="descricao" class="form-label">
+                    <i class="bi bi-text-paragraph me-1"></i>Descrição Personalizada
+                  </label>
+                  <input type="text" 
+                         class="form-control" 
+                         id="descricao" 
+                         name="descricao" 
+                         placeholder="Descrição opcional">
+                  <div class="form-text">Descreva o propósito deste perfil</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview das Permissões -->
+          <div id="preview" style="display: none;">
+            <h5><i class="bi bi-eye me-2"></i>Preview das permissões:</h5>
+            <div id="permissoes-preview" class="row mb-4">
+              <!-- Será preenchido via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('listar_perfis') }}" class="btn btn-secondary">
+              <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+            <button type="submit" class="btn btn-success" id="criarBtn" disabled>
+              <i class="bi bi-magic me-1"></i>Criar Perfil com Assistente
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Configuração dos cenários
+const scenariosData = {
+  {% for scenario in scenarios %}
+  '{{ scenario.id }}': {
+    nome: '{{ scenario.nome }}',
+    descricao: '{{ scenario.descricao }}',
+    permissions: {{ scenario.permissions|tojson }},
+    cor: '{{ scenario.cor }}',
+    icone: '{{ scenario.icone }}'
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+};
+
+// Mapeamento de descrições das permissões
+const permissionsDesc = {
+  'manage_access': 'Gerenciar usuários e perfis do sistema',
+  'manage_registros': 'Criar, editar e excluir registros de certificados',
+  'manage_responsaveis': 'Gerenciar responsáveis pelos certificados',
+  'manage_config': 'Alterar configurações do sistema',
+  'send_alerts': 'Enviar alertas e notificações por email'
+};
+
+// Event listeners
+document.querySelectorAll('input[name="scenario"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    if (this.checked) {
+      mostrarPersonalizacao();
+      mostrarPreview(this.value);
+      document.getElementById('criarBtn').disabled = false;
+      
+      // Destacar card selecionado
+      document.querySelectorAll('.scenario-card').forEach(card => {
+        card.classList.remove('border-primary');
+      });
+      this.closest('.scenario-card').classList.add('border-primary');
+    }
+  });
+});
+
+function mostrarPersonalizacao() {
+  document.getElementById('personalizacao').style.display = 'block';
+}
+
+function mostrarPreview(scenarioId) {
+  const scenario = scenariosData[scenarioId];
+  const previewDiv = document.getElementById('permissoes-preview');
+  const preview = document.getElementById('preview');
+  
+  let html = '';
+  if (scenario.permissions.length > 0) {
+    scenario.permissions.forEach(perm => {
+      html += `
+        <div class="col-md-6 mb-2">
+          <div class="d-flex align-items-center p-3 border rounded bg-body-secondary">
+            <i class="bi bi-check-circle text-success me-2"></i>
+            <div>
+              <strong class="text-body">${perm}</strong><br>
+              <small class="text-body-secondary">${permissionsDesc[perm] || 'Descrição não disponível'}</small>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    html = '<div class="col-12"><div class="alert alert-info">Este cenário não inclui permissões específicas. Você poderá adicionar permissões após a criação.</div></div>';
+  }
+  
+  previewDiv.innerHTML = html;
+  preview.style.display = 'block';
+}
+
+// Adicionar efeito hover nos cards
+document.querySelectorAll('.scenario-card').forEach(card => {
+  card.addEventListener('mouseenter', function() {
+    if (!this.querySelector('input[type="radio"]').checked) {
+      this.style.transform = 'translateY(-2px)';
+      this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+    }
+  });
+  
+  card.addEventListener('mouseleave', function() {
+    if (!this.querySelector('input[type="radio"]').checked) {
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = '';
+    }
+  });
+});
+
+// Estilo para cards selecionados
+const style = document.createElement('style');
+style.textContent = `
+  .scenario-card.border-primary {
+    border-color: #0d6efd !important;
+    border-width: 2px !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+  }
+  .scenario-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .scenario-card:hover {
+    cursor: pointer;
+  }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -98,6 +98,107 @@
       .alert {
         border: none;
         border-radius: 10px;
+      }
+      
+      /* Melhorias para modo escuro */
+      [data-bs-theme="dark"] .card-header {
+        background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+      }
+      
+      [data-bs-theme="dark"] .table thead th {
+        background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+        color: #f8f9fa;
+      }
+      
+      [data-bs-theme="dark"] .bg-body-secondary {
+        background-color: var(--bs-dark) !important;
+        border-color: var(--bs-gray-600);
+      }
+      
+      [data-bs-theme="dark"] .text-body {
+        color: var(--bs-light) !important;
+      }
+      
+      [data-bs-theme="dark"] .text-body-secondary {
+        color: var(--bs-gray-400) !important;
+      }
+      
+      [data-bs-theme="dark"] pre {
+        background-color: var(--bs-dark) !important;
+        border-color: var(--bs-gray-600) !important;
+        color: var(--bs-light) !important;
+      }
+      
+      [data-bs-theme="dark"] code {
+        color: var(--bs-light) !important;
+      }
+      }
+      
+      /* Estilos para submenu dropdown */
+      .dropdown-menu .dropdown-menu {
+        margin-left: 0;
+        margin-right: 0;
+      }
+      
+      .dropend .dropdown-toggle {
+        margin-left: 1em;
+      }
+      
+      .dropend .dropdown-toggle::after {
+        display: inline-block;
+        margin-left: 0.255em;
+        vertical-align: 0.255em;
+        content: "";
+        border-top: 0.3em solid transparent;
+        border-right: 0;
+        border-bottom: 0.3em solid transparent;
+        border-left: 0.3em solid;
+      }
+      
+      .dropend .dropdown-toggle:empty::after {
+        margin-left: 0;
+      }
+      
+      /* Hover para submenu */
+      .dropend:hover > .dropdown-menu {
+        display: block;
+      }
+      
+      /* Posicionamento do submenu */
+      .dropend .dropdown-menu {
+        top: 0;
+        left: 100%;
+        margin-top: 0;
+        margin-left: 0;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      }
+      
+      /* Melhorar aparência do submenu */
+      .dropdown-menu .dropdown-menu {
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background-color: #fff;
+      }
+      
+      /* Hover nos itens do submenu */
+      .dropdown-menu .dropdown-menu .dropdown-item:hover {
+        background-color: #f8f9fa;
+      }
+      
+      /* Indicador visual para submenu */
+      .dropend .dropdown-toggle::after {
+        border-left-color: #6c757d;
+      }
+      
+      /* Ajuste para tema escuro */
+      [data-bs-theme="dark"] .dropdown-menu .dropdown-menu {
+        background-color: #212529;
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+      
+      [data-bs-theme="dark"] .dropdown-menu .dropdown-menu .dropdown-item:hover {
+        background-color: #343a40;
+      }
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       }
       
@@ -244,12 +345,67 @@
               <i class="bi bi-shield-gear"></i> Gestão
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="/usuarios">
-                <i class="bi bi-person-gear"></i> 👤 Usuários
-              </a></li>
-              <li><a class="dropdown-item" href="/perfis">
-                <i class="bi bi-person-badge"></i> 🎭 Perfis
-              </a></li>
+              <!-- Gestão de Usuários (Submenu) -->
+              <li class="nav-item dropend">
+                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-people"></i> 👥 Gestão de Usuários
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/usuarios/dashboard">
+                    <i class="bi bi-graph-up"></i> 📊 Dashboard
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/usuarios">
+                    <i class="bi bi-list"></i> 📋 Listar Usuários
+                  </a></li>
+                  <li><a class="dropdown-item" href="/usuarios/novo">
+                    <i class="bi bi-plus-circle"></i> ➕ Novo Usuário
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/usuarios/import">
+                    <i class="bi bi-upload"></i> 📥 Importar
+                  </a></li>
+                  <li><a class="dropdown-item" href="/usuarios/export">
+                    <i class="bi bi-download"></i> 📤 Exportar
+                  </a></li>
+                </ul>
+              </li>
+              
+              <!-- Gestão de Perfis (Submenu) -->
+              <li class="nav-item dropend">
+                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-person-badge"></i> 🎭 Gestão de Perfis
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/perfis/dashboard">
+                    <i class="bi bi-graph-up"></i> 📊 Dashboard
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/perfis">
+                    <i class="bi bi-list"></i> 📋 Listar Perfis
+                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/novo">
+                    <i class="bi bi-plus-circle"></i> ➕ Novo Perfil
+                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/assistente">
+                    <i class="bi bi-magic"></i> 🪄 Assistente de Criação
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/perfis/templates">
+                    <i class="bi bi-collection"></i> 📝 Templates
+                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/relatorio-permissoes">
+                    <i class="bi bi-clipboard-data"></i> 📊 Relatório de Permissões
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/perfis/import">
+                    <i class="bi bi-upload"></i> 📥 Importar
+                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/export">
+                    <i class="bi bi-download"></i> 📤 Exportar
+                  </a></li>
+                </ul>
+              </li>
               {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_config')|list) %}
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="/configuracao">
@@ -322,13 +478,26 @@
       
       // Função para mostrar dropdown
       function showDropdown() {
-        // Fechar todos os outros dropdowns imediatamente
-        dropdownToggles.forEach(function(otherToggle) {
-          if (otherToggle !== dropdownToggle) {
-            const otherDropdown = new bootstrap.Dropdown(otherToggle);
-            otherDropdown.hide();
-          }
-        });
+        // Fechar todos os outros dropdowns do mesmo nível
+        const parentDropdown = dropdownToggle.closest('.dropdown-menu');
+        if (parentDropdown) {
+          // É um submenu - fechar apenas outros submenus do mesmo nível
+          const siblingDropdowns = parentDropdown.querySelectorAll('.dropdown-toggle');
+          siblingDropdowns.forEach(function(otherToggle) {
+            if (otherToggle !== dropdownToggle) {
+              const otherDropdown = new bootstrap.Dropdown(otherToggle);
+              otherDropdown.hide();
+            }
+          });
+        } else {
+          // É um menu principal - fechar todos os outros
+          dropdownToggles.forEach(function(otherToggle) {
+            if (otherToggle !== dropdownToggle && !otherToggle.closest('.dropdown-menu')) {
+              const otherDropdown = new bootstrap.Dropdown(otherToggle);
+              otherDropdown.hide();
+            }
+          });
+        }
         
         clearTimeout(hideTimeout);
         const dropdown = new bootstrap.Dropdown(dropdownToggle);
@@ -340,7 +509,7 @@
         hideTimeout = setTimeout(function() {
           const dropdown = new bootstrap.Dropdown(dropdownToggle);
           dropdown.hide();
-        }, 300); // 300ms de delay
+        }, 200); // Reduzido para 200ms para melhor responsividade
       }
       
       // Cancelar esconder quando hover
@@ -352,16 +521,45 @@
       dropdownToggle.addEventListener('mouseenter', showDropdown);
       
       // Hover para abrir no menu
-      dropdownMenu.addEventListener('mouseenter', cancelHide);
+      if (dropdownMenu) {
+        dropdownMenu.addEventListener('mouseenter', cancelHide);
+        dropdownMenu.addEventListener('mouseleave', hideDropdown);
+      }
       
       // Mouse leave do toggle
       dropdownToggle.addEventListener('mouseleave', hideDropdown);
+    });
+    
+    // Tratamento especial para submenus (dropend)
+    const dropendToggles = document.querySelectorAll('.dropend .dropdown-toggle');
+    dropendToggles.forEach(function(dropendToggle) {
+      const dropendMenu = dropendToggle.nextElementSibling;
+      let dropendHideTimeout;
       
-      // Mouse leave do menu
-      dropdownMenu.addEventListener('mouseleave', hideDropdown);
+      function showDropend() {
+        clearTimeout(dropendHideTimeout);
+        const dropdown = new bootstrap.Dropdown(dropendToggle);
+        dropdown.show();
+      }
       
-      // Mouse enter no menu cancela o hide
-      dropdownMenu.addEventListener('mouseenter', cancelHide);
+      function hideDropend() {
+        dropendHideTimeout = setTimeout(function() {
+          const dropdown = new bootstrap.Dropdown(dropendToggle);
+          dropdown.hide();
+        }, 150); // Delay menor para submenus
+      }
+      
+      function cancelDropendHide() {
+        clearTimeout(dropendHideTimeout);
+      }
+      
+      dropendToggle.addEventListener('mouseenter', showDropend);
+      dropendToggle.addEventListener('mouseleave', hideDropend);
+      
+      if (dropendMenu) {
+        dropendMenu.addEventListener('mouseenter', cancelDropendHide);
+        dropendMenu.addEventListener('mouseleave', hideDropend);
+      }
     });
   });
 </script>

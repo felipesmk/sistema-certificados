@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório de Permissões{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-clipboard-data"></i> Relatório de Permissões</h4>
+        <div>
+                     <a href="{{ url_for('listar_perfis') }}" class="btn btn-secondary">
+             <i class="bi bi-arrow-left"></i> Voltar
+           </a>
+          <button type="button" class="btn btn-success" onclick="exportarRelatorio()">
+            <i class="bi bi-file-earmark-excel"></i> Exportar
+          </button>
+          <button type="button" class="btn btn-primary" onclick="imprimirRelatorio()">
+            <i class="bi bi-printer"></i> Imprimir
+          </button>
+        </div>
+      </div>
+      <div class="card-body" id="relatorio-content">
+        
+        <!-- Filtros -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+                         <div class="card bg-body-secondary">
+              <div class="card-body">
+                <h6><i class="bi bi-funnel"></i> Filtros do Relatório</h6>
+                <form method="GET" id="filtrosForm">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <label for="perfil_filter" class="form-label">Perfil</label>
+                      <select class="form-select" id="perfil_filter" name="perfil_id">
+                        <option value="">Todos os perfis</option>
+                        {% for perfil in todos_perfis %}
+                          <option value="{{ perfil.id }}" {% if request.args.get('perfil_id') == perfil.id|string %}selected{% endif %}>
+                            {{ perfil.nome }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="categoria_filter" class="form-label">Categoria</label>
+                      <select class="form-select" id="categoria_filter" name="categoria">
+                        <option value="">Todas as categorias</option>
+                        <option value="sistema" {% if request.args.get('categoria') == 'sistema' %}selected{% endif %}>Sistema</option>
+                        <option value="dados" {% if request.args.get('categoria') == 'dados' %}selected{% endif %}>Dados</option>
+                        <option value="comunicação" {% if request.args.get('categoria') == 'comunicação' %}selected{% endif %}>Comunicação</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="criticidade_filter" class="form-label">Criticidade</label>
+                      <select class="form-select" id="criticidade_filter" name="criticidade">
+                        <option value="">Todas as criticidades</option>
+                        <option value="alta" {% if request.args.get('criticidade') == 'alta' %}selected{% endif %}>Alta</option>
+                        <option value="média" {% if request.args.get('criticidade') == 'média' %}selected{% endif %}>Média</option>
+                        <option value="baixa" {% if request.args.get('criticidade') == 'baixa' %}selected{% endif %}>Baixa</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                      <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtrar
+                      </button>
+                                             <a href="{{ url_for('relatorio_permissoes') }}" class="btn btn-outline-secondary">
+                         <i class="bi bi-x-circle"></i> Limpar
+                       </a>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumo Executivo -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <h5><i class="bi bi-graph-up"></i> Resumo Executivo</h5>
+            <div class="row">
+              <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ estatisticas.total_perfis }}</h3>
+                    <small>Total de Perfis</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ estatisticas.total_permissoes }}</h3>
+                    <small>Total de Permissões</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ estatisticas.perfis_ativos }}</h3>
+                    <small>Perfis Ativos</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ estatisticas.usuarios_com_perfis }}</h3>
+                    <small>Usuários c/ Perfis</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matriz de Permissões -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <h5><i class="bi bi-grid-3x3"></i> Matriz de Permissões</h5>
+            
+            {% if matriz_permissoes %}
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Perfil</th>
+                      {% for permissao in todas_permissoes %}
+                        <th class="text-center" style="writing-mode: vertical-lr; text-orientation: mixed; min-width: 40px;" title="{{ permissao.descricao }}">
+                          {{ permissao.nome }}
+                        </th>
+                      {% endfor %}
+                      <th class="text-center">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for perfil_data in matriz_permissoes %}
+                      <tr>
+                        <td>
+                          <strong>{{ perfil_data.perfil.nome }}</strong>
+                          {% if not perfil_data.perfil.ativo %}
+                            <span class="badge bg-secondary">Inativo</span>
+                          {% endif %}
+                        </td>
+                        {% for permissao in todas_permissoes %}
+                          <td class="text-center">
+                            {% if permissao in perfil_data.permissoes %}
+                              <i class="bi bi-check-circle-fill text-success" title="Tem permissão"></i>
+                            {% else %}
+                              <i class="bi bi-x-circle text-muted" title="Não tem permissão"></i>
+                            {% endif %}
+                          </td>
+                        {% endfor %}
+                        <td class="text-center">
+                          <strong>{{ perfil_data.permissoes|length }}</strong>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Nenhum dado encontrado para os filtros aplicados.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Análise por Categoria -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6><i class="bi bi-pie-chart"></i> Permissões por Categoria</h6>
+            <canvas id="categoriasChart" width="400" height="200"></canvas>
+          </div>
+          <div class="col-md-6">
+            <h6><i class="bi bi-bar-chart"></i> Criticidade das Permissões</h6>
+            <canvas id="criticidadeChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Detalhamento por Perfil -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <h5><i class="bi bi-list-check"></i> Detalhamento por Perfil</h5>
+            
+            {% for perfil_data in matriz_permissoes %}
+              <div class="card mb-3">
+                <div class="card-header">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                      {% if perfil_data.perfil.icone %}
+                        <i class="bi bi-{{ perfil_data.perfil.icone }}"></i>
+                      {% endif %}
+                      {{ perfil_data.perfil.nome }}
+                      {% if not perfil_data.perfil.ativo %}
+                        <span class="badge bg-secondary">Inativo</span>
+                      {% endif %}
+                    </h6>
+                    <small class="text-muted">
+                      {{ perfil_data.permissoes|length }} permissão(ões) | {{ perfil_data.perfil.users|length }} usuário(s)
+                    </small>
+                  </div>
+                </div>
+                <div class="card-body">
+                  {% if perfil_data.perfil.descricao %}
+                    <p class="text-muted">{{ perfil_data.perfil.descricao }}</p>
+                  {% endif %}
+                  
+                  <div class="row">
+                    <div class="col-md-8">
+                      <h6>Permissões:</h6>
+                      {% if perfil_data.permissoes %}
+                        {% for permissao in perfil_data.permissoes %}
+                          <span class="badge me-1 mb-1 
+                            {% if permissao.criticidade == 'alta' %}bg-danger
+                            {% elif permissao.criticidade == 'média' %}bg-warning
+                            {% else %}bg-success{% endif %}"
+                            title="{{ permissao.descricao }}">
+                            {{ permissao.nome }}
+                          </span>
+                        {% endfor %}
+                      {% else %}
+                        <span class="text-muted">Nenhuma permissão atribuída</span>
+                      {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                      <h6>Usuários:</h6>
+                      {% if perfil_data.perfil.users %}
+                        <ul class="list-unstyled">
+                          {% for user in perfil_data.perfil.users[:3] %}
+                            <li><i class="bi bi-person"></i> {{ user.username }}</li>
+                          {% endfor %}
+                          {% if perfil_data.perfil.users|length > 3 %}
+                            <li><small class="text-muted">... e mais {{ perfil_data.perfil.users|length - 3 }}</small></li>
+                          {% endif %}
+                        </ul>
+                      {% else %}
+                        <span class="text-muted">Nenhum usuário</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Alertas de Segurança -->
+        {% if alertas_seguranca %}
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <h5><i class="bi bi-shield-exclamation"></i> Alertas de Segurança</h5>
+              {% for alerta in alertas_seguranca %}
+                <div class="alert alert-{{ alerta.tipo }} alert-dismissible fade show">
+                  <i class="bi bi-{{ alerta.icone }}"></i>
+                  <strong>{{ alerta.titulo }}</strong>
+                  <p class="mb-0">{{ alerta.mensagem }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Rodapé do Relatório -->
+        <div class="row mt-4">
+          <div class="col-md-12">
+            <hr>
+            <small class="text-muted">
+              <i class="bi bi-calendar3"></i> Relatório gerado em {{ now.strftime('%d/%m/%Y às %H:%M:%S') }}
+              | <i class="bi bi-person"></i> Por {{ current_user.username }}
+              | <i class="bi bi-database"></i> Sistema de Gestão de Certificados
+            </small>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Categorias
+const ctxCategorias = document.getElementById('categoriasChart').getContext('2d');
+new Chart(ctxCategorias, {
+  type: 'pie',
+  data: {
+    labels: {{ categorias_labels|tojson }},
+    datasets: [{
+      data: {{ categorias_data|tojson }},
+      backgroundColor: ['#dc3545', '#ffc107', '#28a745', '#17a2b8']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+// Gráfico de Criticidade
+const ctxCriticidade = document.getElementById('criticidadeChart').getContext('2d');
+new Chart(ctxCriticidade, {
+  type: 'bar',
+  data: {
+    labels: {{ criticidade_labels|tojson }},
+    datasets: [{
+      label: 'Quantidade',
+      data: {{ criticidade_data|tojson }},
+      backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+function exportarRelatorio() {
+  // Implementar exportação para Excel/PDF
+  window.print();
+}
+
+function imprimirRelatorio() {
+  window.print();
+}
+
+// CSS para impressão
+const style = document.createElement('style');
+style.textContent = `
+  @media print {
+    .btn, .card-header .btn, nav, .no-print { display: none !important; }
+    .card { border: 1px solid #000 !important; box-shadow: none !important; }
+    body { -webkit-print-color-adjust: exact; }
+  }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

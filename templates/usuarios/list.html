@@ -1,37 +1,257 @@
 {% extends 'base.html' %}
+
+{% block title %}Gestão de Usuários{% endblock %}
+
 {% block content %}
-<h2>Usuários</h2>
-<form method="get" class="form-inline mb-2">
-    <input type="text" name="busca_login" class="form-control mr-2" placeholder="Buscar login" value="{{ request.args.get('busca_login', '') }}">
-    <input type="text" name="busca_nome" class="form-control mr-2" placeholder="Buscar nome" value="{{ request.args.get('busca_nome', '') }}">
-    <button type="submit" class="btn btn-primary">Filtrar</button>
-    <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary ml-2">Limpar</a>
-</form>
-<a href="{{ url_for('novo_usuario') }}" class="btn btn-success mb-2">Novo Usuário</a>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Usuário</th>
-            <th>Nome</th>
-            <th>Perfil</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for usuario in usuarios %}
-        <tr>
-            <td>{{ usuario.id }}</td>
-            <td>{{ usuario.username }}</td>
-            <td>{{ usuario.nome }}</td>
-            <td>{{ usuario.role.nome if usuario.role else '-' }}</td>
-            <td>
-                <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" class="btn btn-primary btn-sm">Editar</a>
-                <a href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}" class="btn btn-danger btn-sm">Excluir</a>
-                <a href="{{ url_for('resetar_senha_usuario', usuario_id=usuario.id) }}" class="btn btn-warning btn-sm">Resetar Senha</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-people"></i> Gestão de Usuários</h4>
+        <div>
+          <a href="{{ url_for('dashboard_usuarios') }}" class="btn btn-info">
+            <i class="bi bi-graph-up"></i> Dashboard
+          </a>
+          <a href="{{ url_for('novo_usuario') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Novo Usuário
+          </a>
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+              <i class="bi bi-gear"></i> Ações
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{{ url_for('import_usuarios') }}">
+                <i class="bi bi-upload"></i> Importar
+              </a></li>
+              <li><a class="dropdown-item" href="{{ url_for('export_usuarios') }}">
+                <i class="bi bi-download"></i> Exportar
+              </a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Filtros Avançados -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card bg-body-secondary">
+              <div class="card-body">
+                <h6><i class="bi bi-funnel"></i> Filtros</h6>
+                <form method="get" id="filtrosForm">
+                  <div class="row">
+                    <div class="col-md-2">
+                      <label for="busca_login" class="form-label">Login</label>
+                      <input type="text" name="busca_login" class="form-control" placeholder="Buscar login" value="{{ request.args.get('busca_login', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="busca_nome" class="form-label">Nome</label>
+                      <input type="text" name="busca_nome" class="form-control" placeholder="Buscar nome" value="{{ request.args.get('busca_nome', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="status" class="form-label">Status</label>
+                      <select class="form-select" name="status">
+                        <option value="">Todos</option>
+                        <option value="ativo" {% if request.args.get('status') == 'ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="inativo" {% if request.args.get('status') == 'inativo' %}selected{% endif %}>Inativo</option>
+                        <option value="bloqueado" {% if request.args.get('status') == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
+                      </select>
+                    </div>
+                    <div class="col-md-2">
+                      <label for="tipo" class="form-label">Tipo</label>
+                      <select class="form-select" name="tipo">
+                        <option value="">Todos</option>
+                        <option value="local" {% if request.args.get('tipo') == 'local' %}selected{% endif %}>Local</option>
+                        <option value="ldap" {% if request.args.get('tipo') == 'ldap' %}selected{% endif %}>LDAP</option>
+                      </select>
+                    </div>
+                    <div class="col-md-2">
+                      <label for="perfil_id" class="form-label">Perfil</label>
+                      <select class="form-select" name="perfil_id">
+                        <option value="">Todos</option>
+                        {% for perfil in perfis_para_filtro %}
+                          <option value="{{ perfil.id }}" {% if request.args.get('perfil_id') == perfil.id|string %}selected{% endif %}>{{ perfil.nome }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                      <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtrar
+                      </button>
+                      <a href="{{ url_for('listar_usuarios') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Limpar
+                      </a>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ações em Lote -->
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <form id="bulkForm" method="post" action="{{ url_for('bulk_action_usuarios') }}">
+              <div class="d-flex align-items-center">
+                <input type="checkbox" id="selectAll" class="form-check-input me-2">
+                <label for="selectAll" class="form-check-label me-3">Selecionar Todos</label>
+                
+                <select name="acao" class="form-select me-2" style="width: auto;" required>
+                  <option value="">Selecione uma ação...</option>
+                  <option value="ativar">Ativar</option>
+                  <option value="inativar">Inativar</option>
+                  <option value="bloquear">Bloquear</option>
+                  <option value="trocar_perfil">Trocar Perfil</option>
+                  <option value="excluir">Excluir</option>
+                </select>
+                
+                <select name="novo_perfil_id" class="form-select me-2" style="width: auto; display: none;" id="novoPerfilSelect">
+                  <option value="">Selecione um perfil...</option>
+                  {% for perfil in perfis_para_filtro %}
+                    <option value="{{ perfil.id }}">{{ perfil.nome }}</option>
+                  {% endfor %}
+                </select>
+                
+                <button type="submit" class="btn btn-warning" onclick="return confirm('Tem certeza que deseja executar esta ação?')">
+                  <i class="bi bi-lightning"></i> Executar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tabela de Usuários -->
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th width="40">
+                  <input type="checkbox" id="selectAllTable" class="form-check-input">
+                </th>
+                <th>ID</th>
+                <th>Usuário</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Tipo</th>
+                <th>Perfil</th>
+                <th>Departamento</th>
+                <th>Último Login</th>
+                <th width="200">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for usuario in usuarios %}
+              <tr>
+                <td>
+                  <input type="checkbox" name="usuario_ids" value="{{ usuario.id }}" class="form-check-input usuario-checkbox" form="bulkForm">
+                </td>
+                <td>{{ usuario.id }}</td>
+                <td>
+                  <strong>{{ usuario.username }}</strong>
+                  {% if usuario.username == 'admin' %}
+                    <span class="badge bg-danger ms-1">ADMIN</span>
+                  {% endif %}
+                </td>
+                <td>{{ usuario.nome }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>
+                  {% if usuario.status == 'ativo' %}
+                    <span class="badge bg-success">Ativo</span>
+                  {% elif usuario.status == 'inativo' %}
+                    <span class="badge bg-secondary">Inativo</span>
+                  {% elif usuario.status == 'bloqueado' %}
+                    <span class="badge bg-danger">Bloqueado</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if usuario.ldap_user %}
+                    <span class="badge bg-warning">LDAP</span>
+                  {% else %}
+                    <span class="badge bg-primary">Local</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if usuario.role %}
+                    <span class="badge" style="background-color: {{ usuario.role.cor or '#6c757d' }}">
+                      {{ usuario.role.nome }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>{{ usuario.departamento or '-' }}</td>
+                <td>
+                  {% if usuario.last_login %}
+                    {{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}
+                  {% else %}
+                    <span class="text-muted">Nunca</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-primary" title="Editar">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{{ url_for('historico_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-info" title="Histórico">
+                      <i class="bi bi-clock-history"></i>
+                    </a>
+                    <a href="{{ url_for('resetar_senha_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-warning" title="Resetar Senha">
+                      <i class="bi bi-key"></i>
+                    </a>
+                    {% if usuario.username != 'admin' %}
+                      <a href="{{ url_for('excluir_usuario', usuario_id=usuario.id) }}" class="btn btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este usuário?')">
+                        <i class="bi bi-trash"></i>
+                      </a>
+                    {% else %}
+                      <span class="btn btn-outline-secondary disabled" title="Usuário protegido">
+                        <i class="bi bi-shield"></i>
+                      </span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+              {% if not usuarios %}
+              <tr>
+                <td colspan="11" class="text-center text-muted">
+                  <i class="bi bi-inbox"></i> Nenhum usuário encontrado.
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Seleção de todos os checkboxes
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.usuario-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+
+document.getElementById('selectAllTable').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.usuario-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    document.getElementById('selectAll').checked = this.checked;
+});
+
+// Mostrar/esconder select de perfil
+document.querySelector('select[name="acao"]').addEventListener('change', function() {
+    const perfilSelect = document.getElementById('novoPerfilSelect');
+    if (this.value === 'trocar_perfil') {
+        perfilSelect.style.display = 'block';
+        perfilSelect.required = true;
+    } else {
+        perfilSelect.style.display = 'none';
+        perfilSelect.required = false;
+    }
+});
+</script>
 {% endblock %} 

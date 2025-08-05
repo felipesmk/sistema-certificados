@@ -1,9 +1,54 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Excluir Usuário</h2>
-<p>Tem certeza que deseja excluir o usuário <strong>{{ usuario.username }}</strong>?</p>
-<form method="post">
-    <button type="submit" class="btn btn-danger">Excluir</button>
-    <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">Cancelar</a>
-</form>
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <div class="card">
+      <div class="card-header">
+        <h4><i class="bi bi-exclamation-triangle"></i> Confirmar Exclusão</h4>
+      </div>
+      <div class="card-body">
+        {% if usuario.username == 'admin' %}
+          <div class="alert alert-danger">
+            <i class="bi bi-shield-exclamation"></i>
+            <strong>ACESSO NEGADO!</strong> O usuário admin não pode ser excluído por questões de segurança.
+          </div>
+          <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">Voltar</a>
+        {% elif usuario.id == current_user.id %}
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>ATENÇÃO!</strong> Você não pode excluir sua própria conta.
+          </div>
+          <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">Voltar</a>
+        {% else %}
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>ATENÇÃO!</strong> Esta ação é irreversível.
+          </div>
+          
+          <h5>Dados do Usuário:</h5>
+          <ul>
+            <li><strong>ID:</strong> {{ usuario.id }}</li>
+            <li><strong>Usuário:</strong> {{ usuario.username }}</li>
+            <li><strong>Nome:</strong> {{ usuario.nome }}</li>
+            <li><strong>E-mail:</strong> {{ usuario.email }}</li>
+            <li><strong>Perfil:</strong> {{ usuario.role.nome if usuario.role else 'Sem perfil' }}</li>
+          </ul>
+          
+          <p class="text-danger">
+            <strong>Tem certeza que deseja excluir o usuário <strong>{{ usuario.username }}</strong>?</strong>
+          </p>
+          
+          <form method="post">
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Confirmar Exclusão
+            </button>
+            <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">
+              <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %} 

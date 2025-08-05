@@ -1,36 +1,304 @@
 {% extends 'base.html' %}
+
+{% block title %}Gestão de Perfis{% endblock %}
+
 {% block content %}
-<h2>Perfis</h2>
-<a href="{{ url_for('novo_perfil') }}" class="btn btn-success mb-2">Novo Perfil</a>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Permissões</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for perfil in perfis %}
-        <tr>
-            <td>{{ perfil.id }}</td>
-            <td>{{ perfil.nome }}</td>
-            <td>{{ perfil.descricao }}</td>
-            <td>
-                {% for perm in perfil.permissions %}
-                    <span class="badge bg-info">{{ perm.nome }}</span>
-                {% else %}
-                    <span class="text-muted">Nenhuma</span>
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-person-badge me-2"></i>Gestão de Perfis</h2>
+        <div class="btn-group">
+          <a href="{{ url_for('dashboard_perfis') }}" class="btn btn-info">
+            <i class="bi bi-graph-up me-1"></i>Dashboard
+          </a>
+          <a href="{{ url_for('assistente_perfil') }}" class="btn btn-success">
+            <i class="bi bi-magic me-1"></i>Assistente
+          </a>
+          <a href="{{ url_for('novo_perfil') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Novo Perfil
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Filtros e Busca -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control" id="filtro" placeholder="Buscar perfis...">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" id="filtroStatus">
+              <option value="">Todos os status</option>
+              <option value="ativo">Apenas ativos</option>
+              <option value="inativo">Apenas inativos</option>
+              <option value="ldap">Perfis LDAP</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ações em Lote -->
+        <form id="bulkForm" action="{{ url_for('bulk_action_perfis') }}" method="POST">
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <div class="d-flex align-items-center">
+                <span class="me-2">Com selecionados:</span>
+                <select name="action" class="form-select me-2" style="width: auto;" id="bulkAction">
+                  <option value="">Escolher ação...</option>
+                  <option value="ativar">✅ Ativar</option>
+                  <option value="desativar">❌ Desativar</option>
+                  <option value="excluir">🗑️ Excluir</option>
+                </select>
+                <button type="submit" class="btn btn-warning" id="bulkBtn" disabled>
+                  <i class="bi bi-lightning me-1"></i>Executar
+                </button>
+              </div>
+            </div>
+            <div class="col-md-4 text-end">
+              <small class="text-muted">
+                <span id="selectedCount">0</span> perfil(s) selecionado(s)
+              </small>
+            </div>
+          </div>
+
+          <!-- Tabela de Perfis -->
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th width="50">
+                    <input type="checkbox" id="selectAll" class="form-check-input">
+                  </th>
+                  <th width="60">Status</th>
+                  <th>Perfil</th>
+                  <th>Descrição</th>
+                  <th>Permissões</th>
+                  <th>Usuários</th>
+                  <th>Tipo</th>
+                  <th width="200">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="perfisTable">
+                {% for perfil in perfis %}
+                <tr data-nome="{{ perfil.nome|lower }}" 
+                    data-status="{{ 'ativo' if perfil.ativo else 'inativo' }}" 
+                    data-tipo="{{ 'ldap' if perfil.is_ldap_role else 'local' }}">
+                  <td>
+                    {% if perfil.nome != 'admin' %}
+                    <input type="checkbox" 
+                           name="perfis_ids" 
+                           value="{{ perfil.id }}" 
+                           class="form-check-input perfil-checkbox">
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      {% if perfil.ativo %}
+                      <span class="badge bg-success">
+                        <i class="bi bi-check-circle me-1"></i>Ativo
+                      </span>
+                      {% else %}
+                      <span class="badge bg-secondary">
+                        <i class="bi bi-pause-circle me-1"></i>Inativo
+                      </span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-{{ perfil.icone or 'person' }} me-2" 
+                         style="font-size: 1.2rem; color: {{ perfil.cor or '#6c757d' }};"></i>
+                      <div>
+                        <strong>{{ perfil.nome }}</strong>
+                        {% if perfil.nome == 'admin' %}
+                        <i class="bi bi-shield-fill text-warning ms-1" title="Perfil protegido"></i>
+                        {% endif %}
+                        {% if perfil.parent %}
+                        <br><small class="text-muted">
+                          <i class="bi bi-arrow-up-right me-1"></i>Herda de: {{ perfil.parent.nome }}
+                        </small>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ perfil.descricao or 'Sem descrição' }}</span>
+                    {% if perfil.created_by %}
+                    <br><small class="text-muted">
+                      <i class="bi bi-person me-1"></i>por {{ perfil.created_by }}
+                    </small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-1">
+                      {% for perm in perfil.permissions[:3] %}
+                      <span class="badge bg-info">{{ perm.nome }}</span>
+                      {% endfor %}
+                      {% if perfil.permissions|length > 3 %}
+                      <span class="badge bg-secondary">+{{ perfil.permissions|length - 3 }}</span>
+                      {% elif perfil.permissions|length == 0 %}
+                      <span class="text-muted">Nenhuma</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">
+                      {{ perfil.users|length if perfil.users else 0 }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if perfil.is_ldap_role %}
+                    <span class="badge bg-info">
+                      <i class="bi bi-server me-1"></i>LDAP
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">
+                      <i class="bi bi-database me-1"></i>Local
+                    </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <a href="{{ url_for('editar_perfil', perfil_id=perfil.id) }}" 
+                         class="btn btn-sm btn-outline-primary" 
+                         title="Editar">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <a href="{{ url_for('clonar_perfil', perfil_id=perfil.id) }}" 
+                         class="btn btn-sm btn-outline-success" 
+                         title="Clonar">
+                        <i class="bi bi-files"></i>
+                      </a>
+                      <a href="{{ url_for('historico_perfil', perfil_id=perfil.id) }}" 
+                         class="btn btn-sm btn-outline-info" 
+                         title="Histórico">
+                        <i class="bi bi-clock-history"></i>
+                      </a>
+                      {% if perfil.nome != 'admin' %}
+                      <a href="{{ url_for('toggle_perfil_status', perfil_id=perfil.id) }}" 
+                         class="btn btn-sm btn-outline-warning" 
+                         title="{{ 'Desativar' if perfil.ativo else 'Ativar' }}">
+                        <i class="bi bi-{{ 'pause' if perfil.ativo else 'play' }}"></i>
+                      </a>
+                      <a href="{{ url_for('excluir_perfil', perfil_id=perfil.id) }}" 
+                         class="btn btn-sm btn-outline-danger" 
+                         title="Excluir"
+                         onclick="return confirm('Tem certeza que deseja excluir este perfil?')">
+                        <i class="bi bi-trash"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
                 {% endfor %}
-            </td>
-            <td>
-                <a href="{{ url_for('editar_perfil', perfil_id=perfil.id) }}" class="btn btn-primary btn-sm">Editar</a>
-                <a href="{{ url_for('excluir_perfil', perfil_id=perfil.id) }}" class="btn btn-danger btn-sm">Excluir</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+              </tbody>
+            </table>
+          </div>
+        </form>
+
+        {% if not perfis %}
+        <div class="text-center py-5">
+          <i class="bi bi-person-badge" style="font-size: 3rem; color: #ccc;"></i>
+          <h5 class="mt-3 text-muted">Nenhum perfil encontrado</h5>
+          <p class="text-muted">Comece criando um novo perfil para o sistema.</p>
+          <a href="{{ url_for('novo_perfil') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Criar Primeiro Perfil
+          </a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Funcionalidade de filtro
+document.getElementById('filtro').addEventListener('input', function() {
+  filtrarTabela();
+});
+
+document.getElementById('filtroStatus').addEventListener('change', function() {
+  filtrarTabela();
+});
+
+function filtrarTabela() {
+  const filtroTexto = document.getElementById('filtro').value.toLowerCase();
+  const filtroStatus = document.getElementById('filtroStatus').value;
+  const rows = document.querySelectorAll('#perfisTable tr');
+  
+  rows.forEach(row => {
+    const nome = row.dataset.nome || '';
+    const status = row.dataset.status || '';
+    const tipo = row.dataset.tipo || '';
+    
+    const matchTexto = nome.includes(filtroTexto);
+    const matchStatus = !filtroStatus || 
+                       status === filtroStatus || 
+                       (filtroStatus === 'ldap' && tipo === 'ldap');
+    
+    row.style.display = matchTexto && matchStatus ? '' : 'none';
+  });
+}
+
+// Funcionalidade de seleção em lote
+document.getElementById('selectAll').addEventListener('change', function() {
+  const checkboxes = document.querySelectorAll('.perfil-checkbox');
+  checkboxes.forEach(cb => {
+    cb.checked = this.checked;
+  });
+  updateBulkActions();
+});
+
+document.querySelectorAll('.perfil-checkbox').forEach(checkbox => {
+  checkbox.addEventListener('change', updateBulkActions);
+});
+
+document.getElementById('bulkAction').addEventListener('change', function() {
+  const bulkBtn = document.getElementById('bulkBtn');
+  const selectedCount = document.querySelectorAll('.perfil-checkbox:checked').length;
+  bulkBtn.disabled = !this.value || selectedCount === 0;
+});
+
+function updateBulkActions() {
+  const selected = document.querySelectorAll('.perfil-checkbox:checked');
+  const bulkBtn = document.getElementById('bulkBtn');
+  const bulkAction = document.getElementById('bulkAction');
+  const selectedCount = document.getElementById('selectedCount');
+  
+  selectedCount.textContent = selected.length;
+  bulkBtn.disabled = selected.length === 0 || !bulkAction.value;
+  
+  // Atualizar estado do selectAll
+  const allCheckboxes = document.querySelectorAll('.perfil-checkbox');
+  const selectAll = document.getElementById('selectAll');
+  selectAll.indeterminate = selected.length > 0 && selected.length < allCheckboxes.length;
+  selectAll.checked = selected.length === allCheckboxes.length;
+}
+
+// Confirmação para ações em lote
+document.getElementById('bulkForm').addEventListener('submit', function(e) {
+  const action = document.getElementById('bulkAction').value;
+  const selected = document.querySelectorAll('.perfil-checkbox:checked').length;
+  
+  if (action === 'excluir') {
+    if (!confirm(`Tem certeza que deseja excluir ${selected} perfil(s)?`)) {
+      e.preventDefault();
+    }
+  } else if (action === 'desativar') {
+    if (!confirm(`Tem certeza que deseja desativar ${selected} perfil(s)?`)) {
+      e.preventDefault();
+    }
+  }
+});
+
+// Tooltip para ícones
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
 {% endblock %} 

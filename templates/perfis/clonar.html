@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Clonar Perfil{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="bi bi-files me-2"></i>Clonar Perfil</h2>
+      </div>
+      <div class="card-body">
+        
+        <!-- Informações do Perfil Original -->
+        <div class="alert alert-info">
+          <h5><i class="bi bi-info-circle me-2"></i>Clonando de:</h5>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-{{ perfil.icone or 'person' }} me-2" style="font-size: 1.5rem; color: {{ perfil.cor or '#6c757d' }};"></i>
+            <div>
+              <strong>{{ perfil.nome }}</strong><br>
+              <small class="text-muted">{{ perfil.descricao or 'Sem descrição' }}</small><br>
+              <span class="badge bg-secondary">{{ perfil.permissions|length }} permissões</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulário de Clonagem -->
+        <form method="POST">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="nome" class="form-label">
+                  <i class="bi bi-tag me-1"></i>Nome do Novo Perfil <span class="text-danger">*</span>
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       id="nome" 
+                       name="nome" 
+                       value="Cópia de {{ perfil.nome }}"
+                       placeholder="Digite o nome do novo perfil"
+                       required>
+                <div class="form-text">O nome deve ser único no sistema</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="descricao" class="form-label">
+                  <i class="bi bi-text-paragraph me-1"></i>Descrição
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       id="descricao" 
+                       name="descricao" 
+                       value="Clone de {{ perfil.nome }}"
+                       placeholder="Descrição do perfil clonado">
+                <div class="form-text">Descrição opcional para o perfil</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissões que serão Clonadas -->
+          <div class="mb-4">
+            <h5><i class="bi bi-shield-check me-2"></i>Permissões que serão clonadas:</h5>
+            {% if perfil.permissions %}
+            <div class="row">
+              {% for perm in perfil.permissions %}
+              <div class="col-md-6">
+                <div class="card mb-2 border-success">
+                  <div class="card-body py-2">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-check-circle text-success me-2"></i>
+                      <div>
+                        <strong>{{ perm.nome }}</strong><br>
+                        <small class="text-muted">{{ perm.descricao or 'Sem descrição' }}</small>
+                        {% if perm.categoria %}
+                        <span class="badge bg-info ms-1">{{ perm.categoria }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Este perfil não possui permissões atribuídas.
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Configurações Avançadas -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6><i class="bi bi-gear me-2"></i>Configurações Visuais (copiadas)</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="text-center">
+                    <label class="form-label">Cor</label>
+                    <div style="width: 50px; height: 50px; background-color: {{ perfil.cor or '#6c757d' }}; border-radius: 8px; margin: 0 auto;"></div>
+                    <small class="text-muted">{{ perfil.cor or '#6c757d' }}</small>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="text-center">
+                    <label class="form-label">Ícone</label>
+                    <div>
+                      <i class="bi bi-{{ perfil.icone or 'person' }}" style="font-size: 2rem; color: {{ perfil.cor or '#6c757d' }};"></i>
+                    </div>
+                    <small class="text-muted">{{ perfil.icone or 'bi-person' }}</small>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="text-center">
+                    <label class="form-label">Prioridade</label>
+                    <div style="font-size: 1.5rem; font-weight: bold;">{{ perfil.prioridade or 0 }}</div>
+                    <small class="text-muted">Hierarquia</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('listar_perfis') }}" class="btn btn-secondary">
+              <i class="bi bi-arrow-left me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-files me-1"></i>Clonar Perfil
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-selecionar nome para facilitar edição
+document.getElementById('nome').select();
+</script>
+{% endblock %}

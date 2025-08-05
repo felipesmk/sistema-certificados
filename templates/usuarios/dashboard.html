@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Usuários{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-graph-up"></i> Dashboard de Usuários</h4>
+        <div>
+          <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">
+            <i class="bi bi-list"></i> Listar Usuários
+          </a>
+          <a href="{{ url_for('novo_usuario') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Novo Usuário
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.total_usuarios }}</h3>
+                <small>Total de Usuários</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.usuarios_ativos }}</h3>
+                <small>Usuários Ativos</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.usuarios_ldap }}</h3>
+                <small>Usuários LDAP</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.novos_usuarios }}</h3>
+                <small>Novos (30 dias)</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segunda linha de estatísticas -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.usuarios_inativos }}</h3>
+                <small>Usuários Inativos</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-danger text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.usuarios_bloqueados }}</h3>
+                <small>Usuários Bloqueados</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-dark text-white">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.usuarios_locais }}</h3>
+                <small>Usuários Locais</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-light text-dark">
+              <div class="card-body text-center">
+                <h3>{{ estatisticas.usuarios_ativos_recente }}</h3>
+                <small>Login Recente (7 dias)</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6><i class="bi bi-pie-chart"></i> Distribuição por Perfis</h6>
+              </div>
+              <div class="card-body">
+                <canvas id="perfisChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6><i class="bi bi-bar-chart"></i> Logins por Mês</h6>
+              </div>
+              <div class="card-body">
+                <canvas id="loginsChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Usuários e Departamentos -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6><i class="bi bi-trophy"></i> Top 10 Usuários (Logins)</h6>
+              </div>
+              <div class="card-body">
+                {% if top_usuarios %}
+                  <div class="table-responsive">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Usuário</th>
+                          <th>Nome</th>
+                          <th>Logins</th>
+                          <th>Último Login</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for usuario in top_usuarios %}
+                          <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ usuario.username }}</td>
+                            <td>{{ usuario.nome }}</td>
+                            <td><span class="badge bg-primary">{{ usuario.login_count }}</span></td>
+                            <td>
+                              {% if usuario.last_login %}
+                                {{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}
+                              {% else %}
+                                <span class="text-muted">Nunca</span>
+                              {% endif %}
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhum dado de login disponível.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6><i class="bi bi-building"></i> Top 5 Departamentos</h6>
+              </div>
+              <div class="card-body">
+                {% if departamentos %}
+                  <div class="table-responsive">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Departamento</th>
+                          <th>Usuários</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for dept in departamentos %}
+                          <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ dept.departamento }}</td>
+                            <td><span class="badge bg-info">{{ dept.total }}</span></td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <p class="text-muted">Nenhum departamento informado.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts para gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de distribuição por perfis
+const perfisCtx = document.getElementById('perfisChart').getContext('2d');
+const perfisData = {
+    labels: [
+        {% for perfil in perfis_distribuicao %}
+        '{{ perfil.nome }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        data: [
+            {% for perfil in perfis_distribuicao %}
+            {{ perfil.total_usuarios }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: [
+            {% for perfil in perfis_distribuicao %}
+            '{{ perfil.cor or "#6c757d" }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }]
+};
+
+new Chart(perfisCtx, {
+    type: 'pie',
+    data: perfisData,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gráfico de logins por mês
+const loginsCtx = document.getElementById('loginsChart').getContext('2d');
+const loginsData = {
+    labels: [
+        {% for mes in logins_por_mes|reverse %}
+        '{{ mes.mes }}'{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        label: 'Logins',
+        data: [
+            {% for mes in logins_por_mes|reverse %}
+            {{ mes.count }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+    }]
+};
+
+new Chart(loginsCtx, {
+    type: 'bar',
+    data: loginsData,
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

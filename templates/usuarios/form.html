@@ -1,35 +1,276 @@
 {% extends 'base.html' %}
+
+{% block title %}{% if usuario %}Editar Usuário{% else %}Novo Usuário{% endif %}{% endblock %}
+
 {% block content %}
-<h2>{% if usuario %}Editar Usuário{% else %}Novo Usuário{% endif %}</h2>
-<form method="post">
-    <div class="form-group">
-        <label for="username">Usuário</label>
-        <input type="text" class="form-control" id="username" name="username" required value="{{ usuario.username if usuario else '' }}">
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card">
+      <div class="card-header">
+        <h4>
+          <i class="bi bi-person-gear"></i>
+          {% if usuario %}Editar Usuário: {{ usuario.username }}{% else %}Novo Usuário{% endif %}
+        </h4>
+      </div>
+      <div class="card-body">
+        
+        <form method="post" novalidate>
+          <!-- Campos obrigatórios -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="username" class="form-label">
+                <i class="bi bi-person"></i> Nome de Usuário <span class="text-danger">*</span>
+              </label>
+              <input type="text" 
+                     class="form-control" 
+                     id="username" 
+                     name="username" 
+                     required 
+                     value="{{ form_data.username if form_data else (usuario.username if usuario else '') }}"
+                     {% if usuario and usuario.username == 'admin' %}readonly{% endif %}>
+              <div class="form-text">Mínimo 3 caracteres, sem espaços</div>
+            </div>
+            <div class="col-md-6">
+              <label for="email" class="form-label">
+                <i class="bi bi-envelope"></i> E-mail <span class="text-danger">*</span>
+              </label>
+              <input type="email" 
+                     class="form-control" 
+                     id="email" 
+                     name="email" 
+                     required 
+                     value="{{ form_data.email if form_data else (usuario.email if usuario else '') }}">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="nome" class="form-label">
+                <i class="bi bi-person-badge"></i> Nome Completo <span class="text-danger">*</span>
+              </label>
+              <input type="text" 
+                     class="form-control" 
+                     id="nome" 
+                     name="nome" 
+                     required 
+                     value="{{ form_data.nome if form_data else (usuario.nome if usuario else '') }}">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="password" class="form-label">
+                <i class="bi bi-key"></i> Senha 
+                {% if not usuario %}<span class="text-danger">*</span>{% endif %}
+              </label>
+              <input type="password" 
+                     class="form-control" 
+                     id="password" 
+                     name="password" 
+                     {% if not usuario %}required{% endif %}>
+              <div class="form-text">
+                {% if usuario %}
+                  Deixe em branco para não alterar. Mínimo 6 caracteres.
+                {% else %}
+                  Mínimo 6 caracteres
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="status" class="form-label">
+                <i class="bi bi-toggle-on"></i> Status <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="status" name="status" required>
+                <option value="ativo" {% if (form_data.status if form_data else (usuario.status if usuario else 'ativo')) == 'ativo' %}selected{% endif %}>Ativo</option>
+                <option value="inativo" {% if (form_data.status if form_data else (usuario.status if usuario else '')) == 'inativo' %}selected{% endif %}>Inativo</option>
+                <option value="bloqueado" {% if (form_data.status if form_data else (usuario.status if usuario else '')) == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Perfil -->
+          {% if roles and (not usuario or usuario.username != 'admin') %}
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="role_id" class="form-label">
+                <i class="bi bi-person-badge"></i> Perfil <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="role_id" name="role_id" required>
+                <option value="">Selecione um perfil...</option>
+                {% for role in roles %}
+                  <option value="{{ role.id }}" 
+                          {% if (form_data.role_id if form_data else (usuario.role_id if usuario else '')) == role.id|string %}selected{% endif %}
+                          data-color="{{ role.cor or '#6c757d' }}">
+                    {{ role.nome }}
+                    {% if role.descricao %} - {{ role.descricao }}{% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {% elif usuario and usuario.username == 'admin' %}
+          <div class="alert alert-warning">
+            <i class="bi bi-shield-exclamation"></i>
+            <strong>Usuário Admin:</strong> O perfil do usuário admin não pode ser alterado.
+          </div>
+          {% endif %}
+
+          <!-- Campos adicionais -->
+          <h6 class="border-bottom pb-2 mb-3">
+            <i class="bi bi-info-circle"></i> Informações Adicionais
+          </h6>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="telefone" class="form-label">
+                <i class="bi bi-telephone"></i> Telefone
+              </label>
+              <input type="tel" 
+                     class="form-control" 
+                     id="telefone" 
+                     name="telefone" 
+                     value="{{ form_data.telefone if form_data else (usuario.telefone if usuario else '') }}"
+                     placeholder="(11) 99999-9999">
+              <div class="form-text">Formato: (11) 99999-9999</div>
+            </div>
+            <div class="col-md-6">
+              <label for="departamento" class="form-label">
+                <i class="bi bi-building"></i> Departamento
+              </label>
+              <input type="text" 
+                     class="form-control" 
+                     id="departamento" 
+                     name="departamento" 
+                     value="{{ form_data.departamento if form_data else (usuario.departamento if usuario else '') }}"
+                     placeholder="Ex: TI, RH, Financeiro">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="cargo" class="form-label">
+                <i class="bi bi-briefcase"></i> Cargo
+              </label>
+              <input type="text" 
+                     class="form-control" 
+                     id="cargo" 
+                     name="cargo" 
+                     value="{{ form_data.cargo if form_data else (usuario.cargo if usuario else '') }}"
+                     placeholder="Ex: Analista, Gerente, Coordenador">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="observacoes" class="form-label">
+                <i class="bi bi-journal-text"></i> Observações
+              </label>
+              <textarea class="form-control" 
+                        id="observacoes" 
+                        name="observacoes" 
+                        rows="3" 
+                        placeholder="Informações adicionais sobre o usuário...">{{ form_data.observacoes if form_data else (usuario.observacoes if usuario else '') }}</textarea>
+            </div>
+          </div>
+
+          {% if usuario %}
+          <!-- Informações do sistema -->
+          <h6 class="border-bottom pb-2 mb-3">
+            <i class="bi bi-gear"></i> Informações do Sistema
+          </h6>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Criado em:</label>
+              <p class="form-control-plaintext">
+                {% if usuario.created_at %}
+                  {{ usuario.created_at.strftime('%d/%m/%Y às %H:%M') }}
+                {% else %}
+                  Não informado
+                {% endif %}
+              </p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Último Login:</label>
+              <p class="form-control-plaintext">
+                {% if usuario.last_login %}
+                  {{ usuario.last_login.strftime('%d/%m/%Y às %H:%M') }}
+                {% else %}
+                  Nunca logou
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          {% if usuario.ldap_user %}
+          <div class="alert alert-info">
+            <i class="bi bi-server"></i>
+            <strong>Usuário LDAP:</strong> Este usuário é sincronizado com o Active Directory.
+          </div>
+          {% endif %}
+          {% endif %}
+
+          <!-- Botões -->
+          <div class="row mt-4">
+            <div class="col-md-12">
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> 
+                {% if usuario %}Atualizar{% else %}Criar{% endif %} Usuário
+              </button>
+              <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              {% if usuario %}
+                <a href="{{ url_for('historico_usuario', usuario_id=usuario.id) }}" class="btn btn-info">
+                  <i class="bi bi-clock-history"></i> Ver Histórico
+                </a>
+              {% endif %}
+            </div>
+          </div>
+
+        </form>
+      </div>
     </div>
-    <div class="form-group">
-        <label for="nome">Nome</label>
-        <input type="text" class="form-control" id="nome" name="nome" required value="{{ usuario.nome if usuario else '' }}">
-    </div>
-    <div class="form-group">
-        <label for="email">E-mail</label>
-        <input type="email" class="form-control" id="email" name="email" required value="{{ usuario.email if usuario else '' }}">
-    </div>
-    <div class="form-group">
-        <label for="password">Senha {% if usuario %}(deixe em branco para não alterar){% endif %}</label>
-        <input type="password" class="form-control" id="password" name="password" {% if not usuario %}required{% endif %}>
-    </div>
-    {% if roles and (not usuario or usuario.username != 'admin') %}
-    <div class="form-group mb-3">
-        <label for="role_id">Perfil</label>
-        <select class="form-control" id="role_id" name="role_id" required>
-            <option value="">Selecione...</option>
-            {% for role in roles %}
-                <option value="{{ role.id }}" {% if usuario and usuario.role_id == role.id %}selected{% endif %}>{{ role.nome }}</option>
-            {% endfor %}
-        </select>
-    </div>
+  </div>
+</div>
+
+<script>
+// Máscara para telefone
+document.getElementById('telefone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 11) {
+        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (value.length >= 7) {
+        value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (value.length >= 3) {
+        value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    }
+    e.target.value = value;
+});
+
+// Validação em tempo real
+document.querySelector('form').addEventListener('submit', function(e) {
+    let valid = true;
+    const campos = ['username', 'nome', 'email'];
+    
+    {% if not usuario %}
+    campos.push('password');
     {% endif %}
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">Cancelar</a>
-</form>
+    
+    campos.forEach(campo => {
+        const input = document.getElementById(campo);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            valid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!valid) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+    }
+});
+</script>
 {% endblock %} 

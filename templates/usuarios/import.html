@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Usuários{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-upload"></i> Importar Usuários</h4>
+        <div>
+          <a href="{{ url_for('export_usuarios') }}" class="btn btn-info">
+            <i class="bi bi-download"></i> Exportar Exemplo
+          </a>
+          <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Instruções -->
+        <div class="alert alert-info">
+          <h6><i class="bi bi-info-circle"></i> Instruções de Importação</h6>
+          <ul class="mb-0">
+            <li>O arquivo deve ser no formato JSON</li>
+            <li>Usuários existentes serão atualizados (exceto o admin)</li>
+            <li>Novos usuários receberão a senha padrão "123456"</li>
+            <li>Perfis inexistentes serão ignorados</li>
+            <li>O processo é reversível através do histórico</li>
+          </ul>
+        </div>
+
+        <!-- Formulário de Upload -->
+        <form method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="file" class="form-label">
+              <i class="bi bi-file-earmark-text"></i> Arquivo JSON <span class="text-danger">*</span>
+            </label>
+            <input type="file" 
+                   class="form-control" 
+                   id="file" 
+                   name="file" 
+                   accept=".json"
+                   required>
+            <div class="form-text">Selecione um arquivo JSON com os dados dos usuários</div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload"></i> Importar Usuários
+            </button>
+          </div>
+        </form>
+
+        <!-- Exemplo de Estrutura -->
+        <div class="mt-4">
+          <h6><i class="bi bi-code-square"></i> Exemplo de Estrutura do Arquivo</h6>
+          <div class="card bg-body-secondary">
+            <div class="card-body">
+              <pre class="mb-0"><code>{
+  "exported_at": "2024-01-01T12:00:00",
+  "exported_by": "admin",
+  "total_users": 2,
+  "users": [
+    {
+      "username": "joao.silva",
+      "nome": "João Silva",
+      "email": "joao.silva@empresa.com",
+      "status": "ativo",
+      "role_name": "operador",
+      "telefone": "(11) 99999-9999",
+      "departamento": "TI",
+      "cargo": "Analista",
+      "ldap_user": false
+    },
+    {
+      "username": "maria.santos",
+      "nome": "Maria Santos", 
+      "email": "maria.santos@empresa.com",
+      "status": "ativo",
+      "role_name": "admin",
+      "telefone": "(11) 88888-8888",
+      "departamento": "Gerência",
+      "cargo": "Gerente",
+      "ldap_user": true
+    }
+  ]
+}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campos Suportados -->
+        <div class="mt-4">
+          <h6><i class="bi bi-list-check"></i> Campos Suportados</h6>
+          <div class="row">
+            <div class="col-md-6">
+              <ul>
+                <li><strong>username</strong> - Nome de usuário (obrigatório)</li>
+                <li><strong>nome</strong> - Nome completo (obrigatório)</li>
+                <li><strong>email</strong> - E-mail (obrigatório)</li>
+                <li><strong>status</strong> - ativo, inativo ou bloqueado</li>
+                <li><strong>role_name</strong> - Nome do perfil</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul>
+                <li><strong>telefone</strong> - Número de telefone</li>
+                <li><strong>departamento</strong> - Departamento</li>
+                <li><strong>cargo</strong> - Cargo/função</li>
+                <li><strong>ldap_user</strong> - true/false</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Observações Importantes -->
+        <div class="alert alert-warning mt-4">
+          <h6><i class="bi bi-exclamation-triangle"></i> Observações Importantes</h6>
+          <ul class="mb-0">
+            <li><strong>Backup:</strong> Recomendamos fazer backup antes da importação</li>
+            <li><strong>Senhas:</strong> Usuários importados terão senhas resetadas para "123456"</li>
+            <li><strong>Admin:</strong> O usuário admin não pode ser alterado via importação</li>
+            <li><strong>Histórico:</strong> Todas as alterações ficam registradas no histórico</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Validação do arquivo
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        if (!file.name.toLowerCase().endsWith('.json')) {
+            alert('Por favor, selecione um arquivo JSON válido.');
+            e.target.value = '';
+        }
+    }
+});
+
+// Confirmação antes do envio
+document.querySelector('form').addEventListener('submit', function(e) {
+    const confirmed = confirm(
+        'Tem certeza que deseja importar os usuários?\n\n' +
+        'Esta ação irá:\n' +
+        '• Atualizar usuários existentes\n' +
+        '• Criar novos usuários\n' +
+        '• Registrar todas as alterações no histórico\n\n' +
+        'Recomendamos fazer backup antes de continuar.'
+    );
+    
+    if (!confirmed) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

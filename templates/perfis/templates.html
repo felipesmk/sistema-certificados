@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Templates de Perfis{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-collection"></i> Templates de Perfis</h4>
+        <div>
+                     <a href="{{ url_for('listar_perfis') }}" class="btn btn-secondary">
+             <i class="bi bi-arrow-left"></i> Voltar
+           </a>
+           <a href="{{ url_for('novo_perfil') }}" class="btn btn-primary">
+             <i class="bi bi-plus-circle"></i> Novo Perfil
+           </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <div class="alert alert-info" role="alert">
+          <i class="bi bi-info-circle"></i>
+          <strong>Templates de Perfis</strong> - Use os templates abaixo para criar rapidamente perfis com configurações pré-definidas.
+        </div>
+
+        {% if templates %}
+          <div class="row">
+            {% for template in templates %}
+              <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-start border-4" style="border-left-color: {{ template.cor or '#6c757d' }} !important;">
+                                     <div class="card-header bg-body-secondary">
+                    <h5 class="card-title mb-0">
+                      {% if template.icone %}
+                        <i class="bi bi-{{ template.icone }}"></i>
+                      {% else %}
+                        <i class="bi bi-person-badge"></i>
+                      {% endif %}
+                      {{ template.nome }}
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text">{{ template.descricao or 'Sem descrição disponível' }}</p>
+                    
+                    {% if template.permissoes_padrao %}
+                      <h6><i class="bi bi-shield-check"></i> Permissões Incluídas:</h6>
+                      <div class="mb-3">
+                        {% for permissao in template.permissoes_padrao[:3] %}
+                          <span class="badge bg-secondary me-1 mb-1">{{ permissao }}</span>
+                        {% endfor %}
+                        {% if template.permissoes_padrao|length > 3 %}
+                                                     <span class="badge bg-body-secondary text-body">+{{ template.permissoes_padrao|length - 3 }} mais</span>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    <div class="row">
+                      <div class="col-6">
+                        <small class="text-muted">
+                          <i class="bi bi-calendar3"></i> {{ template.criado_em.strftime('%d/%m/%Y') if template.criado_em else 'N/A' }}
+                        </small>
+                      </div>
+                      <div class="col-6 text-end">
+                        {% if template.categoria %}
+                          <span class="badge bg-info">{{ template.categoria }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-footer bg-transparent">
+                    <div class="d-grid gap-2">
+                                             <a href="{{ url_for('criar_do_template', template_id=template.id) }}" class="btn btn-primary btn-sm">
+                         <i class="bi bi-plus-circle"></i> Criar Perfil
+                       </a>
+                      <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#detalhes-{{ template.id }}">
+                          <i class="bi bi-eye"></i> Detalhes
+                        </button>
+                        {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_access')|list) %}
+                          <button type="button" class="btn btn-outline-warning btn-sm" onclick="editarTemplate({{ template.id }})">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal de Detalhes -->
+              <div class="modal fade" id="detalhes-{{ template.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">
+                        {% if template.icone %}
+                          <i class="bi bi-{{ template.icone }}"></i>
+                        {% endif %}
+                        {{ template.nome }}
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <h6><i class="bi bi-info-circle"></i> Informações</h6>
+                          <p><strong>Nome:</strong> {{ template.nome }}</p>
+                          <p><strong>Descrição:</strong> {{ template.descricao or 'Sem descrição' }}</p>
+                          <p><strong>Categoria:</strong> {{ template.categoria or 'Geral' }}</p>
+                          {% if template.cor %}
+                            <p><strong>Cor:</strong> 
+                              <span class="badge" style="background-color: {{ template.cor }}; color: white;">{{ template.cor }}</span>
+                            </p>
+                          {% endif %}
+                          <p><strong>Criado em:</strong> {{ template.criado_em.strftime('%d/%m/%Y %H:%M') if template.criado_em else 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                          {% if template.permissoes_padrao %}
+                            <h6><i class="bi bi-shield-check"></i> Permissões ({{ template.permissoes_padrao|length }})</h6>
+                            <div class="max-height-200 overflow-auto">
+                              {% for permissao in template.permissoes_padrao %}
+                                <span class="badge bg-secondary me-1 mb-1">{{ permissao }}</span>
+                              {% endfor %}
+                            </div>
+                          {% else %}
+                            <div class="alert alert-warning">
+                              <i class="bi bi-exclamation-triangle"></i>
+                              Nenhuma permissão definida neste template.
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+                      
+                      {% if template.configuracoes_extras %}
+                        <hr>
+                        <h6><i class="bi bi-gear"></i> Configurações Extras</h6>
+                                                 <pre class="bg-body-secondary p-2 rounded small">{{ template.configuracoes_extras }}</pre>
+                      {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                             <a href="{{ url_for('criar_do_template', template_id=template.id) }}" class="btn btn-primary">
+                         <i class="bi bi-plus-circle"></i> Criar Perfil
+                       </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Estatísticas -->
+          <div class="row mt-4">
+            <div class="col-md-12">
+                             <div class="card bg-body-secondary">
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-md-3">
+                      <h4 class="text-primary">{{ templates|length }}</h4>
+                      <small class="text-muted">Templates Disponíveis</small>
+                    </div>
+                    <div class="col-md-3">
+                      <h4 class="text-success">{{ templates|selectattr('categoria', 'equalto', 'Administração')|list|length }}</h4>
+                      <small class="text-muted">Administração</small>
+                    </div>
+                    <div class="col-md-3">
+                      <h4 class="text-warning">{{ templates|selectattr('categoria', 'equalto', 'Operacional')|list|length }}</h4>
+                      <small class="text-muted">Operacional</small>
+                    </div>
+                    <div class="col-md-3">
+                      <h4 class="text-info">{{ templates|selectattr('categoria', 'equalto', 'Consulta')|list|length }}</h4>
+                      <small class="text-muted">Consulta</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        {% else %}
+          <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Nenhum template encontrado.</strong>
+            <p class="mb-0 mt-2">Não há templates de perfis disponíveis no momento. Templates são configurações pré-definidas que facilitam a criação de novos perfis.</p>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.max-height-200 {
+  max-height: 200px;
+}
+</style>
+
+<script>
+function editarTemplate(templateId) {
+  // Funcionalidade para editar template (implementar conforme necessário)
+  alert('Funcionalidade de edição de template em desenvolvimento');
+}
+</script>
+{% endblock %}

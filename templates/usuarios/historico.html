@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico do Usuário{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4>
+          <i class="bi bi-clock-history"></i> 
+          Histórico do Usuário: <strong>{{ usuario.username }}</strong>
+        </h4>
+        <div>
+          <a href="{{ url_for('editar_usuario', usuario_id=usuario.id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Editar
+          </a>
+          <a href="{{ url_for('listar_usuarios') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Informações do Usuário -->
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card bg-body-secondary">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-3">
+                    <strong>Nome:</strong><br>
+                    {{ usuario.nome }}
+                  </div>
+                  <div class="col-md-3">
+                    <strong>Email:</strong><br>
+                    {{ usuario.email }}
+                  </div>
+                  <div class="col-md-3">
+                    <strong>Status:</strong><br>
+                    {% if usuario.status == 'ativo' %}
+                      <span class="badge bg-success">Ativo</span>
+                    {% elif usuario.status == 'inativo' %}
+                      <span class="badge bg-secondary">Inativo</span>
+                    {% elif usuario.status == 'bloqueado' %}
+                      <span class="badge bg-danger">Bloqueado</span>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-3">
+                    <strong>Perfil:</strong><br>
+                    {% if usuario.role %}
+                      <span class="badge" style="background-color: {{ usuario.role.cor or '#6c757d' }}">
+                        {{ usuario.role.nome }}
+                      </span>
+                    {% else %}
+                      <span class="text-muted">Sem perfil</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico -->
+        {% if historico %}
+          <div class="timeline">
+            {% for item in historico %}
+              <div class="timeline-item" data-action="{{ item.acao }}">
+                <div class="timeline-marker">
+                  {% if item.acao == 'created' %}
+                    <i class="bi bi-plus-circle-fill text-success" style="font-size: 1rem;"></i>
+                  {% elif item.acao == 'updated' %}
+                    <i class="bi bi-pencil-square text-primary" style="font-size: 1rem;"></i>
+                  {% elif item.acao == 'status_changed' %}
+                    <i class="bi bi-toggle-on text-warning" style="font-size: 1rem;"></i>
+                  {% elif item.acao == 'role_changed' %}
+                    <i class="bi bi-person-badge text-info" style="font-size: 1rem;"></i>
+                  {% elif item.acao == 'password_reset' %}
+                    <i class="bi bi-key-fill text-secondary" style="font-size: 1rem;"></i>
+                  {% elif item.acao == 'login' %}
+                    <i class="bi bi-box-arrow-in-right text-success" style="font-size: 1rem;"></i>
+                  {% elif item.acao == 'deleted' %}
+                    <i class="bi bi-trash-fill text-danger" style="font-size: 1rem;"></i>
+                  {% else %}
+                    <i class="bi bi-clock text-muted" style="font-size: 1rem;"></i>
+                  {% endif %}
+                </div>
+                <div class="timeline-content">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <h6 class="card-title mb-1">
+                            {% if item.acao == 'created' %}
+                              <span class="badge bg-success">Criação</span> Usuário criado
+                            {% elif item.acao == 'updated' %}
+                              <span class="badge bg-primary">Atualização</span> 
+                              {% if item.detalhes %}
+                                {% set detalhes = item.detalhes|from_json if item.detalhes.startswith('{') else {} %}
+                                {% if detalhes.alteracoes %}
+                                  {% set alteracoes = detalhes.alteracoes %}
+                                  {% if alteracoes|length == 1 %}
+                                    {{ alteracoes[0] }}
+                                  {% else %}
+                                    {{ alteracoes|length }} campos alterados
+                                  {% endif %}
+                                {% else %}
+                                  Dados atualizados
+                                {% endif %}
+                              {% else %}
+                                Dados atualizados
+                              {% endif %}
+                            {% elif item.acao == 'status_changed' %}
+                              <span class="badge bg-warning">Status</span> 
+                              {% if item.detalhes %}
+                                {% set detalhes = item.detalhes|from_json if item.detalhes.startswith('{') else {} %}
+                                {% if detalhes.novo_status %}
+                                  Status alterado para <strong>{{ detalhes.novo_status|title }}</strong>
+                                {% else %}
+                                  Status alterado
+                                {% endif %}
+                              {% else %}
+                                Status alterado
+                              {% endif %}
+                            {% elif item.acao == 'role_changed' %}
+                              <span class="badge bg-info">Perfil</span> 
+                              {% if item.detalhes %}
+                                {% set detalhes = item.detalhes|from_json if item.detalhes.startswith('{') else {} %}
+                                {% if detalhes.perfil_anterior and detalhes.novo_perfil %}
+                                  Perfil alterado de <strong>{{ detalhes.perfil_anterior }}</strong> para <strong>{{ detalhes.novo_perfil }}</strong>
+                                {% elif detalhes.novo_perfil %}
+                                  Perfil definido como <strong>{{ detalhes.novo_perfil }}</strong>
+                                {% else %}
+                                  Perfil alterado
+                                {% endif %}
+                              {% else %}
+                                Perfil alterado
+                              {% endif %}
+                            {% elif item.acao == 'password_reset' %}
+                              <span class="badge bg-secondary">Senha</span> Senha resetada
+                            {% elif item.acao == 'login' %}
+                              <span class="badge bg-success">Login</span> Acesso ao sistema
+                            {% elif item.acao == 'deleted' %}
+                              <span class="badge bg-danger">Exclusão</span> Usuário excluído
+                            {% else %}
+                              <span class="badge bg-secondary">{{ item.acao|title }}</span>
+                            {% endif %}
+                          </h6>
+                          
+                          {% if item.detalhes %}
+                            {% set detalhes = item.detalhes|from_json if item.detalhes.startswith('{') else {} %}
+                            {% if detalhes %}
+                              {% if detalhes.alteracoes and detalhes.alteracoes|length > 1 %}
+                                <div class="mt-2">
+                                  <small class="text-muted">Detalhes das alterações:</small>
+                                  <ul class="mb-0 mt-1">
+                                    {% for alteracao in detalhes.alteracoes %}
+                                      <li><small>{{ alteracao }}</small></li>
+                                    {% endfor %}
+                                  </ul>
+                                </div>
+                              {% elif detalhes.bulk_operation %}
+                                <small class="text-info">
+                                  <i class="bi bi-lightning"></i> Operação em lote
+                                </small>
+                              {% elif detalhes.import_operation %}
+                                <small class="text-warning">
+                                  <i class="bi bi-upload"></i> Importação
+                                </small>
+                              {% elif detalhes.created_by %}
+                                <small class="text-muted">
+                                  <i class="bi bi-person-plus"></i> Criado por {{ detalhes.created_by }}
+                                </small>
+                              {% endif %}
+                            {% endif %}
+                          {% endif %}
+                        </div>
+                        <div class="text-end">
+                          <small class="text-muted">
+                            <i class="bi bi-clock"></i>
+                            {{ item.created_at.strftime('%d/%m/%Y às %H:%M') }}
+                          </small>
+                          <br>
+                          <small class="text-muted">
+                            <i class="bi bi-person"></i>
+                            por <strong>{{ item.usuario }}</strong>
+                          </small>
+                          {% if item.ip_address %}
+                            <br>
+                            <small class="text-muted">
+                              <i class="bi bi-geo-alt"></i>
+                              {{ item.ip_address }}
+                            </small>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-clock-history" style="font-size: 3rem;"></i>
+            <h5 class="mt-3">Nenhum histórico encontrado</h5>
+            <p>Este usuário ainda não possui registros de alterações.</p>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -2rem;
+  top: 0.5rem;
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  background: white;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.timeline-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.timeline-content {
+  margin-left: 0.5rem;
+}
+
+.timeline-content .card {
+  border-left: 4px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.timeline-content .card:hover {
+  border-left-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Cores específicas para cada tipo de ação */
+.timeline-item[data-action="created"] .timeline-marker {
+  border-color: #28a745;
+}
+
+.timeline-item[data-action="updated"] .timeline-marker {
+  border-color: #007bff;
+}
+
+.timeline-item[data-action="status_changed"] .timeline-marker {
+  border-color: #ffc107;
+}
+
+.timeline-item[data-action="role_changed"] .timeline-marker {
+  border-color: #17a2b8;
+}
+
+.timeline-item[data-action="password_reset"] .timeline-marker {
+  border-color: #6c757d;
+}
+
+.timeline-item[data-action="login"] .timeline-marker {
+  border-color: #28a745;
+}
+
+.timeline-item[data-action="deleted"] .timeline-marker {
+  border-color: #dc3545;
+}
+</style>
+{% endblock %}

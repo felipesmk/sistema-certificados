@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Perfis{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-upload"></i> Importar Perfis</h4>
+        <div>
+                     <a href="{{ url_for('listar_perfis') }}" class="btn btn-secondary">
+             <i class="bi bi-arrow-left"></i> Voltar
+           </a>
+           <a href="{{ url_for('export_perfis') }}" class="btn btn-success">
+             <i class="bi bi-download"></i> Exportar
+           </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Instruções -->
+        <div class="alert alert-info" role="alert">
+          <i class="bi bi-info-circle"></i>
+          <strong>Como importar perfis:</strong>
+          <ul class="mb-0 mt-2">
+            <li>Faça upload de um arquivo JSON ou CSV com os dados dos perfis</li>
+            <li>O arquivo deve seguir o formato padrão de exportação do sistema</li>
+            <li>Perfis duplicados serão identificados e você poderá escolher como proceder</li>
+            <li>Sempre faça backup antes de importar dados importantes</li>
+          </ul>
+        </div>
+
+        <!-- Formulário de Upload -->
+        <form method="POST" enctype="multipart/form-data" id="importForm">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label for="arquivo" class="form-label">
+                  <i class="bi bi-file-earmark-arrow-up"></i> Arquivo de Importação
+                </label>
+                <input type="file" class="form-control" id="arquivo" name="arquivo" accept=".json,.csv" required>
+                <div class="form-text">
+                  Formatos aceitos: JSON (.json), CSV (.csv). Tamanho máximo: 10MB
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="formato" class="form-label">
+                  <i class="bi bi-filetype-json"></i> Formato
+                </label>
+                <select class="form-select" id="formato" name="formato">
+                  <option value="auto">Detectar automaticamente</option>
+                  <option value="json">JSON</option>
+                  <option value="csv">CSV</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Opções de Importação -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="bi bi-gear"></i> Comportamento para Duplicatas
+                </label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="duplicatas" id="duplicatas_skip" value="skip" checked>
+                  <label class="form-check-label" for="duplicatas_skip">
+                    Pular duplicatas (manter existentes)
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="duplicatas" id="duplicatas_update" value="update">
+                  <label class="form-check-label" for="duplicatas_update">
+                    Atualizar duplicatas (sobrescrever)
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="duplicatas" id="duplicatas_rename" value="rename">
+                  <label class="form-check-label" for="duplicatas_rename">
+                    Renomear duplicatas (criar novo)
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="bi bi-shield-check"></i> Validações
+                </label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="validar_permissoes" name="validar_permissoes" checked>
+                  <label class="form-check-label" for="validar_permissoes">
+                    Validar se permissões existem
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="criar_permissoes" name="criar_permissoes">
+                  <label class="form-check-label" for="criar_permissoes">
+                    Criar permissões que não existem
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="preview_modo" name="preview_modo" checked>
+                  <label class="form-check-label" for="preview_modo">
+                    Modo preview (não salvar)
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões -->
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="button" class="btn btn-outline-info" onclick="baixarTemplate()">
+              <i class="bi bi-file-earmark-text"></i> Baixar Template
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload"></i> Importar Arquivo
+            </button>
+          </div>
+        </form>
+
+        <!-- Área de Resultado -->
+        <div id="resultado" class="mt-4" style="display: none;">
+          <hr>
+          <h5><i class="bi bi-clipboard-check"></i> Resultado da Importação</h5>
+          <div id="resultado-content"></div>
+        </div>
+
+        <!-- Exemplos de Formato -->
+        <div class="mt-4">
+          <div class="accordion" id="formatosAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#formatoJSON">
+                  <i class="bi bi-filetype-json"></i> &nbsp; Exemplo de Formato JSON
+                </button>
+              </h2>
+              <div id="formatoJSON" class="accordion-collapse collapse" data-bs-parent="#formatosAccordion">
+                <div class="accordion-body">
+                                     <pre class="bg-body-secondary p-3 rounded"><code>[
+  {
+    "nome": "Administrador Departamental",
+    "descricao": "Administrador com acesso total ao departamento",
+    "permissoes": ["manage_access", "manage_registros", "manage_responsaveis"],
+    "ativo": true,
+    "cor": "#dc3545",
+    "icone": "shield-fill-check",
+    "prioridade": 9
+  },
+  {
+    "nome": "Operador Básico",
+    "descricao": "Operador com permissões básicas",
+    "permissoes": ["manage_registros", "manage_responsaveis"],
+    "ativo": true,
+    "cor": "#0d6efd",
+    "icone": "person-gear",
+    "prioridade": 5
+  }
+]</code></pre>
+                </div>
+              </div>
+            </div>
+            
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#formatoCSV">
+                  <i class="bi bi-filetype-csv"></i> &nbsp; Exemplo de Formato CSV
+                </button>
+              </h2>
+              <div id="formatoCSV" class="accordion-collapse collapse" data-bs-parent="#formatosAccordion">
+                <div class="accordion-body">
+                                     <pre class="bg-body-secondary p-3 rounded"><code>nome,descricao,permissoes,ativo,cor,icone,prioridade
+"Administrador Departamental","Administrador com acesso total ao departamento","manage_access,manage_registros,manage_responsaveis",true,#dc3545,shield-fill-check,9
+"Operador Básico","Operador com permissões básicas","manage_registros,manage_responsaveis",true,#0d6efd,person-gear,5</code></pre>
+                  <div class="alert alert-warning mt-2">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Atenção:</strong> No formato CSV, as permissões devem ser separadas por vírgula dentro das aspas.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('importForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const resultadoDiv = document.getElementById('resultado');
+  const resultadoContent = document.getElementById('resultado-content');
+  
+  // Mostrar loading
+  resultadoDiv.style.display = 'block';
+  resultadoContent.innerHTML = `
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+      <p class="mt-2">Processando arquivo...</p>
+    </div>
+  `;
+  
+  // Simular upload (implementar requisição real)
+     fetch('{{ url_for("import_perfis") }}', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      resultadoContent.innerHTML = `
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle"></i>
+          <strong>Importação realizada com sucesso!</strong>
+          <ul class="mt-2 mb-0">
+            <li>Perfis importados: ${data.importados || 0}</li>
+            <li>Perfis atualizados: ${data.atualizados || 0}</li>
+            <li>Perfis ignorados: ${data.ignorados || 0}</li>
+            ${data.erros ? `<li class="text-danger">Erros: ${data.erros}</li>` : ''}
+          </ul>
+        </div>
+      `;
+      
+      // Redirecionar após sucesso
+      if (!document.getElementById('preview_modo').checked) {
+                 setTimeout(() => {
+           window.location.href = '{{ url_for("listar_perfis") }}';
+         }, 2000);
+      }
+    } else {
+      resultadoContent.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle"></i>
+          <strong>Erro na importação:</strong>
+          <p class="mt-2 mb-0">${data.message || 'Erro desconhecido'}</p>
+        </div>
+      `;
+    }
+  })
+  .catch(error => {
+    resultadoContent.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Erro de conexão:</strong>
+        <p class="mt-2 mb-0">${error.message}</p>
+      </div>
+    `;
+  });
+});
+
+function baixarTemplate() {
+  // Criar template JSON e baixar
+  const template = [
+    {
+      "nome": "Exemplo Perfil",
+      "descricao": "Descrição do perfil de exemplo",
+      "permissoes": ["manage_registros", "manage_responsaveis"],
+      "ativo": true,
+      "cor": "#0d6efd",
+      "icone": "person-gear",
+      "prioridade": 5
+    }
+  ];
+  
+  const blob = new Blob([JSON.stringify(template, null, 2)], {type: 'application/json'});
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'template_perfis.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+// Auto-detectar formato pelo arquivo
+document.getElementById('arquivo').addEventListener('change', function() {
+  const arquivo = this.files[0];
+  if (arquivo) {
+    const extensao = arquivo.name.split('.').pop().toLowerCase();
+    const formatoSelect = document.getElementById('formato');
+    
+    if (extensao === 'json') {
+      formatoSelect.value = 'json';
+    } else if (extensao === 'csv') {
+      formatoSelect.value = 'csv';
+    }
+  }
+});
+</script>
+{% endblock %}
