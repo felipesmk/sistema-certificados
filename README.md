@@ -61,12 +61,20 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Controle de Status** - Ativo, inativo, bloqueado
 - **Reset de Senha** - Funcionalidade administrativa
 - **Proteção do Admin** - Usuário admin não pode ser modificado
+- **Histórico Completo** - Timeline de todas as ações do usuário
+- **Dashboard Avançado** - Estatísticas, métricas e análise de atividade
+- **Rastreamento de Login** - Último login, contagem de logins, IP address
+- **Importação/Exportação** - Funcionalidades para gestão em lote
+- **Campos Avançados** - Telefone, departamento, cargo, observações
 
 ### 📊 **Relatórios e Analytics**
 - **Dashboards em Tempo Real** - Dados atualizados dinamicamente
 - **Gráficos Interativos** - Distribuição por status, tipo, responsável
 - **Análise Temporal** - Vencimentos próximos e históricos
 - **Métricas de Atividade** - Registros criados e modificados
+- **Dashboard de Usuários** - Estatísticas avançadas e métricas de login
+- **Dashboard de Perfis** - Análise de roles e permissões
+- **Histórico Detalhado** - Timeline completa de ações com IP e user agent
 
 ## 🛠️ Requisitos Técnicos
 
@@ -92,6 +100,17 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Bootstrap 5** - Framework CSS (via CDN)
 
 ## 📝 Mudanças Recentes
+
+### **v2.2.0 - Sistema de Histórico e Gerenciamento Avançado**
+- ✅ **Histórico de Usuários** - Timeline completa de todas as ações
+- ✅ **Dashboard de Usuários** - Estatísticas e métricas avançadas
+- ✅ **Dashboard de Perfis** - Gerenciamento avançado de roles
+- ✅ **Importação/Exportação** - Funcionalidades para usuários e perfis
+- ✅ **Clonagem de Perfis** - Sistema de templates e clonagem
+- ✅ **Rastreamento de Login** - Last login, login count, IP address
+- ✅ **Cascade Delete** - Correção de integridade do banco
+- ✅ **Scripts Unificados** - manage_db.py e quick_setup.py
+- ✅ **Documentação Completa** - 5 guias detalhados
 
 ### **v2.1.0 - Interface Simplificada**
 - ✅ **Removidas configurações de cor** - Interface mais limpa e consistente
@@ -126,11 +145,15 @@ pip install -r requirements.txt
 
 ### **4. Configuração Inicial**
 ```bash
+# Setup completo automático (RECOMENDADO)
+python quick_setup.py setup
+
+# Ou configuração manual:
 # Inicializar banco de dados e permissões
-python init_db.py
+python manage_db.py migrate
 
 # Criar usuário administrador
-python create_admin.py
+python manage_db.py create-admin
 ```
 
 ### **5. Executar o Sistema**
@@ -175,14 +198,18 @@ flask run
 
 ### **Desenvolvimento**
 ```bash
-# Resetar banco de dados e permissões
-python init_db.py
+# Setup completo automático (RECOMENDADO)
+python quick_setup.py setup
 
-# Criar usuário administrador
-python create_admin.py
+# Gerenciamento manual do banco
+python manage_db.py status          # Verificar status do banco
+python manage_db.py migrate         # Executar migrações
+python manage_db.py reset           # Resetar banco (CUIDADO!)
+python manage_db.py create-admin    # Criar usuário admin
+python manage_db.py create-user     # Criar usuário adicional
 
-# Criar usuários adicionais
-python create_user.py
+# Testes e validação
+python quick_setup.py test-users    # Testar funcionalidades de usuários
 
 # Executar em modo desenvolvimento
 python app.py
@@ -220,23 +247,28 @@ waitress-serve --host=0.0.0.0 --port=8000 app:app
 Projetoteste/
 ├── app.py                 # Aplicação principal e rotas
 ├── models.py              # Modelos do banco de dados
-├── init_db.py             # Inicialização do banco
-├── create_admin.py        # Criação do usuário admin
-├── create_user.py         # Criação de usuários
+├── manage_db.py           # Gerenciamento unificado do banco
+├── quick_setup.py         # Setup rápido e testes
 ├── run_production.py      # Servidor de produção
 ├── requirements.txt       # Dependências Python
 ├── .env.example          # Template de configuração
 ├── .gitignore            # Arquivos ignorados pelo Git
 ├── README.md             # Documentação
+├── DATABASE_MANAGEMENT.md # Guia de gerenciamento do banco
+├── USER_MANAGEMENT_IMPROVEMENTS.md # Melhorias de usuários
+├── ROLES_MANAGEMENT_GUIDE.md # Guia de perfis
+├── LDAP_IMPROVEMENTS.md  # Melhorias LDAP
+├── SCRIPTS_IMPROVEMENTS.md # Melhorias dos scripts
 ├── templates/            # Templates HTML
 │   ├── base.html         # Template base
 │   ├── login.html        # Página de login
 │   ├── dashboard*.html   # Dashboards
 │   ├── registros/        # CRUD de registros
 │   ├── responsaveis/     # CRUD de responsáveis
-│   ├── usuarios/         # CRUD de usuários
-│   ├── perfis/           # CRUD de perfis
+│   ├── usuarios/         # CRUD de usuários (com histórico)
+│   ├── perfis/           # CRUD de perfis (com dashboard)
 │   └── configuracao/     # Configurações do sistema
+├── scripts_legacy/       # Scripts antigos (preservados)
 ├── static/               # Arquivos estáticos
 ├── logs/                 # Logs da aplicação
 └── instance/             # Banco de dados (não versionado)
