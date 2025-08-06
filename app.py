@@ -70,12 +70,12 @@ def get_system_config():
     """Obtém as configurações do sistema para uso global."""
     try:
         with app.app_context():
-            config = Configuracao.query.first()
-            if not config:
-                # Criar configuração padrão se não existir
-                config = Configuracao()
-                db.session.add(config)
-                db.session.commit()
+        config = Configuracao.query.first()
+        if not config:
+            # Criar configuração padrão se não existir
+            config = Configuracao()
+            db.session.add(config)
+            db.session.commit()
             
             # Fazer uma cópia dos dados para evitar problemas de sessão
             config_data = {
@@ -113,9 +113,9 @@ def get_system_config():
 def inject_system_config():
     """Injeta as configurações do sistema em todos os templates."""
     try:
-        return {
-            'system_config': get_system_config()
-        }
+    return {
+        'system_config': get_system_config()
+    }
     except Exception as e:
         logger.error(f"Erro no context processor: {e}")
         # Retornar configurações padrão em caso de erro
@@ -1356,7 +1356,7 @@ def novo_usuario():
                 created_by=current_user.username
             )
             
-            db.session.add(user)
+        db.session.add(user)
             db.session.flush()  # Para obter o ID
             
             # Registrar histórico
@@ -1374,10 +1374,10 @@ def novo_usuario():
             )
             db.session.add(historico)
             
-            db.session.commit()
+        db.session.commit()
             
             flash(f'Usuário "{username}" criado com sucesso!', 'success')
-            return redirect(url_for('listar_usuarios'))
+        return redirect(url_for('listar_usuarios'))
             
         except Exception as e:
             db.session.rollback()
@@ -1898,15 +1898,15 @@ def editar_usuario(usuario_id):
             
             if username != usuario.username:
                 alteracoes.append(f"Username: {usuario.username} → {username}")
-                usuario.username = username
+        usuario.username = username
                 
             if nome != usuario.nome:
                 alteracoes.append(f"Nome: {usuario.nome} → {nome}")
-                usuario.nome = nome
+        usuario.nome = nome
                 
             if email != usuario.email:
                 alteracoes.append(f"Email: {usuario.email} → {email}")
-                usuario.email = email
+        usuario.email = email
                 
             if telefone != usuario.telefone:
                 alteracoes.append(f"Telefone: {usuario.telefone or 'Vazio'} → {telefone or 'Vazio'}")
@@ -1929,22 +1929,22 @@ def editar_usuario(usuario_id):
                 usuario.status = status
             
             # Senha
-            if password:
-                usuario.password = generate_password_hash(password)
+        if password:
+            usuario.password = generate_password_hash(password)
                 alteracoes.append("Senha alterada")
             
             # Proteção para admin
-            if usuario.username == 'admin':
-                admin_role = Role.query.filter_by(nome='admin').first()
+        if usuario.username == 'admin':
+            admin_role = Role.query.filter_by(nome='admin').first()
                 if admin_role and usuario.role_id != admin_role.id:
-                    usuario.role_id = admin_role.id
+            usuario.role_id = admin_role.id
                     alteracoes.append("Perfil admin forçado para usuário admin")
             elif role_id and int(role_id) != usuario.role_id:
                 role_anterior = Role.query.get(usuario.role_id).nome if usuario.role_id else 'Nenhum'
                 nova_role = Role.query.get(int(role_id))
                 if nova_role:
                     alteracoes.append(f"Perfil: {role_anterior} → {nova_role.nome}")
-                    usuario.role_id = int(role_id)
+            usuario.role_id = int(role_id)
             
             # Atualizar timestamp
             usuario.updated_at = db.func.now()
@@ -1964,14 +1964,14 @@ def editar_usuario(usuario_id):
                 )
                 db.session.add(historico)
             
-            db.session.commit()
+        db.session.commit()
             
             if alteracoes:
                 flash(f'Usuário "{username}" atualizado com sucesso! ({len(alteracoes)} alterações)', 'success')
             else:
                 flash('Nenhuma alteração foi feita.', 'info')
                 
-            return redirect(url_for('listar_usuarios'))
+        return redirect(url_for('listar_usuarios'))
             
         except Exception as e:
             db.session.rollback()
@@ -2023,8 +2023,8 @@ def resetar_senha_usuario(usuario_id):
             return render_template('usuarios/resetar_senha.html', usuario=usuario)
         
         try:
-            from werkzeug.security import generate_password_hash
-            usuario.password = generate_password_hash(nova_senha)
+        from werkzeug.security import generate_password_hash
+        usuario.password = generate_password_hash(nova_senha)
             
             # Registrar histórico
             historico = UserHistory(
@@ -2039,10 +2039,10 @@ def resetar_senha_usuario(usuario_id):
                 user_agent=request.headers.get('User-Agent', '')[:255]
             )
             db.session.add(historico)
-            db.session.commit()
+        db.session.commit()
             
-            flash('Senha redefinida com sucesso!', 'success')
-            return redirect(url_for('listar_usuarios'))
+        flash('Senha redefinida com sucesso!', 'success')
+        return redirect(url_for('listar_usuarios'))
             
         except Exception as e:
             db.session.rollback()

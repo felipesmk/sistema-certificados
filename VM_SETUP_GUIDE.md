@@ -122,9 +122,9 @@ echo Pronto! Execute: python app.py
 
 ## 🐧 Configuração Linux (Ubuntu/Debian)
 
-### **1. Script de Automação Linux**
+### **1. Script de Automação Linux (Unificado)**
 
-Crie o arquivo `setup_vm.sh`:
+O arquivo `setup_vm.sh` detecta automaticamente a distribuição Linux:
 
 ```bash
 #!/bin/bash
@@ -195,11 +195,11 @@ chmod +x setup_vm.sh
 
 ---
 
-## 🐧 Configuração SUSE Linux
+## 🐧 Configuração Linux (Todas as Distribuições)
 
-### **1. Script de Automação SUSE**
+### **1. Script de Automação Unificado**
 
-Crie o arquivo `setup_vm_suse.sh`:
+O arquivo `setup_vm.sh` funciona em todas as distribuições Linux:
 
 ```bash
 #!/bin/bash
@@ -290,8 +290,8 @@ python app.py
 ### **2. Tornar Executável e Executar:**
 
 ```bash
-chmod +x setup_vm_suse.sh
-./setup_vm_suse.sh
+chmod +x setup_vm.sh
+./setup_vm.sh
 ```
 
 ---

@@ -17,6 +17,8 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Dashboard Vencimentos** - Análise temporal de documentos próximos ao vencimento
 - **Dashboard Responsáveis** - Ranking e estatísticas por responsável
 - **Dashboard Atividade** - Timeline de atividades e mudanças recentes
+- **Dashboard de Usuários** - Estatísticas avançadas e métricas de login
+- **Dashboard de Perfis** - Análise de roles e permissões
 
 ### 📧 **Sistema de Notificações**
 - **Alertas Automáticos** - Envio semanal configurável
@@ -56,7 +58,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Estatísticas** - Contagem de itens por responsável
 - **Ranking** - Top responsáveis com mais itens
 
-### 👤 **Gestão de Usuários**
+### 👤 **Gestão de Usuários (v2.2.0)**
 - **Perfis Personalizáveis** - Criação de perfis com permissões específicas
 - **Controle de Status** - Ativo, inativo, bloqueado
 - **Reset de Senha** - Funcionalidade administrativa
@@ -67,20 +69,28 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Importação/Exportação** - Funcionalidades para gestão em lote
 - **Campos Avançados** - Telefone, departamento, cargo, observações
 
+### 📊 **Gestão de Perfis (v2.2.0)**
+- **CRUD Completo** - Criar, editar, excluir e visualizar perfis
+- **Dashboard Avançado** - Estatísticas e análise de roles
+- **Clonagem de Perfis** - Sistema de templates e clonagem
+- **Templates Pré-definidos** - Perfis base para cenários comuns
+- **Assistente de Criação** - Wizard para criar perfis
+- **Histórico Detalhado** - Timeline de mudanças com IP e user agent
+- **Bulk Actions** - Ações em lote para múltiplos perfis
+- **Importação/Exportação** - Funcionalidades para gestão em lote
+
 ### 📊 **Relatórios e Analytics**
 - **Dashboards em Tempo Real** - Dados atualizados dinamicamente
 - **Gráficos Interativos** - Distribuição por status, tipo, responsável
 - **Análise Temporal** - Vencimentos próximos e históricos
 - **Métricas de Atividade** - Registros criados e modificados
-- **Dashboard de Usuários** - Estatísticas avançadas e métricas de login
-- **Dashboard de Perfis** - Análise de roles e permissões
 - **Histórico Detalhado** - Timeline completa de ações com IP e user agent
 
 ## 🛠️ Requisitos Técnicos
 
 ### **Sistema Operacional**
 - **Windows 10/11** ✅
-- **Linux** ✅
+- **Linux (Ubuntu, Debian, SUSE, CentOS, RHEL, Fedora)** ✅
 - **macOS** ✅
 
 ### **Software**
@@ -110,7 +120,8 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - ✅ **Rastreamento de Login** - Last login, login count, IP address
 - ✅ **Cascade Delete** - Correção de integridade do banco
 - ✅ **Scripts Unificados** - manage_db.py e quick_setup.py
-- ✅ **Documentação Completa** - 5 guias detalhados
+- ✅ **Documentação Completa** - Guias detalhados
+- ✅ **Suporte VM** - Scripts para Windows, Linux e SUSE
 
 ### **v2.1.0 - Interface Simplificada**
 - ✅ **Removidas configurações de cor** - Interface mais limpa e consistente
@@ -130,8 +141,8 @@ Para configurar o projeto em uma máquina virtual, consulte o [Guia de Configura
 
 ### **1. Clone o Repositório**
 ```bash
-git clone <url-do-repositorio>
-cd Projetoteste
+git clone https://github.com/felipesmk/sistema-certificados.git
+cd sistema-certificados
 ```
 
 ### **2. Ambiente Virtual**
@@ -229,23 +240,14 @@ python app.py
 # Windows - Configuração automática completa
 setup_vm.bat
 
-# Windows - Configuração rápida
-quick_vm_setup.bat
-
 # Windows - Configuração de rede
 configure_network.bat
 
-# Linux (Ubuntu/Debian) - Configuração automática
-chmod +x setup_vm.sh && ./setup_vm.sh
+# Linux - Configuração automática (detecta distribuição automaticamente)
+chmod +x setup_vm_unified.sh && ./setup_vm_unified.sh
 
-# Linux (Ubuntu/Debian) - Configuração de rede
-chmod +x configure_network.sh && ./configure_network.sh
-
-# SUSE Linux - Configuração automática
-chmod +x setup_vm_suse.sh && ./setup_vm_suse.sh
-
-# SUSE Linux - Configuração de rede
-chmod +x configure_network_suse.sh && ./configure_network_suse.sh
+# Linux - Configuração de rede
+chmod +x configure_network_unified.sh && ./configure_network_unified.sh
 ```
 
 ### **Produção**
@@ -263,10 +265,10 @@ waitress-serve --host=0.0.0.0 --port=8000 app:app
 ## 💡 Dicas para Desenvolvimento
 
 ### **Fluxo de Trabalho**
-1. **Sempre execute** `init_db.py` antes de `create_admin.py`
+1. **Sempre execute** `quick_setup.py setup` para configuração completa
 2. **O usuário admin** sempre terá o perfil admin
 3. **Menus e rotas** são exibidos conforme permissões
-4. **Para novas permissões** - edite `init_db.py` e associe aos perfis
+4. **Para novas permissões** - edite `manage_db.py` e associe aos perfis
 
 ### **Boas Práticas**
 - **Ambiente virtual** sempre ativo durante desenvolvimento
@@ -277,7 +279,7 @@ waitress-serve --host=0.0.0.0 --port=8000 app:app
 ## 📁 Estrutura do Projeto
 
 ```
-Projetoteste/
+sistema-certificados/
 ├── app.py                 # Aplicação principal e rotas
 ├── models.py              # Modelos do banco de dados
 ├── manage_db.py           # Gerenciamento unificado do banco
@@ -286,20 +288,13 @@ Projetoteste/
 ├── requirements.txt       # Dependências Python
 ├── .env.example          # Template de configuração
 ├── .gitignore            # Arquivos ignorados pelo Git
-├── README.md             # Documentação
-├── DATABASE_MANAGEMENT.md # Guia de gerenciamento do banco
-├── USER_MANAGEMENT_IMPROVEMENTS.md # Melhorias de usuários
-├── ROLES_MANAGEMENT_GUIDE.md # Guia de perfis
-├── LDAP_IMPROVEMENTS.md  # Melhorias LDAP
-├── SCRIPTS_IMPROVEMENTS.md # Melhorias dos scripts
+├── README.md             # Documentação principal
 ├── VM_SETUP_GUIDE.md     # Guia de configuração em VM
+├── CHANGELOG.md          # Histórico de mudanças
 ├── setup_vm.bat          # Script de automação Windows
-├── quick_vm_setup.bat    # Script rápido Windows
 ├── configure_network.bat # Configuração de rede Windows
-├── setup_vm.sh           # Script de automação Linux (Ubuntu/Debian)
-├── configure_network.sh  # Configuração de rede Linux (Ubuntu/Debian)
-├── setup_vm_suse.sh      # Script de automação SUSE Linux
-├── configure_network_suse.sh # Configuração de rede SUSE Linux
+├── setup_vm_unified.sh   # Script unificado Linux (Ubuntu/Debian/SUSE)
+├── configure_network_unified.sh # Rede unificada Linux
 ├── test_vm_installation.py # Teste de validação da VM
 ├── templates/            # Templates HTML
 │   ├── base.html         # Template base
@@ -310,7 +305,6 @@ Projetoteste/
 │   ├── usuarios/         # CRUD de usuários (com histórico)
 │   ├── perfis/           # CRUD de perfis (com dashboard)
 │   └── configuracao/     # Configurações do sistema
-├── scripts_legacy/       # Scripts antigos (preservados)
 ├── static/               # Arquivos estáticos
 ├── logs/                 # Logs da aplicação
 └── instance/             # Banco de dados (não versionado)
@@ -399,7 +393,52 @@ pkill gunicorn
 python run_production.py
 ```
 
----
+## 🔧 Gerenciamento de Banco de Dados
+
+### **Comandos Principais**
+```bash
+# Verificar status do banco
+python manage_db.py status
+
+# Executar migrações
+python manage_db.py migrate
+
+# Resetar banco (CUIDADO!)
+python manage_db.py reset
+
+# Criar usuário admin
+python manage_db.py create-admin
+
+# Criar usuário adicional
+python manage_db.py create-user
+
+# Backup do banco
+python manage_db.py backup
+
+# Restaurar backup
+python manage_db.py restore
+```
+
+### **Migrações Automáticas**
+O sistema inclui migrações automáticas para:
+- Campos LDAP (last_ldap_sync, is_ldap_role)
+- Campos avançados de usuário (created_at, last_login, etc.)
+- Campos avançados de perfil (ativo, cor, icone, etc.)
+- Tabelas de histórico (user_history, role_history)
+
+## 🔐 Integração LDAP/Active Directory
+
+### **Configuração**
+1. Configure as variáveis LDAP no arquivo `.env`
+2. Execute `python manage_db.py migrate` para adicionar campos LDAP
+3. Teste a conexão em Configurações > LDAP
+
+### **Funcionalidades**
+- **Autenticação automática** com credenciais do AD
+- **Sincronização de dados** (nome, email, departamento)
+- **Mapeamento de grupos** para perfis
+- **Cache de conexão** para melhor performance
+- **Timeout configurável** para conexões
 
 ## 🤝 Contribuição
 
