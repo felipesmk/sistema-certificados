@@ -5,6 +5,7 @@
 ### **Sistema Operacional Recomendado:**
 - **Windows Server 2019/2022** ou **Windows 10/11 Pro**
 - **Ubuntu 20.04/22.04 LTS** (alternativa Linux)
+- **SUSE Linux Enterprise 12/15** ou **openSUSE Leap/Tumbleweed**
 - **Mínimo:** 2GB RAM, 20GB HD, 2 vCPUs
 - **Recomendado:** 4GB RAM, 50GB HD, 4 vCPUs
 
@@ -119,7 +120,7 @@ echo Pronto! Execute: python app.py
 
 ---
 
-## 🐧 Configuração Linux (Ubuntu)
+## 🐧 Configuração Linux (Ubuntu/Debian)
 
 ### **1. Script de Automação Linux**
 
@@ -194,6 +195,107 @@ chmod +x setup_vm.sh
 
 ---
 
+## 🐧 Configuração SUSE Linux
+
+### **1. Script de Automação SUSE**
+
+Crie o arquivo `setup_vm_suse.sh`:
+
+```bash
+#!/bin/bash
+
+echo "========================================"
+echo "    CONFIGURACAO AUTOMATICA SUSE VM"
+echo "========================================"
+echo
+
+# Detectar versão do SUSE
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    echo "Sistema detectado: $PRETTY_NAME"
+    echo "Versão: $VERSION"
+    echo
+fi
+
+# Verificar Python
+echo "[1/8] Verificando Python..."
+if ! command -v python3 &> /dev/null; then
+    echo "Instalando Python..."
+    if command -v zypper &> /dev/null; then
+        # SUSE Linux Enterprise ou openSUSE
+        sudo zypper refresh
+        sudo zypper install -y python3 python3-pip python3-venv
+    elif command -v yast &> /dev/null; then
+        # SUSE Linux Enterprise
+        sudo yast --install python3 python3-pip python3-venv
+    fi
+fi
+
+# Verificar Git
+echo "[2/8] Verificando Git..."
+if ! command -v git &> /dev/null; then
+    echo "Instalando Git..."
+    if command -v zypper &> /dev/null; then
+        sudo zypper install -y git
+    elif command -v yast &> /dev/null; then
+        sudo yast --install git
+    fi
+fi
+
+# Criar ambiente virtual
+echo "[3/8] Criando ambiente virtual..."
+python3 -m venv venv
+
+# Ativar ambiente virtual
+echo "[4/8] Ativando ambiente virtual..."
+source venv/bin/activate
+
+# Instalar dependências
+echo "[5/8] Instalando dependencias..."
+pip install -r requirements.txt
+
+# Configurar banco
+echo "[6/8] Configurando banco de dados..."
+python quick_setup.py setup
+
+# Verificar status
+echo "[7/8] Verificando status do sistema..."
+python manage_db.py status
+
+# Configurar firewall SUSE
+echo "[8/8] Configurando firewall..."
+if command -v firewall-cmd &> /dev/null; then
+    # firewalld (SUSE Linux Enterprise 15+)
+    sudo firewall-cmd --permanent --add-port=5000/tcp
+    sudo firewall-cmd --reload
+elif command -v SuSEfirewall2 &> /dev/null; then
+    # SuSEfirewall2 (SUSE Linux Enterprise 12)
+    sudo SuSEfirewall2 open EXT TCP 5000
+    sudo SuSEfirewall2 start
+fi
+
+# Iniciar aplicação
+echo
+echo "========================================"
+echo "    CONFIGURACAO SUSE CONCLUIDA!"
+echo "========================================"
+echo
+echo "Acesse: http://localhost:5000"
+echo "Usuario admin: admin"
+echo "Senha: (a que voce definiu)"
+echo
+python app.py
+```
+
+### **2. Tornar Executável e Executar:**
+
+```bash
+chmod +x setup_vm_suse.sh
+./setup_vm_suse.sh
+```
+
+---
+
 ## 🔧 Configuração Manual (Passo a Passo)
 
 ### **Windows:**
@@ -232,7 +334,7 @@ chmod +x setup_vm.sh
    python app.py
    ```
 
-### **Linux:**
+### **Linux (Ubuntu/Debian):**
 
 1. **Instalar Dependências:**
    ```bash
@@ -255,6 +357,48 @@ chmod +x setup_vm.sh
    ```
 
 4. **Executar:**
+   ```bash
+   python app.py
+   ```
+
+### **SUSE Linux:**
+
+1. **Instalar Dependências:**
+   ```bash
+   # Para SUSE Linux Enterprise ou openSUSE
+   sudo zypper refresh
+   sudo zypper install -y python3 python3-pip python3-venv git
+   
+   # Ou usando YaST (SUSE Linux Enterprise)
+   sudo yast --install python3 python3-pip python3-venv git
+   ```
+
+2. **Clonar e Configurar:**
+   ```bash
+   git clone https://github.com/felipesmk/sistema-certificados.git
+   cd sistema-certificados
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. **Configurar Sistema:**
+   ```bash
+   python quick_setup.py setup
+   ```
+
+4. **Configurar Firewall:**
+   ```bash
+   # Para SUSE Linux Enterprise 15+ (firewalld)
+   sudo firewall-cmd --permanent --add-port=5000/tcp
+   sudo firewall-cmd --reload
+   
+   # Para SUSE Linux Enterprise 12 (SuSEfirewall2)
+   sudo SuSEfirewall2 open EXT TCP 5000
+   sudo SuSEfirewall2 start
+   ```
+
+5. **Executar:**
    ```bash
    python app.py
    ```
@@ -289,10 +433,25 @@ hostname -I
 netsh advfirewall firewall add rule name="Sistema Certificados" dir=in action=allow protocol=TCP localport=5000
 ```
 
-**Linux:**
+**Linux (Ubuntu/Debian):**
 ```bash
 # Permitir porta 5000
 sudo ufw allow 5000
+```
+
+**SUSE Linux:**
+```bash
+# Para SUSE Linux Enterprise 15+ (firewalld)
+sudo firewall-cmd --permanent --add-port=5000/tcp
+sudo firewall-cmd --reload
+
+# Para SUSE Linux Enterprise 12 (SuSEfirewall2)
+sudo SuSEfirewall2 open EXT TCP 5000
+sudo SuSEfirewall2 start
+
+# Verificar configuração
+sudo firewall-cmd --list-ports  # firewalld
+sudo SuSEfirewall2 status       # SuSEfirewall2
 ```
 
 ---

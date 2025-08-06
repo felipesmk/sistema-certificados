@@ -235,11 +235,17 @@ quick_vm_setup.bat
 # Windows - Configuração de rede
 configure_network.bat
 
-# Linux - Configuração automática
+# Linux (Ubuntu/Debian) - Configuração automática
 chmod +x setup_vm.sh && ./setup_vm.sh
 
-# Linux - Configuração de rede
+# Linux (Ubuntu/Debian) - Configuração de rede
 chmod +x configure_network.sh && ./configure_network.sh
+
+# SUSE Linux - Configuração automática
+chmod +x setup_vm_suse.sh && ./setup_vm_suse.sh
+
+# SUSE Linux - Configuração de rede
+chmod +x configure_network_suse.sh && ./configure_network_suse.sh
 ```
 
 ### **Produção**
@@ -290,8 +296,10 @@ Projetoteste/
 ├── setup_vm.bat          # Script de automação Windows
 ├── quick_vm_setup.bat    # Script rápido Windows
 ├── configure_network.bat # Configuração de rede Windows
-├── setup_vm.sh           # Script de automação Linux
-├── configure_network.sh  # Configuração de rede Linux
+├── setup_vm.sh           # Script de automação Linux (Ubuntu/Debian)
+├── configure_network.sh  # Configuração de rede Linux (Ubuntu/Debian)
+├── setup_vm_suse.sh      # Script de automação SUSE Linux
+├── configure_network_suse.sh # Configuração de rede SUSE Linux
 ├── test_vm_installation.py # Teste de validação da VM
 ├── templates/            # Templates HTML
 │   ├── base.html         # Template base
