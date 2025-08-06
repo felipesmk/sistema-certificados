@@ -89,9 +89,12 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 ## 🛠️ Requisitos Técnicos
 
 ### **Sistema Operacional**
-- **Windows 10/11** ✅
-- **Linux (Ubuntu, Debian, SUSE, CentOS, RHEL, Fedora)** ✅
-- **macOS** ✅
+- **Windows 10/11** ✅ (Scripts automáticos disponíveis)
+- **Linux** ✅ (Detecção automática de distribuição):
+  - **Ubuntu/Debian** (apt) ✅
+  - **SUSE Linux Enterprise/openSUSE** (zypper) ✅  
+  - **CentOS/RHEL/Fedora** (dnf) ✅
+- **macOS** ✅ (Instalação manual)
 
 ### **Software**
 - **Python 3.8+** (recomendado 3.11+)
@@ -111,6 +114,14 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 
 ## 📝 Mudanças Recentes
 
+### **v2.3.0 - Limpeza e Scripts Unificados**
+- ✅ **Scripts Unificados para Linux** - Detecção automática de distribuição (Ubuntu/Debian/SUSE/CentOS/Fedora)
+- ✅ **Documentação Consolidada** - README único com todas as informações importantes
+- ✅ **Projeto Limpo** - Removidos 16 arquivos redundantes e 2000+ linhas desnecessárias
+- ✅ **Instalação Simplificada** - Scripts automáticos para Windows e Linux
+- ✅ **Configuração de Firewall** - Suporte automático para múltiplos firewalls
+- ✅ **Teste de Validação** - Script completo para validar instalação
+
 ### **v2.2.0 - Sistema de Histórico e Gerenciamento Avançado**
 - ✅ **Histórico de Usuários** - Timeline completa de todas as ações
 - ✅ **Dashboard de Usuários** - Estatísticas e métricas avançadas
@@ -119,9 +130,9 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - ✅ **Clonagem de Perfis** - Sistema de templates e clonagem
 - ✅ **Rastreamento de Login** - Last login, login count, IP address
 - ✅ **Cascade Delete** - Correção de integridade do banco
-- ✅ **Scripts Unificados** - manage_db.py e quick_setup.py
+- ✅ **Scripts de Gerenciamento** - manage_db.py e quick_setup.py
 - ✅ **Documentação Completa** - Guias detalhados
-- ✅ **Suporte VM** - Scripts para Windows, Linux e SUSE
+- ✅ **Suporte VM Inicial** - Scripts básicos para Windows e Linux
 
 ### **v2.1.0 - Interface Simplificada**
 - ✅ **Removidas configurações de cor** - Interface mais limpa e consistente
@@ -131,21 +142,60 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 
 ## 🚀 Instalação e Configuração
 
-### 🖥️ **Configuração em VM**
-Para configurar o projeto em uma máquina virtual, consulte o [Guia de Configuração em VM](VM_SETUP_GUIDE.md) que inclui:
-- Scripts de automação para Windows e Linux
-- Configuração de rede e firewall
-- Testes de validação
-- Configuração como serviço
-- Monitoramento e backup
+### 🚀 **Instalação Rápida com Scripts Automáticos**
 
-### **1. Clone o Repositório**
+Para uma instalação mais fácil e rápida, use os scripts de automação:
+
+#### **🖥️ Windows:**
+```batch
+# Configuração completa automática
+setup_vm.bat
+
+# Apenas configuração de rede/firewall
+configure_network.bat
+```
+
+#### **🐧 Linux (Todas as Distribuições):**
+```bash
+# Configuração completa automática
+chmod +x setup_vm.sh && ./setup_vm.sh
+
+# Apenas configuração de rede/firewall
+chmod +x configure_network.sh && ./configure_network.sh
+```
+
+**Distribuições Linux Suportadas:**
+- ✅ **Ubuntu/Debian** (apt)
+- ✅ **SUSE/openSUSE** (zypper)
+- ✅ **CentOS/RHEL/Fedora** (dnf)
+- ✅ **Detecção automática** da distribuição
+
+#### **📋 O que os Scripts Fazem:**
+- **Verificam e instalam** Python 3, pip, venv, git
+- **Criam ambiente virtual** automaticamente
+- **Instalam dependências** do requirements.txt
+- **Configuram banco de dados** com quick_setup.py
+- **Configuram firewall** (Windows Firewall, UFW, firewalld, etc.)
+- **Testam conectividade** na porta 5000
+- **Iniciam a aplicação** automaticamente
+
+### 🖥️ **Configuração Avançada em VM**
+Para configuração detalhada em máquinas virtuais, consulte o [Guia de Configuração em VM](VM_SETUP_GUIDE.md) que inclui:
+- Scripts de automação específicos
+- Configuração de rede e firewall avançada
+- Testes de validação completos
+- Configuração como serviço do sistema
+- Monitoramento e backup automático
+
+### **📦 Instalação Manual (Passo a Passo)**
+
+#### **1. Clone o Repositório**
 ```bash
 git clone https://github.com/felipesmk/sistema-certificados.git
 cd sistema-certificados
 ```
 
-### **2. Ambiente Virtual**
+#### **2. Ambiente Virtual**
 ```bash
 # Criar ambiente virtual
 python -m venv venv
@@ -157,37 +207,73 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### **3. Instalar Dependências**
+#### **3. Instalar Dependências**
 ```bash
 pip install -r requirements.txt
 ```
 
-### **4. Configuração Inicial**
+#### **4. Configuração do Banco de Dados**
 ```bash
-# Setup completo automático (RECOMENDADO)
+# Opção 1: Setup completo automático (RECOMENDADO)
 python quick_setup.py setup
 
-# Ou configuração manual:
-# Inicializar banco de dados e permissões
-python manage_db.py migrate
-
-# Criar usuário administrador
-python manage_db.py create-admin
+# Opção 2: Configuração manual passo a passo
+python manage_db.py migrate         # Criar/atualizar banco
+python manage_db.py create-admin    # Criar usuário admin
 ```
 
-### **5. Executar o Sistema**
+#### **5. Configuração do Ambiente (Opcional)**
+```bash
+# Copiar arquivo de exemplo
+cp env.example .env
+
+# Editar configurações (SMTP, LDAP, etc.)
+# notepad .env  # Windows
+# nano .env     # Linux
+```
+
+#### **6. Executar o Sistema**
 ```bash
 # Desenvolvimento
 python app.py
 
 # Ou usando Flask
 flask run
+
+# Produção (Linux/macOS)
+python run_production.py
 ```
 
-### **6. Acessar o Sistema**
+#### **7. Acessar o Sistema**
 - **URL:** http://localhost:5000
-- **Usuário:** admin
-- **Senha:** (definida no create_admin.py)
+- **Usuário padrão:** admin
+- **Senha:** (definida durante o setup)
+
+### **🔧 Configuração de Firewall Manual**
+
+Se os scripts automáticos não funcionarem, configure o firewall manualmente:
+
+#### **Windows:**
+```batch
+# Permitir porta 5000 no Windows Firewall
+netsh advfirewall firewall add rule name="Sistema Certificados" dir=in action=allow protocol=TCP localport=5000
+```
+
+#### **Linux:**
+```bash
+# Ubuntu/Debian (UFW)
+sudo ufw allow 5000
+
+# CentOS/RHEL/Fedora (firewalld)
+sudo firewall-cmd --permanent --add-port=5000/tcp
+sudo firewall-cmd --reload
+
+# SUSE (firewalld ou SuSEfirewall2)
+sudo firewall-cmd --permanent --add-port=5000/tcp
+sudo firewall-cmd --reload
+# OU
+sudo SuSEfirewall2 open EXT TCP 5000
+```
 
 ## 🔐 Estrutura de Permissões e Perfis
 
@@ -226,28 +312,71 @@ python manage_db.py migrate         # Executar migrações
 python manage_db.py reset           # Resetar banco (CUIDADO!)
 python manage_db.py create-admin    # Criar usuário admin
 python manage_db.py create-user     # Criar usuário adicional
+python manage_db.py backup          # Backup do banco
+python manage_db.py restore         # Restaurar backup
 
 # Testes e validação
 python quick_setup.py test-users    # Testar funcionalidades de usuários
-python test_vm_installation.py      # Teste completo da instalação
+python test_vm_installation.py      # Teste completo da instalação VM
 
 # Executar em modo desenvolvimento
 python app.py
 ```
 
-### **Configuração em VM**
+### **Scripts de VM e Instalação**
 ```bash
-# Windows - Configuração automática completa
-setup_vm.bat
+# Windows - Setup completo
+setup_vm.bat                        # Instala tudo e inicia aplicação
 
-# Windows - Configuração de rede
-configure_network.bat
+# Windows - Apenas rede
+configure_network.bat               # Configura firewall e testa conectividade
 
-# Linux - Configuração automática (detecta distribuição automaticamente)
-chmod +x setup_vm_unified.sh && ./setup_vm_unified.sh
+# Linux - Setup completo (detecta distro automaticamente)
+chmod +x setup_vm.sh && ./setup_vm.sh
 
-# Linux - Configuração de rede
-chmod +x configure_network_unified.sh && ./configure_network_unified.sh
+# Linux - Apenas rede  
+chmod +x configure_network.sh && ./configure_network.sh
+
+# Teste de validação completo
+python test_vm_installation.py     # Valida instalação, dependências, banco, rede
+```
+
+### **Verificação de Status**
+```bash
+# Verificar se tudo está funcionando
+python manage_db.py status          # Status do banco de dados
+python quick_setup.py status        # Status geral do sistema
+python test_vm_installation.py      # Teste completo de validação
+
+# Verificar logs
+tail -f logs/app.log                # Logs da aplicação
+dir logs                            # Windows: ver arquivos de log
+ls -la logs/                        # Linux: ver arquivos de log
+```
+
+### **Solução de Problemas**
+```bash
+# Problema: Erro de migração do banco
+python manage_db.py reset --force    # Resetar banco (CUIDADO! Apaga dados)
+python manage_db.py migrate          # Recriar estrutura
+python manage_db.py create-admin     # Recriar admin
+
+# Problema: Porta 5000 já em uso
+netstat -tlnp | grep 5000           # Linux: verificar o que usa a porta
+netstat -an | findstr 5000          # Windows: verificar o que usa a porta
+
+# Problema: Dependências não instaladas
+pip install --upgrade pip           # Atualizar pip
+pip install -r requirements.txt     # Reinstalar dependências
+
+# Problema: Ambiente virtual corrompido
+rm -rf venv                          # Linux: remover venv
+rmdir /s venv                       # Windows: remover venv
+python -m venv venv                 # Recriar ambiente virtual
+
+# Problema: Firewall bloqueando
+python test_vm_installation.py     # Testar conectividade
+# Seguir instruções de firewall acima
 ```
 
 ### **Produção**
@@ -293,8 +422,8 @@ sistema-certificados/
 ├── CHANGELOG.md          # Histórico de mudanças
 ├── setup_vm.bat          # Script de automação Windows
 ├── configure_network.bat # Configuração de rede Windows
-├── setup_vm_unified.sh   # Script unificado Linux (Ubuntu/Debian/SUSE)
-├── configure_network_unified.sh # Rede unificada Linux
+├── setup_vm.sh           # Script unificado Linux (Ubuntu/Debian/SUSE/CentOS/Fedora)
+├── configure_network.sh  # Rede unificada Linux
 ├── test_vm_installation.py # Teste de validação da VM
 ├── templates/            # Templates HTML
 │   ├── base.html         # Template base
