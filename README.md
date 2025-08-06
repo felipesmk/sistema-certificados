@@ -120,6 +120,14 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 
 ## 🚀 Instalação e Configuração
 
+### 🖥️ **Configuração em VM**
+Para configurar o projeto em uma máquina virtual, consulte o [Guia de Configuração em VM](VM_SETUP_GUIDE.md) que inclui:
+- Scripts de automação para Windows e Linux
+- Configuração de rede e firewall
+- Testes de validação
+- Configuração como serviço
+- Monitoramento e backup
+
 ### **1. Clone o Repositório**
 ```bash
 git clone <url-do-repositorio>
@@ -210,9 +218,28 @@ python manage_db.py create-user     # Criar usuário adicional
 
 # Testes e validação
 python quick_setup.py test-users    # Testar funcionalidades de usuários
+python test_vm_installation.py      # Teste completo da instalação
 
 # Executar em modo desenvolvimento
 python app.py
+```
+
+### **Configuração em VM**
+```bash
+# Windows - Configuração automática completa
+setup_vm.bat
+
+# Windows - Configuração rápida
+quick_vm_setup.bat
+
+# Windows - Configuração de rede
+configure_network.bat
+
+# Linux - Configuração automática
+chmod +x setup_vm.sh && ./setup_vm.sh
+
+# Linux - Configuração de rede
+chmod +x configure_network.sh && ./configure_network.sh
 ```
 
 ### **Produção**
@@ -259,6 +286,13 @@ Projetoteste/
 ├── ROLES_MANAGEMENT_GUIDE.md # Guia de perfis
 ├── LDAP_IMPROVEMENTS.md  # Melhorias LDAP
 ├── SCRIPTS_IMPROVEMENTS.md # Melhorias dos scripts
+├── VM_SETUP_GUIDE.md     # Guia de configuração em VM
+├── setup_vm.bat          # Script de automação Windows
+├── quick_vm_setup.bat    # Script rápido Windows
+├── configure_network.bat # Configuração de rede Windows
+├── setup_vm.sh           # Script de automação Linux
+├── configure_network.sh  # Configuração de rede Linux
+├── test_vm_installation.py # Teste de validação da VM
 ├── templates/            # Templates HTML
 │   ├── base.html         # Template base
 │   ├── login.html        # Página de login
