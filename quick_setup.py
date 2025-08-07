@@ -12,6 +12,7 @@ Uso: python quick_setup.py [opção]
 import sys
 import os
 import subprocess
+import platform
 
 def run_command(command, description, interactive=False):
     """Executa comando e mostra resultado"""
@@ -133,6 +134,48 @@ def create_demo_users():
     for username, name, email, password, role in demo_users:
         print(f"   {username} / {password} ({role})")
 
+def install_production_deps():
+    """Instala dependências de produção"""
+    print("INSTALAÇÃO DE DEPENDÊNCIAS DE PRODUÇÃO")
+    print("="*50)
+    
+    system = platform.system().lower()
+    print(f"📋 Sistema detectado: {system}")
+    print()
+    
+    try:
+        # Instalar dependências básicas
+        print("📦 Instalando dependências do requirements.txt...")
+        if not run_command("pip install -r requirements.txt", "Instalando dependências básicas"):
+            return False
+        
+        # Verificar dependências específicas
+        if system == 'windows':
+            try:
+                import waitress
+                print("✅ Waitress já está instalado")
+            except ImportError:
+                print("📦 Instalando Waitress...")
+                if not run_command("pip install waitress", "Instalando Waitress"):
+                    return False
+        else:
+            try:
+                import gunicorn
+                print("✅ Gunicorn já está instalado")
+            except ImportError:
+                print("📦 Instalando Gunicorn...")
+                if not run_command("pip install gunicorn", "Instalando Gunicorn"):
+                    return False
+        
+        print("\n[SUCCESS] Todas as dependências foram instaladas com sucesso!")
+        print("🚀 Agora você pode executar:")
+        print("   python run_production.py")
+        return True
+        
+    except Exception as e:
+        print(f"[ERROR] Erro inesperado: {e}")
+        return False
+
 def backup_system():
     """Cria backup completo do sistema"""
     print("BACKUP DO SISTEMA")
@@ -179,9 +222,10 @@ def show_menu():
     print("2. Início Rápido (apenas migrações)")
     print("3. Criar Usuários de Demo")
     print("4. Testar Funcionalidades de Usuários")
-    print("5. Backup do Sistema")
-    print("6. Status do Sistema")
-    print("7. Sair")
+    print("5. Instalar Dependências de Produção")
+    print("6. Backup do Sistema")
+    print("7. Status do Sistema")
+    print("8. Sair")
     print()
 
 def main():
@@ -198,11 +242,13 @@ def main():
             backup_system()
         elif option == "test-users":
             test_user_features()
+        elif option == "install-prod":
+            install_production_deps()
         elif option == "status":
             run_command("python manage_db.py status", "Verificando status")
         else:
             print(f"[ERROR] Opção inválida: {option}")
-            print("Opções: setup, start, demo, backup, test-users, status")
+            print("Opções: setup, start, demo, backup, test-users, install-prod, status")
         return
     
     # Menu interativo
@@ -228,19 +274,22 @@ def main():
                 test_user_features()
                 
             elif choice == "5":
-                backup_system()
+                install_production_deps()
                 
             elif choice == "6":
-                run_command("python manage_db.py status", "Verificando status")
+                backup_system()
                 
             elif choice == "7":
+                run_command("python manage_db.py status", "Verificando status")
+                
+            elif choice == "8":
                 print("\nAté logo!")
                 break
                 
             else:
-                print("\n[ERROR] Opção inválida! Escolha entre 1-7.")
+                print("\n[ERROR] Opção inválida! Escolha entre 1-8.")
                 
-            if choice in ["1", "2", "3", "4", "5", "6"]:
+            if choice in ["1", "2", "3", "4", "5", "6", "7"]:
                 input("\nPressione Enter para continuar...")
                 
         except KeyboardInterrupt:

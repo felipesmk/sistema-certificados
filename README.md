@@ -382,7 +382,7 @@ python test_vm_installation.py     # Testar conectividade
 ### **Produção**
 ```bash
 # Instalar dependências de produção primeiro
-python install_production_deps.py
+python quick_setup.py install-prod
 
 # Executar servidor de produção
 python run_production.py
@@ -398,7 +398,7 @@ waitress-serve --host=0.0.0.0 --port=8000 app:app
 ### **Solução de Problemas - Produção**
 ```bash
 # Problema: "No such file or directory: 'gunicorn'"
-python install_production_deps.py    # Instalar dependências automaticamente
+python quick_setup.py install-prod   # Instalar dependências automaticamente
 
 # Ou instalar manualmente:
 pip install gunicorn                 # Linux/macOS
