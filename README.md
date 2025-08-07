@@ -381,14 +381,33 @@ python test_vm_installation.py     # Testar conectividade
 
 ### **Produção**
 ```bash
+# Instalar dependências de produção primeiro
+python install_production_deps.py
+
 # Executar servidor de produção
 python run_production.py
 
-# Usando Gunicorn (Linux/macOS)
+# Ou usar comandos diretos:
+# Linux/macOS (Gunicorn)
 gunicorn -c gunicorn.conf.py app:app
 
-# Usando Waitress (Windows)
+# Windows (Waitress)
 waitress-serve --host=0.0.0.0 --port=8000 app:app
+```
+
+### **Solução de Problemas - Produção**
+```bash
+# Problema: "No such file or directory: 'gunicorn'"
+python install_production_deps.py    # Instalar dependências automaticamente
+
+# Ou instalar manualmente:
+pip install gunicorn                 # Linux/macOS
+pip install waitress                 # Windows
+
+# Problema: Porta 8000 em uso
+python run_production.py             # Usa porta 8000 por padrão
+# Ou especificar porta diferente:
+gunicorn --bind 0.0.0.0:8080 app:app
 ```
 
 ## 💡 Dicas para Desenvolvimento
