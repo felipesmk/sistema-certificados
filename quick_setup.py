@@ -134,6 +134,45 @@ def create_demo_users():
     for username, name, email, password, role in demo_users:
         print(f"   {username} / {password} ({role})")
 
+def test_suse_compatibility():
+    """Testa compatibilidade específica do SUSE"""
+    print("🔍 TESTE DE COMPATIBILIDADE SUSE")
+    print("=" * 50)
+    
+    # Verificar se é SUSE
+    is_suse = False
+    if os.path.exists('/etc/os-release'):
+        with open('/etc/os-release', 'r') as f:
+            content = f.read().lower()
+            if 'suse' in content or 'opensuse' in content:
+                is_suse = True
+                print("✅ Sistema SUSE detectado")
+    
+    if not is_suse:
+        print("ℹ️  Não é SUSE, teste não aplicável")
+        return True
+    
+    print("\n🔧 Testando instalação de pacotes...")
+    
+    # Testar pacotes problemáticos no SUSE
+    problematic_packages = [
+        "Flask>=2.2.0",
+        "Flask-Login>=0.6.3",
+        "Flask-SQLAlchemy>=3.1.1",
+        "Flask-Mail>=0.10.0",
+        "Flask-Principal>=0.4.0",
+        "gunicorn>=21.2.0"
+    ]
+    
+    for package in problematic_packages:
+        print(f"\n📦 Testando {package}...")
+        if not run_command(f"pip install {package}", f"Instalando {package}"):
+            print(f"❌ Erro ao instalar {package}")
+            return False
+    
+    print("\n🎉 Todos os pacotes testados com sucesso!")
+    return True
+
 def install_production_deps():
     """Instala dependências de produção"""
     print("INSTALAÇÃO DE DEPENDÊNCIAS DE PRODUÇÃO")
@@ -143,11 +182,36 @@ def install_production_deps():
     print(f"📋 Sistema detectado: {system}")
     print()
     
+    # Verificar se é SUSE e aplicar correções específicas
+    is_suse = False
+    if os.path.exists('/etc/os-release'):
+        with open('/etc/os-release', 'r') as f:
+            content = f.read().lower()
+            if 'suse' in content or 'opensuse' in content:
+                is_suse = True
+                print("🐧 Sistema SUSE detectado - aplicando configurações específicas")
+    
     try:
         # Instalar dependências básicas
         print("📦 Instalando dependências do requirements.txt...")
         if not run_command("pip install -r requirements.txt", "Instalando dependências básicas"):
-            return False
+            if is_suse:
+                print("⚠️  Tentando instalação alternativa para SUSE...")
+                # Tentar instalar pacotes individualmente se houver problemas
+                if not run_command("pip install Flask>=2.2.0", "Instalando Flask"):
+                    return False
+                if not run_command("pip install Flask-Login>=0.6.3", "Instalando Flask-Login"):
+                    return False
+                if not run_command("pip install Flask-SQLAlchemy>=3.1.1", "Instalando Flask-SQLAlchemy"):
+                    return False
+                if not run_command("pip install Flask-Mail>=0.10.0", "Instalando Flask-Mail"):
+                    return False
+                if not run_command("pip install Flask-Principal>=0.4.0", "Instalando Flask-Principal"):
+                    return False
+                if not run_command("pip install gunicorn>=21.2.0", "Instalando Gunicorn"):
+                    return False
+            else:
+                return False
         
         # Verificar dependências específicas
         if system == 'windows':
@@ -223,9 +287,10 @@ def show_menu():
     print("3. Criar Usuários de Demo")
     print("4. Testar Funcionalidades de Usuários")
     print("5. Instalar Dependências de Produção")
-    print("6. Backup do Sistema")
-    print("7. Status do Sistema")
-    print("8. Sair")
+    print("6. Testar Compatibilidade SUSE")
+    print("7. Backup do Sistema")
+    print("8. Status do Sistema")
+    print("9. Sair")
     print()
 
 def main():
@@ -244,11 +309,13 @@ def main():
             test_user_features()
         elif option == "install-prod":
             install_production_deps()
+        elif option == "test-suse":
+            test_suse_compatibility()
         elif option == "status":
             run_command("python manage_db.py status", "Verificando status")
         else:
             print(f"[ERROR] Opção inválida: {option}")
-            print("Opções: setup, start, demo, backup, test-users, install-prod, status")
+            print("Opções: setup, start, demo, backup, test-users, install-prod, test-suse, status")
         return
     
     # Menu interativo
@@ -277,19 +344,22 @@ def main():
                 install_production_deps()
                 
             elif choice == "6":
-                backup_system()
+                test_suse_compatibility()
                 
             elif choice == "7":
-                run_command("python manage_db.py status", "Verificando status")
+                backup_system()
                 
             elif choice == "8":
+                run_command("python manage_db.py status", "Verificando status")
+                
+            elif choice == "9":
                 print("\nAté logo!")
                 break
                 
             else:
-                print("\n[ERROR] Opção inválida! Escolha entre 1-8.")
+                print("\n[ERROR] Opção inválida! Escolha entre 1-9.")
                 
-            if choice in ["1", "2", "3", "4", "5", "6", "7"]:
+            if choice in ["1", "2", "3", "4", "5", "6", "7", "8"]:
                 input("\nPressione Enter para continuar...")
                 
         except KeyboardInterrupt:

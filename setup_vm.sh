@@ -33,7 +33,11 @@ install_dependencies() {
         "opensuse"|"sles"|"suse")
             echo "📦 Instalando dependências (SUSE)..."
             sudo zypper refresh
-            sudo zypper install -y python3 python3-pip python3-venv git curl
+            # Tentar instalar com nomes alternativos se necessário
+            if ! sudo zypper install -y python3 python3-pip python3-venv git curl; then
+                echo "⚠️  Tentando nomes alternativos de pacotes..."
+                sudo zypper install -y python3 python3-pip3 python3-virtualenv git-core curl
+            fi
             ;;
         "centos"|"rhel"|"fedora")
             echo "📦 Instalando dependências (Red Hat/Fedora)..."

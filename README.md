@@ -317,6 +317,7 @@ python manage_db.py restore         # Restaurar backup
 
 # Testes e validação
 python quick_setup.py test-users    # Testar funcionalidades de usuários
+python quick_setup.py test-suse     # Testar compatibilidade SUSE
 python test_vm_installation.py      # Teste completo da instalação VM
 
 # Executar em modo desenvolvimento
@@ -408,6 +409,23 @@ pip install waitress                 # Windows
 python run_production.py             # Usa porta 8000 por padrão
 # Ou especificar porta diferente:
 gunicorn --bind 0.0.0.0:8080 app:app
+```
+
+### **Solução de Problemas - SUSE Linux**
+```bash
+# Problema: Pacotes Python não encontrados no SUSE
+python quick_setup.py test-suse     # Testar compatibilidade específica
+
+# Problema: Flask não instala no SUSE
+pip install --upgrade pip           # Atualizar pip primeiro
+pip install Flask>=2.2.0            # Instalar Flask individualmente
+
+# Problema: Dependências do sistema não encontradas
+sudo zypper refresh                 # Atualizar repositórios
+sudo zypper install python3 python3-pip3 python3-virtualenv git-core
+
+# Verificar instalação
+python -c "import flask; print(flask.__version__)"
 ```
 
 ## 💡 Dicas para Desenvolvimento
