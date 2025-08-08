@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Painel de Certificados{% endblock %}</title>
+    <script>
+      // Inicializa o tema o mais cedo possível para evitar "flicker" e inversões
+      (function() {
+        try {
+          var saved = localStorage.getItem('theme');
+          var theme = saved === 'dark' ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-bs-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-bs-theme', 'light');
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -110,29 +122,21 @@
         color: #f8f9fa;
       }
       
-      [data-bs-theme="dark"] .bg-body-secondary {
-        background-color: var(--bs-dark) !important;
-        border-color: var(--bs-gray-600);
-      }
+      /* Ajuste de tokens para modo claro/escuro em elementos utilitários */
+      [data-bs-theme="light"] .bg-body-secondary { background-color: var(--bs-secondary-bg) !important; }
+      [data-bs-theme="dark"] .bg-body-secondary { background-color: #2b3035 !important; border-color: #495057; }
       
-      [data-bs-theme="dark"] .text-body {
-        color: var(--bs-light) !important;
-      }
+      [data-bs-theme="light"] .text-body { color: var(--bs-body-color) !important; }
+      [data-bs-theme="dark"] .text-body { color: #e9ecef !important; }
       
-      [data-bs-theme="dark"] .text-body-secondary {
-        color: var(--bs-gray-400) !important;
-      }
+      [data-bs-theme="light"] .text-body-secondary { color: var(--bs-secondary-color) !important; }
+      [data-bs-theme="dark"] .text-body-secondary { color: #adb5bd !important; }
       
-      [data-bs-theme="dark"] pre {
-        background-color: var(--bs-dark) !important;
-        border-color: var(--bs-gray-600) !important;
-        color: var(--bs-light) !important;
-      }
+      [data-bs-theme="light"] pre { background-color: #f8f9fa !important; color: #212529 !important; border-color: #dee2e6 !important; }
+      [data-bs-theme="dark"] pre { background-color: #212529 !important; color: #e9ecef !important; border-color: #495057 !important; }
       
-      [data-bs-theme="dark"] code {
-        color: var(--bs-light) !important;
-      }
-      }
+      [data-bs-theme="light"] code { color: #212529 !important; }
+      [data-bs-theme="dark"] code { color: #e9ecef !important; }
       
       /* Estilos para submenu dropdown */
       .dropdown-menu .dropdown-menu {
@@ -199,32 +203,23 @@
       [data-bs-theme="dark"] .dropdown-menu .dropdown-menu .dropdown-item:hover {
         background-color: #343a40;
       }
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      }
       
-      /* Modo escuro */
-      [data-bs-theme="dark"] .card {
-        background-color: #2d3748;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-      }
+      /* Cartões coerentes com tokens do tema */
+      [data-bs-theme="light"] .card { background-color: #fff; }
+      [data-bs-theme="dark"] .card { background-color: #2b3035; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); }
       
-      [data-bs-theme="dark"] .table thead th {
-        background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
-        color: #e9ecef;
-      }
+      [data-bs-theme="light"] .table thead th { color: #495057; }
+      [data-bs-theme="dark"] .table thead th { background: linear-gradient(135deg, #495057 0%, #6c757d 100%); color: #e9ecef; }
       
+      [data-bs-theme="light"] .form-control,
+      [data-bs-theme="light"] .form-select { background-color: #fff; color: #212529; }
       [data-bs-theme="dark"] .form-control,
-      [data-bs-theme="dark"] .form-select {
-        background-color: #495057;
-        border-color: #6c757d;
-        color: #e9ecef;
-      }
+      [data-bs-theme="dark"] .form-select { background-color: #3a3f44; border-color: #6c757d; color: #e9ecef; }
       
+      [data-bs-theme="light"] .form-control:focus,
+      [data-bs-theme="light"] .form-select:focus { border-color: #667eea; }
       [data-bs-theme="dark"] .form-control:focus,
-      [data-bs-theme="dark"] .form-select:focus {
-        background-color: #495057;
-        border-color: #667eea;
-      }
+      [data-bs-theme="dark"] .form-select:focus { background-color: #3a3f44; border-color: #667eea; }
       
       /* Estilo personalizado para o dropdown de dashboards */
       .dropdown-menu {
@@ -246,20 +241,15 @@
         transform: translateX(5px);
       }
       
-      /* Modo escuro */
-      [data-bs-theme="dark"] .dropdown-item:hover {
-        background-color: #495057;
-        color: #fff;
-      }
+      /* Hover coerente por tema */
+      [data-bs-theme="light"] .dropdown-item:hover { background-color: #e9ecef; }
+      [data-bs-theme="dark"] .dropdown-item:hover { background-color: #495057; color: #fff; }
       
-      [data-bs-theme="dark"] .dropdown-menu {
-        background-color: #212529;
-        border: 1px solid #495057;
-      }
+      [data-bs-theme="light"] .dropdown-menu { background-color: #fff; }
+      [data-bs-theme="dark"] .dropdown-menu { background-color: #212529; border: 1px solid #495057; }
       
-      [data-bs-theme="dark"] .dropdown-item {
-        color: #e9ecef;
-      }
+      [data-bs-theme="light"] .dropdown-item { color: #212529; }
+      [data-bs-theme="dark"] .dropdown-item { color: #e9ecef; }
       
       [data-bs-theme="dark"] .dropdown-item:hover {
         background-color: #495057;
