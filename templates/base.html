@@ -308,109 +308,63 @@
                             <ul class="navbar-nav">
                         <li class="nav-item dropdown">
                           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-speedometer2"></i> Dashboard
+                            Dashboard
                           </a>
                           <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/dashboard">
-                              <i class="bi bi-pie-chart"></i> 📊 Principal
-                            </a></li>
-                            <li><a class="dropdown-item" href="/dashboard-vencimentos">
-                              <i class="bi bi-calendar-exclamation"></i> ⏰ Vencimentos
-                            </a></li>
-                            <li><a class="dropdown-item" href="/dashboard-responsaveis">
-                              <i class="bi bi-people"></i> 👥 Responsáveis
-                            </a></li>
+                            <li><a class="dropdown-item" href="/dashboard">📊 Principal</a></li>
+                            <li><a class="dropdown-item" href="/dashboard-vencimentos">⏰ Vencimentos</a></li>
+                            <li><a class="dropdown-item" href="/dashboard-responsaveis">👥 Responsáveis</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/dashboard-atividade">
-                              <i class="bi bi-activity"></i> 📈 Atividade
-                            </a></li>
+                            <li><a class="dropdown-item" href="/dashboard-atividade">📈 Atividade</a></li>
                           </ul>
                         </li>
                                                 <li class="nav-item dropdown">
                           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-gear"></i> Controle
+                            Controle
                           </a>
                           <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/registros">
-                              <i class="bi bi-files"></i> 📋 Registros
-                            </a></li>
-                            <li><a class="dropdown-item" href="/responsaveis">
-                              <i class="bi bi-people"></i> 👥 Responsáveis
-                            </a></li>
+                            <li><a class="dropdown-item" href="/registros">📋 Registros</a></li>
+                            <li><a class="dropdown-item" href="/responsaveis">👥 Responsáveis</a></li>
                           </ul>
                         </li>
         {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_access')|list) %}
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-shield-gear"></i> Gestão
-            </a>
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Gestão</a>
             <ul class="dropdown-menu">
               <!-- Gestão de Usuários (Submenu) -->
               <li class="nav-item dropend">
-                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-people"></i> 👥 Gestão de Usuários
-                </a>
+                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">👥 Gestão de Usuários</a>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/usuarios/dashboard">
-                    <i class="bi bi-graph-up"></i> 📊 Dashboard
-                  </a></li>
+                  <li><a class="dropdown-item" href="/usuarios/dashboard">📊 Dashboard</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/usuarios">
-                    <i class="bi bi-list"></i> 📋 Listar Usuários
-                  </a></li>
-                  <li><a class="dropdown-item" href="/usuarios/novo">
-                    <i class="bi bi-plus-circle"></i> ➕ Novo Usuário
-                  </a></li>
+                  <li><a class="dropdown-item" href="/usuarios">📋 Listar Usuários</a></li>
+                  <li><a class="dropdown-item" href="/usuarios/novo">➕ Novo Usuário</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/usuarios/import">
-                    <i class="bi bi-upload"></i> 📥 Importar
-                  </a></li>
-                  <li><a class="dropdown-item" href="/usuarios/export">
-                    <i class="bi bi-download"></i> 📤 Exportar
-                  </a></li>
+                  <li><a class="dropdown-item" href="/usuarios/import">📥 Importar</a></li>
+                  <li><a class="dropdown-item" href="/usuarios/export">📤 Exportar</a></li>
                 </ul>
               </li>
               
               <!-- Gestão de Perfis (Submenu) -->
               <li class="nav-item dropend">
-                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-person-badge"></i> 🎭 Gestão de Perfis
-                </a>
+                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">🎭 Gestão de Perfis</a>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/perfis/dashboard">
-                    <i class="bi bi-graph-up"></i> 📊 Dashboard
-                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/dashboard">📊 Dashboard</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/perfis">
-                    <i class="bi bi-list"></i> 📋 Listar Perfis
-                  </a></li>
-                  <li><a class="dropdown-item" href="/perfis/novo">
-                    <i class="bi bi-plus-circle"></i> ➕ Novo Perfil
-                  </a></li>
-                  <li><a class="dropdown-item" href="/perfis/assistente">
-                    <i class="bi bi-magic"></i> 🪄 Assistente de Criação
-                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis">📋 Listar Perfis</a></li>
+                  <li><a class="dropdown-item" href="/perfis/novo">➕ Novo Perfil</a></li>
+                  <li><a class="dropdown-item" href="/perfis/assistente">🪄 Assistente de Criação</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/perfis/templates">
-                    <i class="bi bi-collection"></i> 📝 Templates
-                  </a></li>
-                  <li><a class="dropdown-item" href="/perfis/relatorio-permissoes">
-                    <i class="bi bi-clipboard-data"></i> 📊 Relatório de Permissões
-                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/templates">📝 Templates</a></li>
+                  <li><a class="dropdown-item" href="/perfis/relatorio-permissoes">📊 Relatório de Permissões</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/perfis/import">
-                    <i class="bi bi-upload"></i> 📥 Importar
-                  </a></li>
-                  <li><a class="dropdown-item" href="/perfis/export">
-                    <i class="bi bi-download"></i> 📤 Exportar
-                  </a></li>
+                  <li><a class="dropdown-item" href="/perfis/import">📥 Importar</a></li>
+                  <li><a class="dropdown-item" href="/perfis/export">📤 Exportar</a></li>
                 </ul>
               </li>
               {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_config')|list) %}
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/configuracao">
-                  <i class="bi bi-gear"></i> ⚙️ Configuração
-                </a></li>
+                <li><a class="dropdown-item" href="/configuracao">⚙️ Configuração</a></li>
               {% endif %}
             </ul>
           </li>
