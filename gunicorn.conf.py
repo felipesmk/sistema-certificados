@@ -2,7 +2,32 @@
 import multiprocessing
 
 # Configurações básicas
-bind = "0.0.0.0:8000"
+import socket
+
+
+def _detect_machine_ip() -> str:
+    """Tenta detectar um IP local não-loopback para binding externo."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        if ip and ip != "127.0.0.1":
+            return ip
+    except Exception:
+        pass
+    try:
+        ip = socket.gethostbyname(socket.gethostname())
+        if ip:
+            return ip
+    except Exception:
+        pass
+    return "0.0.0.0"
+
+
+_ip_addr = _detect_machine_ip()
+_port = 80
+bind = f"{_ip_addr}:{_port}"
 workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "sync"
 worker_connections = 1000

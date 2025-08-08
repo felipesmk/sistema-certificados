@@ -28,18 +28,18 @@ echo "Hostname: $(hostname)"
 echo "FQDN: $(hostname -f 2>/dev/null || echo 'N/A')"
 
 # Verificar porta 5000
-echo "[3/5] Verificando porta 5000..."
+echo "[3/5] Verificando porta 80..."
 if command -v netstat &> /dev/null; then
-    if netstat -tlnp 2>/dev/null | grep :5000; then
-        echo "✅ Porta 5000 está em uso"
+    if netstat -tlnp 2>/dev/null | grep :80; then
+        echo "✅ Porta 80 está em uso"
     else
-        echo "⚠️  Porta 5000 não está em uso"
+        echo "⚠️  Porta 80 não está em uso"
     fi
 elif command -v ss &> /dev/null; then
-    if ss -tlnp 2>/dev/null | grep :5000; then
-        echo "✅ Porta 5000 está em uso"
+    if ss -tlnp 2>/dev/null | grep :80; then
+        echo "✅ Porta 80 está em uso"
     else
-        echo "⚠️  Porta 5000 não está em uso"
+        echo "⚠️  Porta 80 não está em uso"
     fi
 else
     echo "⚠️  Comandos netstat/ss não encontrados"
@@ -52,7 +52,7 @@ if [ -f /etc/os-release ]; then
     case $ID in
         "ubuntu"|"debian")
             if command -v ufw &> /dev/null; then
-                sudo ufw allow 5000
+                sudo ufw allow 80
                 echo "✅ Firewall UFW configurado"
             else
                 echo "⚠️  UFW não encontrado"
@@ -60,11 +60,11 @@ if [ -f /etc/os-release ]; then
             ;;
         "opensuse"|"sles"|"suse")
             if command -v firewall-cmd &> /dev/null; then
-                sudo firewall-cmd --permanent --add-port=5000/tcp
+                sudo firewall-cmd --permanent --add-port=80/tcp
                 sudo firewall-cmd --reload
                 echo "✅ Firewall firewalld configurado"
             elif command -v SuSEfirewall2 &> /dev/null; then
-                sudo SuSEfirewall2 open EXT TCP 5000
+                sudo SuSEfirewall2 open EXT TCP 80
                 sudo SuSEfirewall2 start
                 echo "✅ Firewall SuSEfirewall2 configurado"
             else
@@ -73,7 +73,7 @@ if [ -f /etc/os-release ]; then
             ;;
         "centos"|"rhel"|"fedora")
             if command -v firewall-cmd &> /dev/null; then
-                sudo firewall-cmd --permanent --add-port=5000/tcp
+                sudo firewall-cmd --permanent --add-port=80/tcp
                 sudo firewall-cmd --reload
                 echo "✅ Firewall firewalld configurado"
             else
@@ -90,7 +90,7 @@ fi
 echo "[5/5] Testando conectividade..."
 echo "Testando localhost..."
 if command -v curl &> /dev/null; then
-    if curl -s http://localhost:5000 > /dev/null 2>&1; then
+    if curl -s http://localhost > /dev/null 2>&1; then
         echo "✅ Localhost: OK"
     else
         echo "⚠️  Localhost: FALHOU (aplicação não está rodando)"
@@ -119,18 +119,18 @@ echo "    CONFIGURACAO DE REDE CONCLUIDA"
 echo "========================================"
 echo
 echo "Para acessar de outras maquinas:"
-echo "http://[IP-DA-VM]:5000"
+echo "http://[IP-DA-VM]"
 echo
 echo "📋 COMANDOS ÚTEIS:"
 echo "  - Verificar IP: ip addr show"
 echo "  - Verificar rota: ip route show"
 echo "  - Verificar DNS: cat /etc/resolv.conf"
-echo "  - Testar conectividade: curl http://localhost:5000"
+echo "  - Testar conectividade: curl http://localhost"
 echo
 echo "🔧 SOLUÇÃO DE PROBLEMAS:"
 echo "  - Se não conseguir acessar externamente, configure o firewall:"
-echo "    Ubuntu/Debian: sudo ufw allow 5000"
-echo "    SUSE/Red Hat: sudo firewall-cmd --permanent --add-port=5000/tcp"
+echo "    Ubuntu/Debian: sudo ufw allow 80"
+echo "    SUSE/Red Hat: sudo firewall-cmd --permanent --add-port=80/tcp"
 echo "  - Se problemas de DNS: sudo systemctl restart NetworkManager"
 echo "  - Para verificar logs: journalctl -u NetworkManager -f"
 echo 
