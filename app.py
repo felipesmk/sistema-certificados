@@ -139,6 +139,15 @@ def from_json_filter(value):
     except (json.JSONDecodeError, TypeError):
         return {}
 
+# Filtro personalizado para valor absoluto
+@app.template_filter('abs')
+def abs_filter(value):
+    """Retorna o valor absoluto de um número."""
+    try:
+        return abs(value)
+    except (TypeError, ValueError):
+        return value
+
 # Configurações do Flask com suporte a variáveis de ambiente
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_urlsafe(32))
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://certificados_user:certificados123@localhost:5432/certificados_db')
