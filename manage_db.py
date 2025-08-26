@@ -66,7 +66,15 @@ class DatabaseManager:
     """Gerenciador principal do banco de dados"""
     
     def __init__(self):
-        self.db_path = os.path.join(app.instance_path, 'certificados.db')
+        # Detectar tipo de banco
+        db_url = os.environ.get('DATABASE_URL', 'sqlite:///certificados.db')
+        if db_url.startswith('postgresql://'):
+            self.db_type = 'postgresql'
+            self.db_path = None  # PostgreSQL não usa arquivo local
+        else:
+            self.db_type = 'sqlite'
+            self.db_path = os.path.join(app.instance_path, 'certificados.db')
+        
         self.backup_dir = Path('backups')
         self.backup_dir.mkdir(exist_ok=True)
     
@@ -75,10 +83,14 @@ class DatabaseManager:
         print_header("INICIALIZAÇÃO DO BANCO DE DADOS")
         
         with app.app_context():
-            if reset and os.path.exists(self.db_path):
-                print_warning("Removendo banco existente...")
+            if self.db_type == 'sqlite' and reset and os.path.exists(self.db_path):
+                print_warning("Removendo banco SQLite existente...")
                 os.remove(self.db_path)
                 print_success("Banco removido")
+            elif self.db_type == 'postgresql' and reset:
+                print_warning("Reset do PostgreSQL - removendo todas as tabelas...")
+                db.drop_all()
+                print_success("Tabelas removidas")
             
             # Criar todas as tabelas
             print_info("Criando estrutura do banco...")
@@ -352,23 +364,83 @@ class DatabaseManager:
         """Cria backup do banco de dados"""
         print_header("BACKUP DO BANCO DE DADOS")
         
-        if not os.path.exists(self.db_path):
+        if self.db_type == 'sqlite' and not os.path.exists(self.db_path):
             print_error("Banco de dados não encontrado!")
             return False
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = self.backup_dir / f"certificados_backup_{timestamp}.db"
         
         try:
-            shutil.copy2(self.db_path, backup_file)
-            print_success(f"Backup criado: {backup_file}")
-            
-            # Manter apenas os 10 backups mais recentes
-            backups = sorted(self.backup_dir.glob("certificados_backup_*.db"))
-            if len(backups) > 10:
-                for old_backup in backups[:-10]:
-                    old_backup.unlink()
-                    print_info(f"Backup antigo removido: {old_backup.name}")
+            if self.db_type == 'sqlite':
+                backup_file = self.backup_dir / f"certificados_backup_{timestamp}.db"
+                shutil.copy2(self.db_path, backup_file)
+                print_success(f"Backup criado: {backup_file}")
+                
+                # Manter apenas os 10 backups mais recentes
+                backups = sorted(self.backup_dir.glob("certificados_backup_*.db"))
+                if len(backups) > 10:
+                    for old_backup in backups[:-10]:
+                        old_backup.unlink()
+                        print_info(f"Backup antigo removido: {old_backup.name}")
+                
+            elif self.db_type == 'postgresql':
+                backup_file = self.backup_dir / f"certificados_backup_{timestamp}.sql"
+                
+                # Extrair informações da URL do PostgreSQL
+                db_url = os.environ.get('DATABASE_URL', 'postgresql://certificados_user:certificados123@localhost:5432/certificados_db')
+                
+                # Parse da URL (formato: postgresql://user:pass@host:port/db)
+                if db_url.startswith('postgresql://'):
+                    parts = db_url.replace('postgresql://', '').split('@')
+                    if len(parts) == 2:
+                        user_pass = parts[0].split(':')
+                        host_db = parts[1].split('/')
+                        if len(user_pass) >= 2 and len(host_db) >= 2:
+                            username = user_pass[0]
+                            password = user_pass[1]
+                            host_port = host_db[0].split(':')
+                            host = host_port[0]
+                            port = host_port[1] if len(host_port) > 1 else '5432'
+                            database = host_db[1]
+                            
+                            # Usar pg_dump via subprocess
+                            import subprocess
+                            cmd = [
+                                'pg_dump',
+                                '-h', host,
+                                '-p', port,
+                                '-U', username,
+                                '-d', database,
+                                '-f', str(backup_file)
+                            ]
+                            
+                            # Definir variável de ambiente para senha
+                            env = os.environ.copy()
+                            env['PGPASSWORD'] = password
+                            
+                            result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                            
+                            if result.returncode == 0:
+                                print_success(f"Backup PostgreSQL criado: {backup_file}")
+                                
+                                # Manter apenas os 10 backups mais recentes
+                                backups = sorted(self.backup_dir.glob("certificados_backup_*.sql"))
+                                if len(backups) > 10:
+                                    for old_backup in backups[:-10]:
+                                        old_backup.unlink()
+                                        print_info(f"Backup antigo removido: {old_backup.name}")
+                            else:
+                                print_error(f"Erro no pg_dump: {result.stderr}")
+                                return False
+                        else:
+                            print_error("Formato de URL PostgreSQL inválido")
+                            return False
+                    else:
+                        print_error("Formato de URL PostgreSQL inválido")
+                        return False
+                else:
+                    print_error("URL PostgreSQL inválida")
+                    return False
             
             return str(backup_file)
             
@@ -391,8 +463,12 @@ class DatabaseManager:
             if current_backup:
                 print_info(f"Backup atual criado: {current_backup}")
             
-            # Restaurar
-            shutil.copy2(backup_path, self.db_path)
+            if self.db_type == 'sqlite':
+                shutil.copy2(backup_path, self.db_path)
+            elif self.db_type == 'postgresql':
+                print_warning("Restauração do PostgreSQL não suportada via script. Use um cliente de restauração.")
+                return False
+            
             print_success(f"Banco restaurado de: {backup_file}")
             return True
             
@@ -555,16 +631,25 @@ class DatabaseManager:
         """Mostra status do banco de dados"""
         print_header("STATUS DO BANCO DE DADOS")
         
-        if not os.path.exists(self.db_path):
+        if self.db_type == 'sqlite' and not os.path.exists(self.db_path):
             print_error("Banco de dados não encontrado!")
             return
         
         with app.app_context():
             try:
                 # Informações básicas
-                file_size = os.path.getsize(self.db_path) / 1024 / 1024  # MB
-                print_info(f"Arquivo: {self.db_path}")
-                print_info(f"Tamanho: {file_size:.2f} MB")
+                if self.db_type == 'sqlite':
+                    file_size = os.path.getsize(self.db_path) / 1024 / 1024  # MB
+                    print_info(f"Arquivo: {self.db_path}")
+                    print_info(f"Tamanho: {file_size:.2f} MB")
+                elif self.db_type == 'postgresql':
+                    print_info("Status do PostgreSQL (via conexão):")
+                    try:
+                        # Tentar uma consulta simples para verificar a conexão
+                        db.session.execute(text("SELECT 1"))
+                        print_success("Conexão PostgreSQL: OK")
+                    except Exception as e:
+                        print_error(f"Conexão PostgreSQL: Falha - {e}")
                 
                 # Contadores
                 users_count = User.query.count()

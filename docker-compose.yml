@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: bitnami/postgresql:latest
+    container_name: certificados_postgres
+    environment:
+      POSTGRESQL_DATABASE: certificados_db
+      POSTGRESQL_USERNAME: certificados_user
+      POSTGRESQL_PASSWORD: certificados123
+      POSTGRESQL_PORT_NUMBER: 5432
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/bitnami/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U certificados_user -d certificados_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
