@@ -62,6 +62,13 @@ def setup_new_system():
     print("CONFIGURAÇÃO COMPLETA DO SISTEMA")
     print("="*50)
     
+    # Verificar se é SUSE e corrigir autenticação PostgreSQL automaticamente
+    if check_suse():
+        print("🐧 Sistema SUSE detectado - verificando configuração PostgreSQL...")
+        if not fix_postgresql_auth_suse():
+            print("⚠️  Correção automática falhou, mas continuando...")
+        print()
+    
     steps = [
         ("python manage_db.py reset --force", "Resetando banco de dados"),
         ("python manage_db.py migrate", "Executando migrações (incluindo campos avançados de usuários)"),
@@ -132,23 +139,123 @@ def create_demo_users():
     for username, name, email, password, role in demo_users:
         print(f"   {username} / {password} ({role})")
 
+def check_suse():
+    """Verifica se é SUSE Linux"""
+    if not os.path.exists('/etc/os-release'):
+        return False
+    
+    with open('/etc/os-release', 'r') as f:
+        content = f.read().lower()
+        return 'suse' in content or 'opensuse' in content
+
+def fix_postgresql_auth_suse():
+    """Corrige autenticação do PostgreSQL no SUSE automaticamente"""
+    print("🔧 CORREÇÃO AUTOMÁTICA DE AUTENTICAÇÃO POSTGRESQL - SUSE")
+    print("=" * 60)
+    
+    # Verificar se é SUSE
+    if not check_suse():
+        print("ℹ️  Não é SUSE, correção não aplicável")
+        return True
+    
+    print("✅ Sistema SUSE detectado - aplicando correção de autenticação...")
+    
+    # Encontrar arquivo de configuração
+    possible_paths = [
+        '/var/lib/pgsql/data/pg_hba.conf',
+        '/etc/postgresql/*/main/pg_hba.conf',
+        '/var/lib/postgresql/*/data/pg_hba.conf',
+        '/opt/postgresql/*/data/pg_hba.conf'
+    ]
+    
+    config_file = None
+    for path_pattern in possible_paths:
+        import glob
+        matches = glob.glob(path_pattern)
+        if matches:
+            config_file = matches[0]
+            break
+    
+    if not config_file:
+        print("⚠️  Arquivo pg_hba.conf não encontrado")
+        print("ℹ️  Continue com configuração manual se necessário")
+        return True
+    
+    print(f"📁 Arquivo encontrado: {config_file}")
+    
+    try:
+        # Fazer backup
+        import shutil
+        backup_file = f"{config_file}.backup"
+        shutil.copy2(config_file, backup_file)
+        print(f"✅ Backup criado: {backup_file}")
+        
+        # Ler e corrigir arquivo
+        with open(config_file, 'r') as f:
+            lines = f.readlines()
+        
+        # Substituir linhas problemáticas
+        new_lines = []
+        for line in lines:
+            if 'ident' in line.lower() and not line.strip().startswith('#'):
+                new_lines.append(f"# {line.strip()}  # Comentado pelo script de correção\n")
+            else:
+                new_lines.append(line)
+        
+        # Adicionar configurações corretas
+        new_lines.extend([
+            "\n# Configurações corrigidas para autenticação por senha\n",
+            "local   all             all                                     md5\n",
+            "host    all             all             127.0.0.1/32            md5\n",
+            "host    all             all             ::1/128                 md5\n",
+            "host    all             all             0.0.0.0/0               md5\n"
+        ])
+        
+        # Escrever arquivo corrigido
+        with open(config_file, 'w') as f:
+            f.writelines(new_lines)
+        
+        print("✅ Arquivo pg_hba.conf corrigido!")
+        
+        # Tentar reiniciar PostgreSQL
+        restart_commands = [
+            ['sudo', 'systemctl', 'restart', 'postgresql'],
+            ['sudo', 'systemctl', 'restart', 'postgresql.service'],
+            ['sudo', 'service', 'postgresql', 'restart']
+        ]
+        
+        restarted = False
+        for cmd in restart_commands:
+            try:
+                result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if result.returncode == 0:
+                    print("✅ PostgreSQL reiniciado automaticamente!")
+                    restarted = True
+                    break
+            except FileNotFoundError:
+                continue
+        
+        if not restarted:
+            print("⚠️  Não foi possível reiniciar automaticamente")
+            print("ℹ️  Execute manualmente: sudo systemctl restart postgresql")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erro na correção: {e}")
+        return False
+
 def test_suse_compatibility():
     """Testa compatibilidade específica do SUSE"""
     print("🔍 TESTE DE COMPATIBILIDADE SUSE")
     print("=" * 50)
     
     # Verificar se é SUSE
-    is_suse = False
-    if os.path.exists('/etc/os-release'):
-        with open('/etc/os-release', 'r') as f:
-            content = f.read().lower()
-            if 'suse' in content or 'opensuse' in content:
-                is_suse = True
-                print("✅ Sistema SUSE detectado")
-    
-    if not is_suse:
+    if not check_suse():
         print("ℹ️  Não é SUSE, teste não aplicável")
         return True
+    
+    print("✅ Sistema SUSE detectado")
     
     print("\n🔧 Testando instalação de pacotes...")
     
@@ -288,7 +395,8 @@ def show_menu():
     print("6. Testar Compatibilidade SUSE")
     print("7. Backup do Sistema")
     print("8. Status do Sistema")
-    print("9. Sair")
+    print("9. Corrigir Autenticação PostgreSQL (SUSE)")
+    print("10. Sair")
     print()
 
 def main():
@@ -309,11 +417,13 @@ def main():
             install_production_deps()
         elif option == "test-suse":
             test_suse_compatibility()
+        elif option == "fix-auth":
+            fix_postgresql_auth_suse()
         elif option == "status":
             run_command("python manage_db.py status", "Verificando status")
         else:
             print(f"[ERROR] Opção inválida: {option}")
-            print("Opções: setup, start, demo, backup, test-users, install-prod, test-suse, status")
+            print("Opções: setup, start, demo, backup, test-users, install-prod, test-suse, fix-auth, status")
         return
     
     # Menu interativo
@@ -351,13 +461,16 @@ def main():
                 run_command("python manage_db.py status", "Verificando status")
                 
             elif choice == "9":
+                fix_postgresql_auth_suse()
+                
+            elif choice == "10":
                 print("\nAté logo!")
                 break
                 
             else:
-                print("\n[ERROR] Opção inválida! Escolha entre 1-9.")
+                print("\n[ERROR] Opção inválida! Escolha entre 1-10.")
                 
-            if choice in ["1", "2", "3", "4", "5", "6", "7", "8"]:
+            if choice in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:
                 input("\nPressione Enter para continuar...")
                 
         except KeyboardInterrupt:
