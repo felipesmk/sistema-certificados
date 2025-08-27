@@ -132,15 +132,50 @@ def start_server():
                     print("   sudo sysctl -p")
                     print()
                     
-                    # Perguntar se quer usar porta alternativa
+                    # Perguntar qual opção escolher
                     try:
-                        choice = input("Usar porta 8080? (s/n): ").lower().strip()
-                        if choice in ['s', 'sim', 'y', 'yes']:
+                        print("Escolha uma opção:")
+                        print("1 - Usar porta 8080 (recomendado)")
+                        print("2 - Tentar com sudo")
+                        print("3 - Configurar porta 80 permanentemente")
+                        choice = input("Opção (1/2/3): ").strip()
+                        
+                        if choice == "1":
                             port = 8080
                             print("✅ Usando porta 8080")
+                        elif choice == "2":
+                            print("🔄 Tentando executar com sudo...")
+                            # Tentar executar com sudo
+                            try:
+                                cmd = ['sudo', 'python', 'run_production.py']
+                                subprocess.run(cmd)
+                                return  # Sair da função atual
+                            except FileNotFoundError:
+                                print("❌ sudo não encontrado ou não funcionou")
+                                print("Tentando porta 8080 como fallback...")
+                                port = 8080
+                        elif choice == "3":
+                            print("🔧 Configurando porta 80 permanentemente...")
+                            try:
+                                # Tentar configurar sysctl
+                                sysctl_cmd = ['sudo', 'sysctl', '-w', 'net.ipv4.ip_unprivileged_port_start=80']
+                                result = subprocess.run(sysctl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                
+                                if result.returncode == 0:
+                                    print("✅ Configuração aplicada com sucesso!")
+                                    print("🔄 Tentando usar porta 80...")
+                                    port = 80  # Manter porta 80
+                                else:
+                                    print("⚠️ Não foi possível aplicar a configuração")
+                                    print("Tentando porta 8080 como fallback...")
+                                    port = 8080
+                            except Exception as e:
+                                print("❌ Erro ao configurar: {}".format(e))
+                                print("Tentando porta 8080 como fallback...")
+                                port = 8080
                         else:
-                            print("❌ Cancelando execução")
-                            return
+                            print("❌ Opção inválida, usando porta 8080")
+                            port = 8080
                     except (KeyboardInterrupt, EOFError):
                         print("\n❌ Cancelando execução")
                         return
