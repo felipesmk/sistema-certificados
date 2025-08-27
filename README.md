@@ -138,6 +138,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - ✅ **Instalação Automática** - PostgreSQL instalado automaticamente no Linux
 - ✅ **Scripts Atualizados** - `setup_vm.sh` e `setup_vm.bat` com configuração segura
 - ✅ **Documentação de Segurança** - Guias completos para configuração segura
+- ✅ **Guias Específicos por SO** - `INSTALACAO_WINDOWS.md`, `INSTALACAO_LINUX.md`, `INSTALACAO_MACOS.md`
 
 ### **v2.4.0 - Sistema de Validação e Correções**
 - ✅ **Sistema de Validação Centralizado** - `utils/validation.py` com funções reutilizáveis
@@ -181,6 +182,14 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 
 ## 🚀 Instalação e Configuração
 
+### 📚 **Guias de Instalação por Sistema Operacional**
+
+Para instruções detalhadas e específicas do seu sistema operacional, consulte os guias dedicados:
+
+- **🖥️ Windows:** [Guia de Instalação Windows](INSTALACAO_WINDOWS.md)
+- **🐧 Linux:** [Guia de Instalação Linux](INSTALACAO_LINUX.md)
+- **🍎 macOS:** [Guia de Instalação macOS](INSTALACAO_MACOS.md)
+
 ### 🚀 **Instalação Rápida com Scripts Automáticos**
 
 Para uma instalação mais fácil e rápida, use os scripts de automação:
@@ -209,6 +218,14 @@ chmod +x configure_network.sh && ./configure_network.sh
 - ✅ **CentOS/RHEL/Fedora** (dnf)
 - ✅ **Detecção automática** da distribuição
 
+#### **🍎 macOS:**
+```bash
+# Configuração completa automática
+chmod +x setup_vm.sh && ./setup_vm.sh
+
+# OU instalação manual com Homebrew
+```
+
 #### **📋 O que os Scripts Fazem:**
 - **Verificam e instalam** Python 3, pip, venv, git
 - **Criam ambiente virtual** automaticamente
@@ -226,7 +243,7 @@ Para configuração detalhada em máquinas virtuais, consulte o [Guia de Configu
 - Configuração como serviço do sistema
 - Monitoramento e backup automático
 
-### **📦 Instalação Manual (Passo a Passo)**
+### **📦 Instalação Manual (Resumo)**
 
 #### **1. Clone o Repositório**
 ```bash
@@ -565,6 +582,9 @@ sistema-certificados/
 ├── test_vm_installation.py # Teste de validação da VM
 ├── test_validation.py    # Testes do sistema de validação
 ├── configure_postgresql.py # Configuração segura do PostgreSQL
+├── INSTALACAO_WINDOWS.md # Guia detalhado para Windows
+├── INSTALACAO_LINUX.md   # Guia detalhado para Linux
+├── INSTALACAO_MACOS.md   # Guia detalhado para macOS
 ├── utils/                # Utilitários
 │   ├── __init__.py       # Package init
 │   ├── validation.py     # Sistema de validação centralizado
