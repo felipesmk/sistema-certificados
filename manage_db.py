@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 🗄️ SISTEMA UNIFICADO DE GESTÃO DE BANCO DE DADOS
 =================================================

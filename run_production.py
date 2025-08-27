@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Script para executar a aplicação em produção usando Waitress (Windows) ou Gunicorn (Linux).
 Este script configura o ambiente e inicia o servidor.

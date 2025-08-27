@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Script específico para corrigir autenticação PostgreSQL no SUSE Linux
 Versão simplificada e direta

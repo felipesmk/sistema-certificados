@@ -434,6 +434,33 @@ chmod +x setup_vm.sh
 chmod +x configure_network.sh
 ```
 
+### **Problema: Autenticação PostgreSQL no SUSE**
+Se você encontrar erro de autenticação "Ident" no PostgreSQL no SUSE, execute:
+
+```bash
+# 1. Acessar como usuário postgres
+sudo -u postgres psql
+
+# 2. No prompt do PostgreSQL, execute:
+ALTER SYSTEM SET password_encryption = 'md5';
+SELECT pg_reload_conf();
+\q
+
+# 3. Editar arquivo de configuração
+sudo -u postgres nano /var/lib/pgsql/data/pg_hba.conf
+
+# 4. Substituir linhas com 'ident' por 'md5':
+# local   all             all                                     md5
+# host    all             all             127.0.0.1/32            md5
+# host    all             all             ::1/128                 md5
+
+# 5. Reiniciar PostgreSQL
+sudo systemctl restart postgresql
+
+# 6. Testar conexão
+python quick_setup.py setup
+```
+
 ---
 
 ## 📞 Suporte
