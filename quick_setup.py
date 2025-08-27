@@ -217,15 +217,23 @@ def fix_postgresql_auth_suse():
     print(f"📁 Arquivo encontrado: {config_file}")
     
     try:
-        # Fazer backup
-        import shutil
+        # Fazer backup usando sudo -u postgres
         backup_file = f"{config_file}.backup"
-        shutil.copy2(config_file, backup_file)
-        print(f"✅ Backup criado: {backup_file}")
+        result = subprocess.run(['sudo', '-u', 'postgres', 'cp', config_file, backup_file], 
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            print(f"✅ Backup criado: {backup_file}")
+        else:
+            print(f"⚠️  Erro ao criar backup: {result.stderr.decode()}")
         
-        # Ler e corrigir arquivo
-        with open(config_file, 'r') as f:
-            lines = f.readlines()
+        # Ler arquivo usando sudo -u postgres
+        result = subprocess.run(['sudo', '-u', 'postgres', 'cat', config_file], 
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            print(f"❌ Erro ao ler arquivo: {result.stderr.decode()}")
+            return False
+        
+        lines = result.stdout.decode().splitlines(True)
         
         # Substituir linhas problemáticas
         new_lines = []
@@ -244,9 +252,22 @@ def fix_postgresql_auth_suse():
             "host    all             all             0.0.0.0/0               md5\n"
         ])
         
-        # Escrever arquivo corrigido
-        with open(config_file, 'w') as f:
-            f.writelines(new_lines)
+        # Criar arquivo temporário
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+            temp_file.writelines(new_lines)
+            temp_file_path = temp_file.name
+        
+        # Copiar arquivo temporário para o local correto usando sudo -u postgres
+        result = subprocess.run(['sudo', '-u', 'postgres', 'cp', temp_file_path, config_file], 
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # Limpar arquivo temporário
+        os.unlink(temp_file_path)
+        
+        if result.returncode != 0:
+            print(f"❌ Erro ao escrever arquivo: {result.stderr.decode()}")
+            return False
         
         print("✅ Arquivo pg_hba.conf corrigido!")
         
