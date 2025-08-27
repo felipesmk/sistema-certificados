@@ -53,7 +53,7 @@ def check_dependencies():
         print("Dependências de produção verificadas")
         return True
     except ImportError as e:
-        print(f"Dependência faltando: {e}")
+        print("Dependência faltando: {}".format(e))
         print("Execute: pip install -r requirements.txt")
         return False
 
@@ -109,7 +109,7 @@ def start_server():
             cmd = [
                 'gunicorn',
                 '--config', 'gunicorn.conf.py',
-                '--bind', f'{ip_addr}:{port}',
+                '--bind', '{}:{}'.format(ip_addr, port),
                 '--workers', '4',
                 '--timeout', '30',
                 '--access-logfile', 'logs/gunicorn_access.log',
@@ -118,12 +118,12 @@ def start_server():
             ]
         
         print("Iniciando servidor...")
-        print(f"Comando: {' '.join(cmd)}")
+        print("Comando: {}".format(' '.join(cmd)))
         # Mostrar URL padrão sem :80
         if ip_addr in ("0.0.0.0", "127.0.0.1"):
             print("Aplicação disponível em: http://localhost")
         else:
-            print(f"Aplicação disponível em: http://{ip_addr}")
+            print("Aplicação disponível em: http://{}".format(ip_addr))
         print("Logs em: logs/")
         print("Para parar: Ctrl+C")
         
@@ -133,7 +133,7 @@ def start_server():
     except KeyboardInterrupt:
         print("\nServidor parado pelo usuário")
     except FileNotFoundError as e:
-        print(f"Erro ao iniciar servidor: {e}")
+        print("Erro ao iniciar servidor: {}".format(e))
         if system != 'windows':
             print("\nSolução:")
             print("1. Instale o gunicorn:")
@@ -150,7 +150,7 @@ def start_server():
             print("   pip install -r requirements.txt")
         sys.exit(1)
     except Exception as e:
-        print(f"Erro ao iniciar servidor: {e}")
+        print("Erro ao iniciar servidor: {}".format(e))
         print("\nVerifique se o ambiente virtual está ativado e as dependências instaladas")
         sys.exit(1)
 
