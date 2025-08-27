@@ -34,9 +34,7 @@ def run_command(command, description, interactive=False):
                 shell=True, 
                 stdout=subprocess.PIPE, 
                 stderr=subprocess.STDOUT, 
-                text=True,
-                bufsize=1,
-                universal_newlines=True
+                bufsize=1
             )
             
             # Mostrar saída em tempo real

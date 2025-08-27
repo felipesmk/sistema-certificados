@@ -432,7 +432,7 @@ class DatabaseManager:
                             env = os.environ.copy()
                             env['PGPASSWORD'] = password
                             
-                            result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                            result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             
                             if result.returncode == 0:
                                 print_success(f"Backup PostgreSQL criado: {backup_file}")

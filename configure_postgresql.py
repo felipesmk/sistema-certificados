@@ -52,7 +52,7 @@ def check_postgresql_installed():
     try:
         result = subprocess.run(['psql', '--version'], 
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                              universal_newlines=True, timeout=10)
+                              timeout=10)
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
@@ -105,8 +105,7 @@ def create_postgresql_user(username, password, database):
         
         for command in sql_commands:
             result = subprocess.run(['sudo', '-u', 'postgres', 'psql', '-c', command], 
-                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                                  universal_newlines=True)
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if result.returncode != 0:
                 print_warning(f"Comando falhou: {command}")
                 print_warning(f"Erro: {result.stderr}")
