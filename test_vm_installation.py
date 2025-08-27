@@ -32,7 +32,7 @@ def run_command(command, capture_output=True):
     """Executa comando e retorna resultado"""
     try:
         if capture_output:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             return result.returncode == 0, result.stdout, result.stderr
         else:
             result = subprocess.run(command, shell=True)
