@@ -2651,10 +2651,28 @@ def export_perfis():
     from flask import make_response
     
     perfis = Role.query.all()
+    # Garantir que os objetos estejam na sessão antes de chamar to_dict()
+    perfis_data = []
+    for perfil in perfis:
+        try:
+            perfis_data.append(perfil.to_dict())
+        except Exception as e:
+            # Se houver erro, criar dicionário manualmente
+            perfis_data.append({
+                'nome': perfil.nome,
+                'descricao': perfil.descricao,
+                'cor': perfil.cor,
+                'icone': perfil.icone,
+                'ativo': perfil.ativo,
+                'prioridade': perfil.prioridade,
+                'parent_nome': None,  # Evitar acesso ao parent
+                'permissions': [p.nome for p in perfil.permissions]
+            })
+    
     export_data = {
         'timestamp': datetime.now().isoformat(),
         'exported_by': current_user.username,
-        'perfis': [perfil.to_dict() for perfil in perfis]
+        'perfis': perfis_data
     }
     
     response = make_response(json.dumps(export_data, indent=2, ensure_ascii=False))

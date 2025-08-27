@@ -38,13 +38,17 @@ class Role(db.Model):
     
     # Relacionamentos
     permissions = db.relationship('Permission', secondary='role_permission', backref='roles', lazy='joined')
-    children = db.relationship('Role', backref=db.backref('parent', remote_side=[id]))
+    children = db.relationship('Role', backref=db.backref('parent', remote_side=[id], lazy='select'))
     
     def get_all_permissions(self):
         """Retorna todas as permissões incluindo as herdadas do role pai."""
         perms = set(self.permissions)
-        if self.parent:
-            perms.update(self.parent.get_all_permissions())
+        try:
+            if self.parent:
+                perms.update(self.parent.get_all_permissions())
+        except:
+            # Evitar DetachedInstanceError
+            pass
         return list(perms)
     
     def can_be_deleted(self):
@@ -60,6 +64,12 @@ class Role(db.Model):
     
     def to_dict(self):
         """Converte role para dicionário (para export/import)."""
+        try:
+            parent_nome = self.parent.nome if self.parent else None
+        except:
+            # Evitar DetachedInstanceError
+            parent_nome = None
+            
         return {
             'nome': self.nome,
             'descricao': self.descricao,
@@ -67,7 +77,7 @@ class Role(db.Model):
             'icone': self.icone,
             'ativo': self.ativo,
             'prioridade': self.prioridade,
-            'parent_nome': self.parent.nome if self.parent else None,
+            'parent_nome': parent_nome,
             'permissions': [p.nome for p in self.permissions]
         }
 
