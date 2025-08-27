@@ -461,6 +461,49 @@ sudo systemctl restart postgresql
 python quick_setup.py setup
 ```
 
+### **Problema: Compatibilidade Python < 3.7 no SUSE**
+Se você encontrar erros relacionados a `capture_output` ou `text=True` no subprocess, o sistema detecta automaticamente e usa compatibilidade:
+
+```bash
+# Verificar versão do Python
+python3 --version
+
+# Se for < 3.7, o sistema usa compatibilidade automática
+# Não é necessário fazer nada manualmente
+```
+
+### **Problema: Elevação de Privilégios no SUSE (Porta 80)**
+No SUSE Linux, ao executar `python run_production.py`, você pode encontrar problemas com privilégios para usar a porta 80. O sistema oferece 3 opções interativas:
+
+```bash
+# Executar aplicação
+python run_production.py
+
+# Opções que aparecerão:
+# 1. Usar porta 8080 (recomendado para desenvolvimento)
+# 2. Tentar usar sudo para porta 80
+# 3. Configurar sysctl para permitir porta 80 sem privilégios
+
+# Recomendação: Use a opção 1 (porta 8080) para desenvolvimento
+# Use a opção 3 para produção (configura permanentemente)
+```
+
+**Configuração Permanente para Porta 80 (Opção 3):**
+```bash
+# O sistema configurará automaticamente:
+sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80
+echo 'net.ipv4.ip_unprivileged_port_start=80' | sudo tee -a /etc/sysctl.conf
+```
+
+### **Problema: Erros de Encoding UTF-8**
+Se encontrar erros de encoding, todos os scripts já incluem a declaração UTF-8:
+
+```python
+# -*- coding: utf-8 -*-
+```
+
+**Não é necessário fazer nada manualmente.**
+
 ---
 
 ## 📞 Suporte
@@ -544,11 +587,54 @@ htop
 - Usa `zypper` como gerenciador de pacotes
 - Firewall: firewalld ou SuSEfirewall2
 - Serviços gerenciados por systemd
+- **Compatibilidade Python:** Detecta automaticamente versões < 3.7
+- **Elevação de Privilégios:** Sistema interativo para porta 80
+- **PostgreSQL:** Configuração específica para autenticação md5
 
 ### **CentOS/RHEL/Fedora**
 - Usa `dnf` como gerenciador de pacotes
 - Firewall padrão: firewalld
 - Serviços gerenciados por systemd
+
+---
+
+## 🔄 Últimas Modificações e Melhorias
+
+### **Compatibilidade Python < 3.7**
+- ✅ **Subprocess:** Substituído `capture_output=True, text=True` por compatibilidade universal
+- ✅ **F-strings:** Convertido para `.format()` em `run_production.py`
+- ✅ **Encoding:** Adicionado `# -*- coding: utf-8 -*-` em todos os scripts
+
+### **SUSE Linux - Soluções Específicas**
+- ✅ **PostgreSQL Auth:** Script automático para corrigir autenticação "Ident"
+- ✅ **Privilégios Porta 80:** Sistema interativo com 3 opções
+- ✅ **Detecção Automática:** Identifica SUSE e aplica configurações específicas
+
+### **SQLAlchemy - Correções de Sessão**
+- ✅ **DetachedInstanceError:** Implementado `lazy='select'` e tratamento de erros
+- ✅ **to_dict():** Protegido com try-except para evitar erros de sessão
+- ✅ **Export/Import:** Melhorado tratamento de relacionamentos
+
+### **Scripts Atualizados**
+- ✅ `configure_postgresql.py` - Compatibilidade subprocess
+- ✅ `manage_db.py` - Compatibilidade subprocess + encoding
+- ✅ `quick_setup.py` - Integração correção PostgreSQL SUSE
+- ✅ `run_production.py` - Sistema interativo privilégios + compatibilidade
+- ✅ `test_vm_installation.py` - Compatibilidade subprocess
+- ✅ `models.py` - Correções SQLAlchemy
+- ✅ `app.py` - Melhorias export/import
+
+### **Comandos de Verificação**
+```bash
+# Testar compatibilidade
+python test_vm_installation.py
+
+# Verificar configuração PostgreSQL
+python quick_setup.py setup
+
+# Testar aplicação
+python run_production.py
+```
 
 ---
 
