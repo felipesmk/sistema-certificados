@@ -67,11 +67,18 @@ class DatabaseManager:
     
     def __init__(self):
         # Detectar tipo de banco
-        db_url = os.environ.get('DATABASE_URL', 'sqlite:///certificados.db')
+        db_url = os.environ.get('DATABASE_URL')
+        if not db_url:
+            print_warning("DATABASE_URL não encontrada no ambiente!")
+            print_info("Execute: python configure_postgresql.py")
+            print_info("Ou configure manualmente o arquivo .env")
+            sys.exit(1)
+            
         if db_url.startswith('postgresql://'):
             self.db_type = 'postgresql'
             self.db_path = None  # PostgreSQL não usa arquivo local
         else:
+            # Fallback para SQLite apenas em desenvolvimento
             self.db_type = 'sqlite'
             self.db_path = os.path.join(app.instance_path, 'certificados.db')
         
@@ -365,8 +372,15 @@ class DatabaseManager:
         print_header("BACKUP DO BANCO DE DADOS")
         
         if self.db_type == 'sqlite' and not os.path.exists(self.db_path):
-            print_error("Banco de dados não encontrado!")
+            print_error("Banco SQLite não encontrado!")
             return False
+        elif self.db_type == 'postgresql':
+            # Verificar conexão PostgreSQL
+            try:
+                db.session.execute(text("SELECT 1"))
+            except Exception as e:
+                print_error(f"Conexão PostgreSQL falhou: {e}")
+                return False
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
@@ -632,8 +646,15 @@ class DatabaseManager:
         print_header("STATUS DO BANCO DE DADOS")
         
         if self.db_type == 'sqlite' and not os.path.exists(self.db_path):
-            print_error("Banco de dados não encontrado!")
+            print_error("Banco SQLite não encontrado!")
             return
+        elif self.db_type == 'postgresql':
+            # Verificar conexão PostgreSQL
+            try:
+                db.session.execute(text("SELECT 1"))
+            except Exception as e:
+                print_error(f"Conexão PostgreSQL falhou: {e}")
+                return
         
         with app.app_context():
             try:

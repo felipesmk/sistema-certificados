@@ -91,6 +91,113 @@ configure_firewall() {
     esac
 }
 
+# Configurar PostgreSQL
+configure_postgresql() {
+    echo "🗄️  Configurando PostgreSQL..."
+    echo
+    
+    # Verificar se PostgreSQL está instalado
+    if ! command -v psql &> /dev/null; then
+        echo "📦 Instalando PostgreSQL..."
+        case $1 in
+            "ubuntu"|"debian")
+                sudo apt install -y postgresql postgresql-contrib
+                ;;
+            "opensuse"|"sles"|"suse")
+                sudo zypper install -y postgresql postgresql-server
+                ;;
+            "centos"|"rhel"|"fedora")
+                sudo dnf install -y postgresql postgresql-server
+                ;;
+        esac
+    fi
+    
+    # Inicializar PostgreSQL se necessário
+    if [ ! -d "/var/lib/pgsql/data" ] && [ ! -d "/var/lib/postgresql/data" ]; then
+        echo "🔧 Inicializando PostgreSQL..."
+        sudo postgresql-setup initdb
+        sudo systemctl enable postgresql
+        sudo systemctl start postgresql
+    fi
+    
+    echo "🔐 Configurando credenciais do banco..."
+    echo "Por favor, defina as credenciais para o banco de dados:"
+    echo
+    
+    read -p "Nome do usuário PostgreSQL (padrão: certificados_user): " DB_USER
+    DB_USER=${DB_USER:-certificados_user}
+    
+    read -s -p "Senha do usuário PostgreSQL: " DB_PASSWORD
+    echo
+    
+    read -p "Nome do banco de dados (padrão: certificados_db): " DB_NAME
+    DB_NAME=${DB_NAME:-certificados_db}
+    
+    read -p "Host PostgreSQL (padrão: localhost): " DB_HOST
+    DB_HOST=${DB_HOST:-localhost}
+    
+    read -p "Porta PostgreSQL (padrão: 5432): " DB_PORT
+    DB_PORT=${DB_PORT:-5432}
+    
+    # Criar usuário e banco
+    echo "🔧 Criando usuário e banco de dados..."
+    sudo -u postgres psql << EOF
+CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';
+CREATE DATABASE $DB_NAME OWNER $DB_USER;
+GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
+\q
+EOF
+    
+    # Configurar autenticação
+    echo "🔧 Configurando autenticação..."
+    sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/data/postgresql.conf
+    
+    # Configurar pg_hba.conf para permitir conexões locais
+    echo "local $DB_NAME $DB_USER md5" | sudo tee -a /var/lib/pgsql/data/pg_hba.conf
+    
+    # Reiniciar PostgreSQL
+    sudo systemctl restart postgresql
+    
+    # Criar arquivo .env com as credenciais
+    echo "📝 Criando arquivo .env..."
+    cat > .env << EOF
+# Configurações do Flask
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=$(openssl rand -hex 32)
+
+# Configurações do Banco de Dados PostgreSQL
+DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
+
+# Configurações de Email
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USE_SSL=False
+MAIL_USERNAME=seu_email@gmail.com
+MAIL_PASSWORD=sua_senha_de_app
+MAIL_DEFAULT_SENDER=seu_email@gmail.com
+
+# Configurações de Autenticação
+AUTH_MODE=banco
+
+# Configurações de Sessão
+PERMANENT_SESSION_LIFETIME=3600
+
+# Configurações de Logging
+LOG_LEVEL=INFO
+LOG_FILE=logs/app.log
+
+# Configurações do Scheduler
+SCHEDULER_ENABLED=True
+SCHEDULER_TIMEZONE=America/Sao_Paulo
+EOF
+    
+    echo "✅ PostgreSQL configurado com sucesso!"
+    echo "📋 Credenciais salvas em .env"
+    echo "🔐 DATABASE_URL: postgresql://$DB_USER:***@$DB_HOST:$DB_PORT/$DB_NAME"
+}
+
 # Verificar se é root
 if [ "$EUID" -eq 0 ]; then
     echo "⚠️  Executando como root. Continuando..."
@@ -108,7 +215,7 @@ fi
 DISTRO_ID=$ID
 
 # Verificar Python
-echo "[1/8] Verificando Python..."
+echo "[1/10] Verificando Python..."
 if ! command -v python3 &> /dev/null; then
     echo "Instalando Python..."
     if ! install_dependencies $DISTRO_ID; then
@@ -120,7 +227,7 @@ else
 fi
 
 # Verificar Git
-echo "[2/8] Verificando Git..."
+echo "[2/10] Verificando Git..."
 if ! command -v git &> /dev/null; then
     echo "❌ Git não encontrado! Execute o script novamente."
     exit 1
@@ -129,7 +236,7 @@ else
 fi
 
 # Criar ambiente virtual
-echo "[3/8] Criando ambiente virtual..."
+echo "[3/10] Criando ambiente virtual..."
 python3 -m venv venv
 if [ $? -ne 0 ]; then
     echo "❌ Falha ao criar ambiente virtual!"
@@ -137,7 +244,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Ativar ambiente virtual
-echo "[4/8] Ativando ambiente virtual..."
+echo "[4/10] Ativando ambiente virtual..."
 source venv/bin/activate
 if [ $? -ne 0 ]; then
     echo "❌ Falha ao ativar ambiente virtual!"
@@ -149,15 +256,23 @@ echo "Atualizando pip..."
 pip install --upgrade pip
 
 # Instalar dependências
-echo "[5/8] Instalando dependencias..."
+echo "[5/10] Instalando dependencias..."
 pip install -r requirements.txt
 if [ $? -ne 0 ]; then
     echo "❌ Falha ao instalar dependencias!"
     exit 1
 fi
 
+# Configurar PostgreSQL
+echo "[6/10] Configurando PostgreSQL..."
+configure_postgresql $DISTRO_ID
+if [ $? -ne 0 ]; then
+    echo "❌ Falha na configuracao do PostgreSQL!"
+    exit 1
+fi
+
 # Configurar banco
-echo "[6/8] Configurando banco de dados..."
+echo "[7/10] Configurando banco de dados..."
 python quick_setup.py setup
 if [ $? -ne 0 ]; then
     echo "❌ Falha na configuracao do banco!"
@@ -165,7 +280,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Verificar status
-echo "[7/8] Verificando status do sistema..."
+echo "[8/10] Verificando status do sistema..."
 python manage_db.py status
 if [ $? -ne 0 ]; then
     echo "❌ Falha na verificacao do status!"
@@ -173,7 +288,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Configurar firewall
-echo "[8/8] Configurando firewall..."
+echo "[9/10] Configurando firewall..."
 configure_firewall $DISTRO_ID
 
 # Iniciar aplicação

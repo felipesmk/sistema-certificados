@@ -10,6 +10,13 @@ import requests
 import sqlite3
 from datetime import datetime
 
+# Imports para PostgreSQL (opcionais)
+try:
+    from sqlalchemy import text, inspect
+except ImportError:
+    text = None
+    inspect = None
+
 def print_header(title):
     """Imprime cabeçalho formatado"""
     print("\n" + "="*60)
@@ -85,6 +92,65 @@ def test_database():
     """Testa banco de dados"""
     print_step("3", "Testando Banco de Dados")
     
+    # Detectar tipo de banco
+    db_url = os.environ.get('DATABASE_URL')
+    if not db_url:
+        print("❌ DATABASE_URL não encontrada no ambiente!")
+        print("Execute: python configure_postgresql.py")
+        return False
+    
+    if db_url.startswith('postgresql://'):
+        print("🔍 Detectado PostgreSQL")
+        return test_postgresql_database()
+    else:
+        print("🔍 Detectado SQLite")
+        return test_sqlite_database()
+
+def test_postgresql_database():
+    """Testa banco PostgreSQL"""
+    try:
+        # Importar dependências necessárias
+        from app import app, db
+        from models import User, Role, Permission
+        
+        with app.app_context():
+            # Testar conexão
+            db.session.execute(text("SELECT 1"))
+            print("✅ Conexão PostgreSQL: OK")
+            
+            # Verificar tabelas
+            inspector = inspect(db.engine)
+            required_tables = ['user', 'role', 'permission', 'user_history', 'role_history']
+            existing_tables = inspector.get_table_names()
+            
+            missing_tables = [table for table in required_tables if table not in existing_tables]
+            
+            if not missing_tables:
+                print("✅ Todas as tabelas necessárias encontradas")
+            else:
+                print(f"❌ Tabelas faltando: {missing_tables}")
+                return False
+            
+            # Verificar usuários
+            user_count = User.query.count()
+            print(f"✅ Usuários no banco: {user_count}")
+            
+            # Verificar admin
+            admin = User.query.filter_by(username='admin').first()
+            if admin:
+                print("✅ Usuário admin encontrado")
+            else:
+                print("❌ Usuário admin não encontrado")
+                return False
+            
+            return True
+            
+    except Exception as e:
+        print(f"❌ Erro ao conectar no PostgreSQL: {e}")
+        return False
+
+def test_sqlite_database():
+    """Testa banco SQLite (legado)"""
     # Verificar se arquivo existe
     if os.path.exists("instance/app.db"):
         print("✅ Arquivo do banco encontrado")

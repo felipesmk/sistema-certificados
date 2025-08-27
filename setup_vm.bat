@@ -4,7 +4,7 @@ echo    CONFIGURACAO AUTOMATICA DA VM
 echo ========================================
 echo.
 
-echo [1/8] Verificando Python...
+echo [1/10] Verificando Python...
 python --version
 if %errorlevel% neq 0 (
     echo ERRO: Python nao encontrado!
@@ -13,7 +13,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [2/8] Verificando Git...
+echo [2/10] Verificando Git...
 git --version
 if %errorlevel% neq 0 (
     echo ERRO: Git nao encontrado!
@@ -22,7 +22,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [3/8] Criando ambiente virtual...
+echo [3/10] Criando ambiente virtual...
 python -m venv venv
 if %errorlevel% neq 0 (
     echo ERRO: Falha ao criar ambiente virtual!
@@ -30,7 +30,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [4/8] Ativando ambiente virtual...
+echo [4/10] Ativando ambiente virtual...
 call venv\Scripts\activate.bat
 if %errorlevel% neq 0 (
     echo ERRO: Falha ao ativar ambiente virtual!
@@ -38,7 +38,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [5/8] Instalando dependencias...
+echo [5/10] Instalando dependencias...
 pip install -r requirements.txt
 if %errorlevel% neq 0 (
     echo ERRO: Falha ao instalar dependencias!
@@ -46,7 +46,15 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [6/8] Configurando banco de dados...
+echo [6/10] Configurando PostgreSQL...
+python configure_postgresql.py
+if %errorlevel% neq 0 (
+    echo ERRO: Falha na configuracao do PostgreSQL!
+    pause
+    exit /b 1
+)
+
+echo [7/10] Configurando banco de dados...
 python quick_setup.py setup
 if %errorlevel% neq 0 (
     echo ERRO: Falha na configuracao do banco!
@@ -54,7 +62,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [7/8] Verificando status do sistema...
+echo [8/10] Verificando status do sistema...
 python manage_db.py status
 if %errorlevel% neq 0 (
     echo ERRO: Falha na verificacao do status!
@@ -62,7 +70,11 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [8/8] Iniciando aplicacao...
+echo [9/10] Configurando firewall...
+netsh advfirewall firewall add rule name="Sistema Certificados Dev" dir=in action=allow protocol=TCP localport=5000
+netsh advfirewall firewall add rule name="Sistema Certificados Prod" dir=in action=allow protocol=TCP localport=80
+
+echo [10/10] Iniciando aplicacao...
 echo.
 echo ========================================
 echo    CONFIGURACAO CONCLUIDA!

@@ -2,7 +2,7 @@
 
 ## 📋 Visão Geral
 
-Sistema web completo para gestão de certificados, senhas, licenças e documentos controlados com controle de acesso baseado em perfis (RBAC). Desenvolvido em Flask com interface moderna, dashboards interativos e funcionalidades avançadas de autenticação e notificação.
+Sistema web completo para gestão de certificados, senhas, licenças e documentos controlados com controle de acesso baseado em perfis (RBAC). Desenvolvido em Flask com interface moderna, dashboards interativos, sistema robusto de validação e funcionalidades avançadas de autenticação e notificação.
 
 ## ✨ Funcionalidades Principais
 
@@ -11,6 +11,14 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Autenticação Dupla** - Banco de dados ou LDAP/Active Directory
 - **Sessões Seguras** - Proteção contra ataques comuns
 - **Usuário Admin Protegido** - Não pode ser excluído ou modificado
+- **Bypass de Admin** - Usuário admin tem acesso total automático
+
+### ✅ **Sistema de Validação Robusto**
+- **Validação Server-side** - Verificação no servidor antes de salvar
+- **Validação Client-side** - Feedback em tempo real no navegador
+- **Tratamento de Erros** - Mensagens amigáveis para constraints únicos
+- **Validação Centralizada** - Funções reutilizáveis em `utils/validation.py`
+- **Campos Validados** - Email, nome, username, senha, telefone, datas
 
 ### 📊 **Dashboards Interativos**
 - **Dashboard Principal** - Visão geral com gráficos de distribuição
@@ -41,6 +49,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Bootstrap Icons** - Ícones consistentes
 - **Navegação Intuitiva** - Menus dropdown organizados
 - **Design Limpo** - Interface simplificada sem configurações de cor desnecessárias
+- **Formulários Validados** - Feedback visual em tempo real
 
 ## 🚀 Funcionalidades Detalhadas
 
@@ -51,12 +60,14 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Status de Regularização** - Controle de documentos regularizados
 - **Filtros Avançados** - Busca por nome, tipo, responsável, status
 - **Ordenação** - Múltiplos critérios de ordenação
+- **Validação Completa** - Nome, origem, tipo, data futura, tempo de alerta
 
 ### 👥 **Gestão de Responsáveis**
-- **Cadastro de Responsáveis** - Nome e email
+- **Cadastro de Responsáveis** - Nome e email com validação
 - **Atribuição Múltipla** - Um registro pode ter vários responsáveis
 - **Estatísticas** - Contagem de itens por responsável
 - **Ranking** - Top responsáveis com mais itens
+- **Validação de Email** - Verificação de formato e unicidade
 
 ### 👤 **Gestão de Usuários (v2.2.0)**
 - **Perfis Personalizáveis** - Criação de perfis com permissões específicas
@@ -68,6 +79,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Rastreamento de Login** - Último login, contagem de logins, IP address
 - **Importação/Exportação** - Funcionalidades para gestão em lote
 - **Campos Avançados** - Telefone, departamento, cargo, observações
+- **Validação Robusta** - Username, email, nome, senha, telefone
 
 ### 📊 **Gestão de Perfis (v2.2.0)**
 - **CRUD Completo** - Criar, editar, excluir e visualizar perfis
@@ -78,6 +90,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Histórico Detalhado** - Timeline de mudanças com IP e user agent
 - **Bulk Actions** - Ações em lote para múltiplos perfis
 - **Importação/Exportação** - Funcionalidades para gestão em lote
+- **Log de Alterações** - Histórico completo de criação, edição e exclusão
 
 ### 📊 **Relatórios e Analytics**
 - **Dashboards em Tempo Real** - Dados atualizados dinamicamente
@@ -98,7 +111,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 
 ### **Software**
 - **Python 3.8+** (recomendado 3.11+)
-- **SQLite 3** (incluído no Python)
+- **PostgreSQL** (via Docker ou instalação local)
 - **Git** (para controle de versão)
 
 ### **Dependências Python**
@@ -109,10 +122,36 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Flask-Mail** - Envio de emails
 - **APScheduler** - Agendamento de tarefas
 - **ldap3** - Integração LDAP/Active Directory
+- **psycopg2-binary** - Driver PostgreSQL
 - **Chart.js** - Gráficos interativos (via CDN)
 - **Bootstrap 5** - Framework CSS (via CDN)
 
 ## 📝 Mudanças Recentes
+
+### **v2.5.0 - Configuração Segura do PostgreSQL**
+- ✅ **Configuração Interativa Segura** - `configure_postgresql.py` sem credenciais hardcoded
+- ✅ **Entrada Segura de Senhas** - Senhas não exibidas na tela durante configuração
+- ✅ **Arquivo .env Protegido** - Configurações sensíveis em arquivo não versionado
+- ✅ **SECRET_KEY Aleatória** - Geração automática de chaves seguras
+- ✅ **Validação de Entrada** - Confirmação antes de aplicar configurações
+- ✅ **Suporte Multi-plataforma** - Windows e Linux com detecção automática
+- ✅ **Instalação Automática** - PostgreSQL instalado automaticamente no Linux
+- ✅ **Scripts Atualizados** - `setup_vm.sh` e `setup_vm.bat` com configuração segura
+- ✅ **Documentação de Segurança** - Guias completos para configuração segura
+
+### **v2.4.0 - Sistema de Validação e Correções**
+- ✅ **Sistema de Validação Centralizado** - `utils/validation.py` com funções reutilizáveis
+- ✅ **Validação Server-side** - Verificação no servidor antes de salvar dados
+- ✅ **Validação Client-side** - Feedback em tempo real nos formulários
+- ✅ **Tratamento de Erros** - Mensagens amigáveis para constraints únicos
+- ✅ **Correção de Templates** - Campos corretos do `RoleHistory` e JavaScript
+- ✅ **Sistema de Logs UTF-8** - Suporte completo a caracteres especiais
+- ✅ **Rotas com Trailing Slashes** - Suporte a URLs com e sem `/`
+- ✅ **Links Dinâmicos** - Conversão de links hardcoded para `url_for()`
+- ✅ **Histórico de Perfis** - Log completo de criação, edição e exclusão
+- ✅ **Correção de BuildError** - Endpoints corretos mapeados
+- ✅ **Scripts Organizados** - Remoção de scripts temporários desnecessários
+- ✅ **Regras do Cursor** - `.cursorrules` para orientação do AI
 
 ### **v2.3.0 - Limpeza e Scripts Unificados**
 - ✅ **Scripts Unificados para Linux** - Detecção automática de distribuição (Ubuntu/Debian/SUSE/CentOS/Fedora)
@@ -176,7 +215,7 @@ chmod +x configure_network.sh && ./configure_network.sh
 - **Instalam dependências** do requirements.txt
 - **Configuram banco de dados** com quick_setup.py
 - **Configuram firewall** (Windows Firewall, UFW, firewalld, etc.)
-- **Testam conectividade** na porta 5000
+- **Testam conectividade** nas portas 5000 (dev) e 80 (prod)
 - **Iniciam a aplicação** automaticamente
 
 ### 🖥️ **Configuração Avançada em VM**
@@ -212,22 +251,29 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-#### **4. Configuração do Banco de Dados**
+#### **4. Configuração Segura do PostgreSQL**
 ```bash
-# Opção 1: Setup completo automático (RECOMENDADO)
+# Configuração interativa e segura (RECOMENDADO)
+python configure_postgresql.py
+
+# OU configuração manual
+cp env.example .env
+# Editar .env com suas credenciais PostgreSQL
+```
+
+#### **5. Configuração do Banco de Dados**
+```bash
+# Setup completo automático
 python quick_setup.py setup
 
-# Opção 2: Configuração manual passo a passo
+# OU configuração manual passo a passo
 python manage_db.py migrate         # Criar/atualizar banco
 python manage_db.py create-admin    # Criar usuário admin
 ```
 
-#### **5. Configuração do Ambiente (Opcional)**
+#### **6. Configuração do Ambiente (Opcional)**
 ```bash
-# Copiar arquivo de exemplo
-cp env.example .env
-
-# Editar configurações (SMTP, LDAP, etc.)
+# Editar configurações adicionais (SMTP, LDAP, etc.)
 # notepad .env  # Windows
 # nano .env     # Linux
 ```
@@ -245,9 +291,43 @@ python run_production.py
 ```
 
 #### **7. Acessar o Sistema**
-- **URL:** http://localhost:5000
+- **Desenvolvimento:** http://localhost:5000
+- **Produção:** http://localhost (porta 80)
 - **Usuário padrão:** admin
 - **Senha:** (definida durante o setup)
+
+### **🔐 Segurança e Credenciais**
+
+#### **Configuração Segura do PostgreSQL**
+O sistema agora utiliza **configuração interativa e segura** para evitar credenciais hardcoded:
+
+```bash
+# Configuração interativa (RECOMENDADO)
+python configure_postgresql.py
+```
+
+**Características de Segurança:**
+- ✅ **Sem credenciais hardcoded** no código
+- ✅ **Entrada segura de senhas** (não exibidas na tela)
+- ✅ **Arquivo .env protegido** (não versionado)
+- ✅ **SECRET_KEY aleatória** gerada automaticamente
+- ✅ **Validação de entrada** do usuário
+- ✅ **Confirmação** antes de aplicar configurações
+
+#### **Arquivo .env Seguro**
+O arquivo `.env` contém todas as configurações sensíveis:
+```bash
+# Exemplo de .env (NÃO versionado)
+DATABASE_URL=postgresql://seu_usuario:sua_senha@localhost:5432/seu_banco
+SECRET_KEY=sua_chave_secreta_aleatoria_aqui
+MAIL_PASSWORD=sua_senha_de_email
+```
+
+**⚠️ Importante:**
+- O arquivo `.env` **NÃO é versionado** no Git
+- Mantenha suas credenciais **seguras e privadas**
+- **Nunca** commite credenciais no repositório
+- Use **senhas fortes** para produção
 
 ### **🔧 Configuração de Firewall Manual**
 
@@ -255,24 +335,33 @@ Se os scripts automáticos não funcionarem, configure o firewall manualmente:
 
 #### **Windows:**
 ```batch
-# Permitir porta 5000 no Windows Firewall
-netsh advfirewall firewall add rule name="Sistema Certificados" dir=in action=allow protocol=TCP localport=5000
+# Desenvolvimento (porta 5000)
+netsh advfirewall firewall add rule name="Sistema Certificados Dev" dir=in action=allow protocol=TCP localport=5000
+
+# Produção (porta 80)
+netsh advfirewall firewall add rule name="Sistema Certificados Prod" dir=in action=allow protocol=TCP localport=80
 ```
 
 #### **Linux:**
 ```bash
-# Ubuntu/Debian (UFW)
+# Desenvolvimento (porta 5000)
 sudo ufw allow 5000
 
+# Produção (porta 80)
+sudo ufw allow 80
+
 # CentOS/RHEL/Fedora (firewalld)
-sudo firewall-cmd --permanent --add-port=5000/tcp
+sudo firewall-cmd --permanent --add-port=5000/tcp  # Desenvolvimento
+sudo firewall-cmd --permanent --add-port=80/tcp    # Produção
 sudo firewall-cmd --reload
 
 # SUSE (firewalld ou SuSEfirewall2)
-sudo firewall-cmd --permanent --add-port=5000/tcp
+sudo firewall-cmd --permanent --add-port=5000/tcp  # Desenvolvimento
+sudo firewall-cmd --permanent --add-port=80/tcp    # Produção
 sudo firewall-cmd --reload
 # OU
-sudo SuSEfirewall2 open EXT TCP 5000
+sudo SuSEfirewall2 open EXT TCP 5000  # Desenvolvimento
+sudo SuSEfirewall2 open EXT TCP 80    # Produção
 ```
 
 ## 🔐 Estrutura de Permissões e Perfis
@@ -285,6 +374,7 @@ sudo SuSEfirewall2 open EXT TCP 5000
 | `manage_responsaveis` | Gerenciar responsáveis | Operadores |
 | `manage_config` | Gerenciar configurações | Administradores |
 | `send_alerts` | Enviar alertas por email | Operadores |
+| `view_data` | Visualizar dados | Visualizadores |
 
 ### **Perfis Padrão**
 | Perfil | Permissões | Descrição |
@@ -295,6 +385,7 @@ sudo SuSEfirewall2 open EXT TCP 5000
 
 ### **Características Especiais**
 - **Usuário Admin Protegido** - Não pode ser excluído ou modificado
+- **Bypass de Admin** - Usuário admin tem acesso total automático
 - **Perfis Customizáveis** - Novos perfis podem ser criados
 - **Permissões Granulares** - Controle fino de acesso
 - **Menus Dinâmicos** - Interface adapta-se às permissões
@@ -303,6 +394,9 @@ sudo SuSEfirewall2 open EXT TCP 5000
 
 ### **Desenvolvimento**
 ```bash
+# Configuração segura do PostgreSQL (PRIMEIRO PASSO)
+python configure_postgresql.py      # Configuração interativa e segura
+
 # Setup completo automático (RECOMENDADO)
 python quick_setup.py setup
 
@@ -319,6 +413,7 @@ python manage_db.py restore         # Restaurar backup
 python quick_setup.py test-users    # Testar funcionalidades de usuários
 python quick_setup.py test-suse     # Testar compatibilidade SUSE
 python test_vm_installation.py      # Teste completo da instalação VM
+python test_validation.py           # Testar sistema de validação
 
 # Executar em modo desenvolvimento
 python app.py
@@ -362,9 +457,11 @@ python manage_db.py reset --force    # Resetar banco (CUIDADO! Apaga dados)
 python manage_db.py migrate          # Recriar estrutura
 python manage_db.py create-admin     # Recriar admin
 
-# Problema: Porta 5000 já em uso
-netstat -tlnp | grep 5000           # Linux: verificar o que usa a porta
-netstat -an | findstr 5000          # Windows: verificar o que usa a porta
+# Problema: Porta em uso
+netstat -tlnp | grep 5000           # Linux: verificar porta 5000 (desenvolvimento)
+netstat -tlnp | grep 80             # Linux: verificar porta 80 (produção)
+netstat -an | findstr 5000          # Windows: verificar porta 5000 (desenvolvimento)
+netstat -an | findstr 80            # Windows: verificar porta 80 (produção)
 
 # Problema: Dependências não instaladas
 pip install --upgrade pip           # Atualizar pip
@@ -393,7 +490,7 @@ python run_production.py
 gunicorn -c gunicorn.conf.py app:app
 
 # Windows (Waitress)
-waitress-serve --host=0.0.0.0 --port=8000 app:app
+waitress-serve --host=0.0.0.0 --port=80 app:app
 ```
 
 ### **Solução de Problemas - Produção**
@@ -405,10 +502,10 @@ python quick_setup.py install-prod   # Instalar dependências automaticamente
 pip install gunicorn                 # Linux/macOS
 pip install waitress                 # Windows
 
-# Problema: Porta 8000 em uso
-python run_production.py             # Usa porta 8000 por padrão
+# Problema: Porta 80 em uso
+python run_production.py             # Usa porta 80 por padrão
 # Ou especificar porta diferente:
-gunicorn --bind 0.0.0.0:8080 app:app
+gunicorn --bind 0.0.0.0:8080 app:app  # Porta alternativa se 80 estiver ocupada
 ```
 
 ### **Solução de Problemas - SUSE Linux**
@@ -432,15 +529,18 @@ python -c "import flask; print(flask.__version__)"
 
 ### **Fluxo de Trabalho**
 1. **Sempre execute** `quick_setup.py setup` para configuração completa
-2. **O usuário admin** sempre terá o perfil admin
+2. **O usuário admin** sempre terá o perfil admin com bypass automático
 3. **Menus e rotas** são exibidos conforme permissões
 4. **Para novas permissões** - edite `manage_db.py` e associe aos perfis
+5. **Use validação centralizada** - `utils/validation.py` para novos campos
 
 ### **Boas Práticas**
 - **Ambiente virtual** sempre ativo durante desenvolvimento
-- **Logs** são salvos em `logs/app.log`
+- **Logs** são salvos em `logs/app.log` com encoding UTF-8
 - **Configurações** em arquivo `.env` (não versionado)
 - **Testes** de email com SMTP4Dev para desenvolvimento
+- **Validação dupla** - Sempre implementar server-side + client-side
+- **Tratamento de erros** - Usar mensagens amigáveis para constraints
 
 ## 📁 Estrutura do Projeto
 
@@ -454,6 +554,7 @@ sistema-certificados/
 ├── requirements.txt       # Dependências Python
 ├── .env.example          # Template de configuração
 ├── .gitignore            # Arquivos ignorados pelo Git
+├── .cursorrules          # Regras do Cursor AI
 ├── README.md             # Documentação principal
 ├── VM_SETUP_GUIDE.md     # Guia de configuração em VM
 ├── CHANGELOG.md          # Histórico de mudanças
@@ -462,18 +563,25 @@ sistema-certificados/
 ├── setup_vm.sh           # Script unificado Linux (Ubuntu/Debian/SUSE/CentOS/Fedora)
 ├── configure_network.sh  # Rede unificada Linux
 ├── test_vm_installation.py # Teste de validação da VM
+├── test_validation.py    # Testes do sistema de validação
+├── configure_postgresql.py # Configuração segura do PostgreSQL
+├── utils/                # Utilitários
+│   ├── __init__.py       # Package init
+│   ├── validation.py     # Sistema de validação centralizado
+│   ├── cache.py          # Sistema de cache
+│   └── pagination.py     # Sistema de paginação
 ├── templates/            # Templates HTML
 │   ├── base.html         # Template base
 │   ├── login.html        # Página de login
 │   ├── dashboard*.html   # Dashboards
-│   ├── registros/        # CRUD de registros
-│   ├── responsaveis/     # CRUD de responsáveis
-│   ├── usuarios/         # CRUD de usuários (com histórico)
-│   ├── perfis/           # CRUD de perfis (com dashboard)
+│   ├── registros/        # CRUD de registros (com validação)
+│   ├── responsaveis/     # CRUD de responsáveis (com validação)
+│   ├── usuarios/         # CRUD de usuários (com validação)
+│   ├── perfis/           # CRUD de perfis (com histórico)
 │   └── configuracao/     # Configurações do sistema
-├── static/               # Arquivos estáticos
-├── logs/                 # Logs da aplicação
-└── instance/             # Banco de dados (não versionado)
+├── routes/               # Blueprints de rotas (auth.py)
+├── logs/                 # Logs da aplicação (UTF-8)
+└── instance/             # Banco SQLite (legado, não versionado)
 ```
 
 ## 🚀 Deploy e Produção
@@ -505,7 +613,7 @@ gunicorn --config gunicorn.conf.py app:app
 
 #### Opção 3: Comando Simples
 ```bash
-gunicorn -w 4 -b 0.0.0.0:8000 app:app
+gunicorn -w 4 -b 0.0.0.0:80 app:app
 ```
 
 ### Configurações de Produção
@@ -513,21 +621,23 @@ gunicorn -w 4 -b 0.0.0.0:8000 app:app
 #### Variáveis de Ambiente Importantes
 - `FLASK_ENV=production`: Define modo produção
 - `SECRET_KEY`: Chave secreta forte e fixa
-- `DATABASE_URL`: URL do banco de dados
+- `DATABASE_URL`: URL do banco de dados PostgreSQL
 - `MAIL_*`: Configurações de email
 - `AUTH_MODE`: Modo de autenticação ('banco' ou 'ldap')
 - `PERMANENT_SESSION_LIFETIME`: Tempo de sessão em segundos
 
 #### Logs
-- **Aplicação**: `logs/app.log` (com rotação automática)
+- **Aplicação**: `logs/app.log` (com rotação automática e UTF-8)
 - **Gunicorn**: `logs/gunicorn_access.log` e `logs/gunicorn_error.log`
 - **Nível**: INFO (configurável via `LOG_LEVEL`)
 
 #### Segurança
-- ✅ Logs em arquivo com rotação
+- ✅ Logs em arquivo com rotação e UTF-8
 - ✅ Configuração via variáveis de ambiente
 - ✅ Sessões com tempo de expiração
 - ✅ Suporte a HTTPS (configure no Gunicorn)
+- ✅ Validação robusta de dados
+- ✅ Tratamento de erros de constraint
 - ⚠️ Configure firewall e acesso restrito
 - ⚠️ Use HTTPS em produção
 - ⚠️ Monitore logs regularmente
@@ -591,6 +701,7 @@ O sistema inclui migrações automáticas para:
 - Campos avançados de usuário (created_at, last_login, etc.)
 - Campos avançados de perfil (ativo, cor, icone, etc.)
 - Tabelas de histórico (user_history, role_history)
+- Sistema de validação e constraints únicos
 
 ## 🔐 Integração LDAP/Active Directory
 
@@ -620,6 +731,8 @@ O sistema inclui migrações automáticas para:
 - **HTML**: Indentação consistente
 - **CSS**: Organização por seções
 - **JavaScript**: ES6+ quando possível
+- **Validação**: Sempre implementar server-side + client-side
+- **Logs**: Usar encoding UTF-8
 
 ## 📄 Licença
 
@@ -632,6 +745,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 - **Chart.js** - Biblioteca de gráficos
 - **Bootstrap Icons** - Ícones
 - **SMTP4Dev** - Servidor SMTP para testes
+- **PostgreSQL** - Banco de dados robusto
 
 ---
 

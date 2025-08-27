@@ -12,7 +12,11 @@ from pathlib import Path
 
 # Configurações
 SQLITE_DB = 'instance/certificados.db'
-POSTGRES_URL = os.environ.get('DATABASE_URL', 'postgresql://certificados_user:certificados123@localhost:5432/certificados_db')
+POSTGRES_URL = os.environ.get('DATABASE_URL')
+if not POSTGRES_URL:
+    print("❌ DATABASE_URL não encontrada no ambiente!")
+    print("Execute: python configure_postgresql.py")
+    sys.exit(1)
 
 def migrate_data():
     """Migra dados do SQLite para PostgreSQL"""
