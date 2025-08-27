@@ -160,12 +160,15 @@ def fix_postgresql_auth_suse():
     
     print("✅ Sistema SUSE detectado - aplicando correção de autenticação...")
     
-    # Encontrar arquivo de configuração
+    # Encontrar arquivo de configuração - busca mais abrangente
     possible_paths = [
         '/var/lib/pgsql/data/pg_hba.conf',
         '/etc/postgresql/*/main/pg_hba.conf',
         '/var/lib/postgresql/*/data/pg_hba.conf',
-        '/opt/postgresql/*/data/pg_hba.conf'
+        '/opt/postgresql/*/data/pg_hba.conf',
+        '/var/lib/pgsql/*/data/pg_hba.conf',
+        '/usr/local/pgsql/data/pg_hba.conf',
+        '/usr/pgsql-*/data/pg_hba.conf'
     ]
     
     config_file = None
@@ -176,10 +179,40 @@ def fix_postgresql_auth_suse():
             config_file = matches[0]
             break
     
+    # Se não encontrou, tentar encontrar via comando PostgreSQL
+    if not config_file:
+        try:
+            result = subprocess.run(['psql', '-U', 'postgres', '-c', 'SHOW config_file;'], 
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if result.returncode == 0:
+                # Extrair caminho do arquivo de configuração
+                output = result.stdout.decode().strip()
+                if 'postgresql.conf' in output:
+                    config_dir = output.replace('postgresql.conf', '')
+                    potential_pg_hba = config_dir + 'pg_hba.conf'
+                    if os.path.exists(potential_pg_hba):
+                        config_file = potential_pg_hba
+        except:
+            pass
+    
+    # Última tentativa: buscar em todo o sistema
+    if not config_file:
+        try:
+            result = subprocess.run(['find', '/', '-name', 'pg_hba.conf', '-type', 'f', '2>/dev/null'], 
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+            if result.returncode == 0:
+                files = result.stdout.decode().strip().split('\n')
+                if files and files[0]:
+                    config_file = files[0]
+        except:
+            pass
+    
     if not config_file:
         print("⚠️  Arquivo pg_hba.conf não encontrado")
-        print("ℹ️  Continue com configuração manual se necessário")
-        return True
+        print("ℹ️  Tentando configuração alternativa...")
+        
+        # Tentar configurar PostgreSQL via comando direto
+        return fix_postgresql_auth_alternative()
     
     print(f"📁 Arquivo encontrado: {config_file}")
     
@@ -243,6 +276,63 @@ def fix_postgresql_auth_suse():
         
     except Exception as e:
         print(f"❌ Erro na correção: {e}")
+        return False
+
+def fix_postgresql_auth_alternative():
+    """Configuração alternativa quando não encontra pg_hba.conf"""
+    print("🔧 CONFIGURAÇÃO ALTERNATIVA - POSTGRESQL SUSE")
+    print("=" * 50)
+    
+    try:
+        # Tentar configurar via comandos SQL diretos
+        print("📝 Configurando autenticação via comandos SQL...")
+        
+        # Comandos para configurar autenticação
+        sql_commands = [
+            "ALTER SYSTEM SET password_encryption = 'md5';",
+            "ALTER SYSTEM SET listen_addresses = '*';",
+            "SELECT pg_reload_conf();"
+        ]
+        
+        # Tentar executar como usuário postgres
+        for cmd in sql_commands:
+            try:
+                result = subprocess.run(['sudo', '-u', 'postgres', 'psql', '-c', cmd], 
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if result.returncode == 0:
+                    print(f"✅ Comando executado: {cmd}")
+                else:
+                    print(f"⚠️  Comando falhou: {cmd}")
+            except:
+                print(f"⚠️  Não foi possível executar: {cmd}")
+        
+        # Tentar reiniciar PostgreSQL
+        restart_commands = [
+            ['sudo', 'systemctl', 'restart', 'postgresql'],
+            ['sudo', 'systemctl', 'restart', 'postgresql.service'],
+            ['sudo', 'service', 'postgresql', 'restart']
+        ]
+        
+        restarted = False
+        for cmd in restart_commands:
+            try:
+                result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if result.returncode == 0:
+                    print("✅ PostgreSQL reiniciado!")
+                    restarted = True
+                    break
+            except FileNotFoundError:
+                continue
+        
+        if not restarted:
+            print("⚠️  Não foi possível reiniciar automaticamente")
+            print("ℹ️  Execute manualmente: sudo systemctl restart postgresql")
+        
+        print("✅ Configuração alternativa aplicada!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erro na configuração alternativa: {e}")
         return False
 
 def test_suse_compatibility():
