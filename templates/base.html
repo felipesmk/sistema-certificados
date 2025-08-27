@@ -290,7 +290,7 @@
 {% if current_user.is_authenticated %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard">{{ system_config.nome_sistema }}</a>
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">{{ system_config.nome_sistema }}</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -301,11 +301,11 @@
                             Dashboard
                           </a>
                           <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/dashboard">📊 Principal</a></li>
-                            <li><a class="dropdown-item" href="/dashboard-vencimentos">⏰ Vencimentos</a></li>
-                            <li><a class="dropdown-item" href="/dashboard-responsaveis">👥 Responsáveis</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/dashboard-atividade">📈 Atividade</a></li>
+                                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">📊 Principal</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('dashboard_vencimentos') }}">⏰ Vencimentos</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('dashboard_responsaveis') }}">👥 Responsáveis</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('dashboard_atividade') }}">📈 Atividade</a></li>
                           </ul>
                         </li>
                                                 <li class="nav-item dropdown">
@@ -313,8 +313,8 @@
                             Controle
                           </a>
                           <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/registros">📋 Registros</a></li>
-                            <li><a class="dropdown-item" href="/responsaveis">👥 Responsáveis</a></li>
+                                            <li><a class="dropdown-item" href="{{ url_for('listar_registros') }}">📋 Registros</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('listar_responsaveis') }}">👥 Responsáveis</a></li>
                           </ul>
                         </li>
         {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_access')|list) %}
@@ -325,13 +325,13 @@
               <li class="nav-item dropend">
                 <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">👥 Gestão de Usuários</a>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/usuarios/dashboard">📊 Dashboard</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('dashboard_usuarios') }}">📊 Dashboard</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/usuarios">📋 Listar Usuários</a></li>
-                  <li><a class="dropdown-item" href="/usuarios/novo">➕ Novo Usuário</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('listar_usuarios') }}">📋 Listar Usuários</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('novo_usuario') }}">➕ Novo Usuário</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/usuarios/import">📥 Importar</a></li>
-                  <li><a class="dropdown-item" href="/usuarios/export">📤 Exportar</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('import_usuarios') }}">📥 Importar</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('export_usuarios') }}">📤 Exportar</a></li>
                 </ul>
               </li>
               
@@ -339,22 +339,22 @@
               <li class="nav-item dropend">
                 <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">🎭 Gestão de Perfis</a>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/perfis/dashboard">📊 Dashboard</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('dashboard_perfis') }}">📊 Dashboard</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/perfis">📋 Listar Perfis</a></li>
-                  <li><a class="dropdown-item" href="/perfis/novo">➕ Novo Perfil</a></li>
-                  <li><a class="dropdown-item" href="/perfis/assistente">🪄 Assistente de Criação</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('listar_perfis') }}">📋 Listar Perfis</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('novo_perfil') }}">➕ Novo Perfil</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('assistente_perfil') }}">🪄 Assistente de Criação</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/perfis/templates">📝 Templates</a></li>
-                  <li><a class="dropdown-item" href="/perfis/relatorio-permissoes">📊 Relatório de Permissões</a></li>
+                                          <li><a class="dropdown-item" href="{{ url_for('listar_templates') }}">📝 Templates</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('relatorio_permissoes') }}">📊 Relatório de Permissões</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/perfis/import">📥 Importar</a></li>
-                  <li><a class="dropdown-item" href="/perfis/export">📤 Exportar</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('import_perfis') }}">📥 Importar</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('export_perfis') }}">📤 Exportar</a></li>
                 </ul>
               </li>
               {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_config')|list) %}
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="/configuracao">⚙️ Configuração</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('configuracao') }}">⚙️ Configuração</a></li>
               {% endif %}
             </ul>
           </li>
@@ -363,11 +363,11 @@
       <ul class="navbar-nav ms-auto">
         {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'send_alerts')|list) %}
           <li class="nav-item">
-            <a href="/enviar-alertas" class="btn btn-warning me-2">Enviar alertas</a>
+            <a href="{{ url_for('enviar_alertas_manual') }}" class="btn btn-warning me-2">Enviar alertas</a>
           </li>
         {% endif %}
         <li class="nav-item">
-          <a class="nav-link" href="/logout">Sair</a>
+          <a class="nav-link" href="{{ url_for('logout') }}">Sair</a>
         </li>
         <li class="nav-item">
           <button id="toggle-dark" class="btn btn-outline-light ms-2" type="button">🌙</button>

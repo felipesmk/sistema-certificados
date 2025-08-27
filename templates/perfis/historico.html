@@ -63,7 +63,7 @@
                   <h6>Usuários:</h6>
                   <ul class="list-unstyled">
                     {% for user in perfil.users[:5] %}
-                      <li><i class="bi bi-person"></i> {{ user.username }} ({{ user.name }})</li>
+                      <li><i class="bi bi-person"></i> {{ user.username }} ({{ user.nome }})</li>
                     {% endfor %}
                     {% if perfil.users|length > 5 %}
                       <li><small class="text-muted">... e mais {{ perfil.users|length - 5 }} usuário(s)</small></li>
@@ -97,12 +97,12 @@
                       <tr>
                         <td>
                           <small>
-                            {{ item.data_alteracao.strftime('%d/%m/%Y') }}<br>
-                            <span class="text-muted">{{ item.data_alteracao.strftime('%H:%M:%S') }}</span>
+                            {{ item.timestamp.strftime('%d/%m/%Y') }}<br>
+                            <span class="text-muted">{{ item.timestamp.strftime('%H:%M:%S') }}</span>
                           </small>
                         </td>
                         <td>
-                          <i class="bi bi-person-circle"></i> {{ item.usuario_alteracao }}
+                          <i class="bi bi-person-circle"></i> {{ item.usuario }}
                         </td>
                         <td>
                           {% if item.acao == 'criado' %}
@@ -125,20 +125,13 @@
                           <small>{{ item.detalhes or 'Sem detalhes' }}</small>
                         </td>
                         <td>
-                          {% if item.valores_anteriores or item.valores_novos %}
+                          {% if item.detalhes %}
                             <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#alteracoes-{{ loop.index }}" aria-expanded="false">
-                              <i class="bi bi-eye"></i> Ver
+                              <i class="bi bi-eye"></i> Ver Detalhes
                             </button>
                             <div class="collapse mt-2" id="alteracoes-{{ loop.index }}">
                               <div class="card card-body">
-                                {% if item.valores_anteriores %}
-                                  <strong>Antes:</strong>
-                                  <pre class="small bg-body-secondary p-2 rounded">{{ item.valores_anteriores }}</pre>
-                                {% endif %}
-                                {% if item.valores_novos %}
-                                  <strong>Depois:</strong>
-                                  <pre class="small bg-body-secondary p-2 rounded">{{ item.valores_novos }}</pre>
-                                {% endif %}
+                                <pre class="small bg-body-secondary p-2 rounded">{{ item.detalhes }}</pre>
                               </div>
                             </div>
                           {% else %}
@@ -151,46 +144,7 @@
                 </table>
               </div>
               
-              <!-- Paginação se necessário -->
-              {% if historico.has_prev or historico.has_next %}
-                <nav aria-label="Navegação do histórico">
-                  <ul class="pagination justify-content-center">
-                                         {% if historico.has_prev %}
-                       <li class="page-item">
-                         <a class="page-link" href="{{ url_for('historico_perfil', perfil_id=perfil.id, page=historico.prev_num) }}">
-                           <i class="bi bi-chevron-left"></i> Anterior
-                         </a>
-                       </li>
-                     {% endif %}
-                     
-                     {% for page_num in historico.iter_pages() %}
-                       {% if page_num %}
-                         {% if page_num != historico.page %}
-                           <li class="page-item">
-                             <a class="page-link" href="{{ url_for('historico_perfil', perfil_id=perfil.id, page=page_num) }}">{{ page_num }}</a>
-                           </li>
-                         {% else %}
-                           <li class="page-item active">
-                             <span class="page-link">{{ page_num }}</span>
-                           </li>
-                         {% endif %}
-                       {% else %}
-                         <li class="page-item disabled">
-                           <span class="page-link">…</span>
-                         </li>
-                       {% endif %}
-                     {% endfor %}
-                     
-                     {% if historico.has_next %}
-                       <li class="page-item">
-                         <a class="page-link" href="{{ url_for('historico_perfil', perfil_id=perfil.id, page=historico.next_num) }}">
-                           Próximo <i class="bi bi-chevron-right"></i>
-                         </a>
-                       </li>
-                     {% endif %}
-                  </ul>
-                </nav>
-              {% endif %}
+
               
             {% else %}
               <div class="alert alert-info" role="alert">
@@ -246,7 +200,8 @@
   // Auto-refresh a cada 30 segundos se houver atividade recente
   {% if historico and historico.items %}
     {% set ultimo_registro = historico.items[0] %}
-    {% if (moment().utc() - ultimo_registro.data_alteracao).total_seconds() < 300 %}
+    {% set ultimo_timestamp = ultimo_registro.timestamp.timestamp() %}
+    {% if (agora_timestamp - ultimo_timestamp) < 300 %}
       setTimeout(function() {
         location.reload();
       }, 30000);

@@ -14,7 +14,7 @@
       </div>
       <div class="card-body">
         
-        <form method="post" novalidate>
+        <form method="post" id="usuarioForm" novalidate>
           <!-- Campos obrigatórios -->
           <div class="row mb-3">
             <div class="col-md-6">
@@ -26,9 +26,12 @@
                      id="username" 
                      name="username" 
                      required 
+                     minlength="3" maxlength="80"
                      value="{{ form_data.username if form_data else (usuario.username if usuario else '') }}"
-                     {% if usuario and usuario.username == 'admin' %}readonly{% endif %}>
+                     {% if usuario and usuario.username == 'admin' %}readonly{% endif %}
+                     placeholder="usuario123">
               <div class="form-text">Mínimo 3 caracteres, sem espaços</div>
+              <div class="invalid-feedback"></div>
             </div>
             <div class="col-md-6">
               <label for="email" class="form-label">
@@ -39,7 +42,10 @@
                      id="email" 
                      name="email" 
                      required 
-                     value="{{ form_data.email if form_data else (usuario.email if usuario else '') }}">
+                     maxlength="120"
+                     value="{{ form_data.email if form_data else (usuario.email if usuario else '') }}"
+                     placeholder="usuario@empresa.com">
+              <div class="invalid-feedback"></div>
             </div>
           </div>
 
@@ -53,7 +59,10 @@
                      id="nome" 
                      name="nome" 
                      required 
-                     value="{{ form_data.nome if form_data else (usuario.nome if usuario else '') }}">
+                     minlength="2" maxlength="120"
+                     value="{{ form_data.nome if form_data else (usuario.nome if usuario else '') }}"
+                     placeholder="Nome Completo">
+              <div class="invalid-feedback"></div>
             </div>
           </div>
 
@@ -67,7 +76,10 @@
                      class="form-control" 
                      id="password" 
                      name="password" 
-                     {% if not usuario %}required{% endif %}>
+                     {% if not usuario %}required{% endif %}
+                     minlength="6" maxlength="200"
+                     placeholder="{% if usuario %}Deixe em branco para não alterar{% else %}Digite a senha{% endif %}">
+              <div class="invalid-feedback"></div>
               <div class="form-text">
                 {% if usuario %}
                   Deixe em branco para não alterar. Mínimo 6 caracteres.
@@ -97,6 +109,7 @@
               </label>
               <select class="form-select" id="role_id" name="role_id" required>
                 <option value="">Selecione um perfil...</option>
+                <div class="invalid-feedback"></div>
                 {% for role in roles %}
                   <option value="{{ role.id }}" 
                           {% if (form_data.role_id if form_data else (usuario.role_id if usuario else '')) == role.id|string %}selected{% endif %}
@@ -130,8 +143,10 @@
                      id="telefone" 
                      name="telefone" 
                      value="{{ form_data.telefone if form_data else (usuario.telefone if usuario else '') }}"
-                     placeholder="(11) 99999-9999">
+                     placeholder="(11) 99999-9999"
+                     maxlength="20">
               <div class="form-text">Formato: (11) 99999-9999</div>
+              <div class="invalid-feedback"></div>
             </div>
             <div class="col-md-6">
               <label for="departamento" class="form-label">
@@ -213,7 +228,7 @@
           <!-- Botões -->
           <div class="row mt-4">
             <div class="col-md-12">
-              <button type="submit" class="btn btn-primary">
+              <button type="submit" class="btn btn-primary" id="submitBtn">
                 <i class="bi bi-check-circle"></i> 
                 {% if usuario %}Atualizar{% else %}Criar{% endif %} Usuário
               </button>
@@ -235,42 +250,183 @@
 </div>
 
 <script>
-// Máscara para telefone
-document.getElementById('telefone').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length >= 11) {
-        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (value.length >= 7) {
-        value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-    } else if (value.length >= 3) {
-        value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('usuarioForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Função para validar email
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
-    e.target.value = value;
-});
-
-// Validação em tempo real
-document.querySelector('form').addEventListener('submit', function(e) {
-    let valid = true;
-    const campos = ['username', 'nome', 'email'];
     
-    {% if not usuario %}
-    campos.push('password');
-    {% endif %}
+    // Função para validar username
+    function isValidUsername(username) {
+        const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+        return username.length >= 3 && usernameRegex.test(username);
+    }
     
-    campos.forEach(campo => {
-        const input = document.getElementById(campo);
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
-            valid = false;
+    // Máscara para telefone
+    const telefoneInput = document.getElementById('telefone');
+    telefoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 11) {
+            value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        } else if (value.length >= 7) {
+            value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+        } else if (value.length >= 3) {
+            value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+        }
+        e.target.value = value;
+    });
+    
+    // Validação em tempo real
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    const nomeInput = document.getElementById('nome');
+    const passwordInput = document.getElementById('password');
+    const roleSelect = document.getElementById('role_id');
+    
+    // Validar username
+    usernameInput.addEventListener('blur', function() {
+        const username = this.value.trim();
+        if (!username) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Nome de usuário é obrigatório';
+        } else if (!isValidUsername(username)) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Nome de usuário deve ter pelo menos 3 caracteres e conter apenas letras, números, pontos, hífens e underscores';
         } else {
-            input.classList.remove('is-invalid');
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
         }
     });
     
-    if (!valid) {
-        e.preventDefault();
-        alert('Por favor, preencha todos os campos obrigatórios.');
+    // Validar email
+    emailInput.addEventListener('blur', function() {
+        const email = this.value.trim();
+        if (!email) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'E-mail é obrigatório';
+        } else if (!isValidEmail(email)) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Digite um e-mail válido';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar nome
+    nomeInput.addEventListener('blur', function() {
+        const nome = this.value.trim();
+        if (!nome) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Nome completo é obrigatório';
+        } else if (nome.length < 2) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Nome deve ter pelo menos 2 caracteres';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar senha (apenas se for novo usuário ou se foi preenchida)
+    passwordInput.addEventListener('blur', function() {
+        const password = this.value;
+        {% if not usuario %}
+        if (!password) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Senha é obrigatória';
+        } else if (password.length < 6) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Senha deve ter pelo menos 6 caracteres';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+        {% else %}
+        if (password && password.length < 6) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Senha deve ter pelo menos 6 caracteres';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+        {% endif %}
+    });
+    
+    // Validar perfil
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            if (!this.value) {
+                this.classList.add('is-invalid');
+                this.nextElementSibling.nextElementSibling.textContent = 'Perfil é obrigatório';
+            } else {
+                this.classList.remove('is-invalid');
+                this.nextElementSibling.nextElementSibling.textContent = '';
+            }
+        });
     }
+    
+    // Validação no submit
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        
+        // Validar campos obrigatórios
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+        const nome = nomeInput.value.trim();
+        const password = passwordInput.value;
+        const role = roleSelect ? roleSelect.value : '';
+        
+        // Validar username
+        if (!username || !isValidUsername(username)) {
+            usernameInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validar email
+        if (!email || !isValidEmail(email)) {
+            emailInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validar nome
+        if (!nome || nome.length < 2) {
+            nomeInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validar senha
+        {% if not usuario %}
+        if (!password || password.length < 6) {
+            passwordInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        {% else %}
+        if (password && password.length < 6) {
+            passwordInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        {% endif %}
+        
+        // Validar perfil
+        if (roleSelect && !role) {
+            roleSelect.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Desabilitar botão para evitar double-submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
+    });
 });
 </script>
 {% endblock %} 

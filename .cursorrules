@@ -1,0 +1,250 @@
+# Sistema de Certificados - Regras do Cursor
+# ===========================================
+
+## 📋 **Visão Geral do Projeto**
+Este é um sistema de gestão de certificados e documentos controlados desenvolvido em Flask com PostgreSQL. O sistema implementa RBAC (Role-Based Access Control) completo com dashboards interativos e notificações automáticas.
+
+## 🏗️ **Arquitetura do Sistema**
+
+### **Estrutura Principal**
+- `app.py` - Aplicação Flask consolidada (2611 linhas)
+- `models.py` - Modelos SQLAlchemy (User, Role, Permission, Registro, Responsavel)
+- `routes/` - Blueprints de rotas organizadas
+- `templates/` - Templates HTML com Bootstrap 5
+- `utils/` - Utilitários (cache, paginação, validação)
+- `docker-compose.yml` - PostgreSQL via Docker
+
+### **Banco de Dados**
+- **PostgreSQL** via Docker
+- **URL**: `postgresql://certificados_user:certificados123@localhost:5432/certificados_db`
+- **Migração**: De SQLite para PostgreSQL
+- **Constraints**: Campos únicos (email) com validação dupla (cliente/servidor)
+
+## 🔐 **Sistema de Permissões (RBAC)**
+
+### **Modelos Principais**
+- `User` - Usuários do sistema
+- `Role` - Perfis de acesso com hierarquia
+- `Permission` - Permissões granulares
+- `RolePermission` - Associação N:N
+
+### **Permissões Padrão**
+- `manage_access` - Gerenciar usuários e perfis
+- `manage_registros` - Gerenciar registros de certificados
+- `manage_responsaveis` - Gerenciar responsáveis
+- `manage_config` - Gerenciar configurações
+- `send_alerts` - Enviar alertas por email
+- `view_data` - Visualizar dados
+
+### **Bypass do Admin**
+O usuário `admin` deve ter bypass automático em todas as permissões:
+```python
+if hasattr(current_user, 'role') and current_user.role and current_user.role.nome == 'admin':
+    return f(*args, **kwargs)
+```
+
+## 🎨 **Frontend e UI**
+
+### **Tecnologias**
+- **Bootstrap 5** - Framework CSS
+- **Chart.js** - Gráficos interativos
+- **Bootstrap Icons** - Ícones
+- **Modo escuro/claro** - Toggle de tema
+- **JavaScript** - Validação client-side em tempo real
+
+### **Templates**
+- `base.html` - Template base com navegação
+- Dashboards específicos por funcionalidade
+- Formulários CRUD organizados com validação
+- Templates de email HTML
+
+## 🚀 **Execução e Deploy**
+
+### **Desenvolvimento**
+```bash
+# Ativar ambiente virtual
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\venv\Scripts\Activate.ps1
+
+# Subir PostgreSQL
+docker-compose up -d postgres
+
+# Executar aplicação
+python run_production.py
+```
+
+### **Produção**
+- **Windows**: Waitress
+- **Linux/Mac**: Gunicorn
+- **Porta**: 80 (HTTP padrão)
+
+## 📧 **Sistema de Notificações**
+
+### **Configuração**
+- **SMTP**: Gmail, Outlook, Office 365, Exchange
+- **Agendamento**: APScheduler com configuração flexível
+- **Templates**: HTML personalizados
+- **Teste**: Validação em tempo real
+
+## 🔧 **Padrões de Código**
+
+### **Python**
+- **Flask 2.2+** com blueprints
+- **SQLAlchemy** para ORM
+- **Flask-Login** para autenticação
+- **Flask-Principal** para RBAC
+- **APScheduler** para agendamentos
+- **Validação Dupla** - Server-side + Client-side
+
+### **Estrutura de Rotas**
+```python
+@app.route('/rota')
+@permission_required('permissao')
+@login_required
+def funcao():
+    # Validação server-side
+    if request.method == 'POST':
+        # Validar dados antes de salvar
+        from utils.validation import validate_email, check_email_exists
+        # Lógica de validação
+    # Lógica da rota
+    return render_template('template.html')
+```
+
+### **Modelos**
+```python
+class Modelo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # Campos do modelo
+    # Relacionamentos
+    # Métodos auxiliares
+```
+
+## 🛠️ **Scripts e Utilitários**
+
+### **Scripts Principais**
+- `run_production.py` - Execução em produção
+- `manage_db.py` - Gerenciamento do banco
+- `quick_setup.py` - Setup rápido
+- `migrate_to_postgres.py` - Migração de dados
+- `test_validation.py` - Testes de validação
+
+### **Utilitários de Validação**
+- `utils/validation.py` - Funções de validação centralizadas
+  - `validate_email()` - Validação de formato de email
+  - `check_email_exists()` - Verificação de email único no banco
+  - `validate_name()` - Validação de nomes
+  - `validate_username()` - Validação de usernames
+  - `validate_password()` - Validação de senhas
+  - `validate_phone()` - Validação de telefones
+
+### **Docker**
+- PostgreSQL via `docker-compose.yml`
+- Configuração simplificada
+- Volumes persistentes
+
+## 📊 **Funcionalidades Principais**
+
+### **Gestão de Registros**
+- CRUD completo de certificados
+- Controle de vencimentos
+- Filtros e ordenação
+- Status de regularização
+
+### **Dashboards**
+- Dashboard principal com gráficos
+- Dashboard de vencimentos
+- Dashboard de responsáveis
+- Dashboard de atividade
+
+### **Gestão de Usuários**
+- CRUD de usuários
+- Perfis personalizáveis
+- Histórico de atividades
+- Importação/exportação
+
+## 🔍 **Debugging e Logs**
+
+### **Logging**
+- Rotação de arquivos (1MB, 10 backups)
+- Níveis configuráveis
+- Contexto detalhado
+
+### **Cache**
+- Cache em memória para configurações
+- TTL configurável
+- Invalidação automática
+
+## ⚠️ **Pontos de Atenção**
+
+### **Permissões**
+- Sempre verificar se o admin tem bypass
+- Usar decorator `@permission_required`
+- Verificar permissões nos templates
+
+### **Banco de Dados**
+- PostgreSQL obrigatório (não mais SQLite)
+- Configuração via variáveis de ambiente
+- Backup automático recomendado
+- **Constraints únicos**: Sempre validar antes de inserir/atualizar
+
+### **Email**
+- Configuração SMTP obrigatória
+- Teste de conectividade
+- Templates HTML responsivos
+
+### **Validação de Dados**
+- **Sempre implementar validação server-side** antes de salvar no banco
+- **Usar validação client-side** para melhor UX
+- **Tratar erros de constraint** com mensagens amigáveis
+- **Centralizar validações** em `utils/validation.py`
+
+## 🎯 **Boas Práticas**
+
+1. **Sempre ativar ambiente virtual** antes de executar
+2. **Verificar permissões** antes de implementar novas rotas
+3. **Usar blueprints** para organizar rotas
+4. **Implementar logging** para operações críticas
+5. **Testar emails** antes de produção
+6. **Manter backup** do banco de dados
+7. **Documentar mudanças** no CHANGELOG.md
+8. **Validar dados** antes de salvar no banco
+9. **Usar funções centralizadas** para validações
+10. **Testar validações** com `test_validation.py`
+
+## 🔄 **Fluxo de Desenvolvimento**
+
+1. Ativar ambiente virtual
+2. Subir PostgreSQL via Docker
+3. Implementar funcionalidade
+4. **Implementar validações** (server-side + client-side)
+5. Testar permissões
+6. Verificar templates
+7. Testar validações com `test_validation.py`
+8. Testar email (se aplicável)
+9. Commit e push
+
+## 📝 **Comandos Úteis**
+
+```bash
+# Ambiente
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# Banco
+docker-compose up -d postgres
+python manage_db.py init
+
+# Aplicação
+python run_production.py
+
+# Testes
+python test_validation.py
+
+# Git
+git status
+git add .
+git commit -m "descrição"
+git push
+```

@@ -5,53 +5,263 @@
   <div class="col-md-8">
     <div class="card">
       <div class="card-header">
-        <h2 class="mb-0">{{ 'Editar' if registro else 'Novo' }} Registro</h2>
+        <h2 class="mb-0">
+          <i class="bi bi-file-earmark-text me-2"></i>
+          {{ 'Editar' if registro else 'Novo' }} Registro
+        </h2>
       </div>
       <div class="card-body">
-        <form method="POST">
+        <form method="POST" id="registroForm">
           <div class="mb-3">
-            <label for="nome" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nome" name="nome" value="{{ registro.nome if registro else '' }}" required>
+            <label for="nome" class="form-label">
+              <i class="bi bi-tag me-1"></i>Nome do Registro
+            </label>
+            <input type="text" class="form-control" id="nome" name="nome" 
+                   value="{{ registro.nome if registro else '' }}" 
+                   required minlength="3" maxlength="200"
+                   placeholder="Ex: Certificado ISO 9001">
+            <div class="form-text">Nome descritivo do certificado ou documento</div>
+            <div class="invalid-feedback"></div>
           </div>
+          
           <div class="mb-3">
-            <label for="origem" class="form-label">Origem</label>
-            <input type="text" class="form-control" id="origem" name="origem" value="{{ registro.origem if registro else '' }}">
+            <label for="origem" class="form-label">
+              <i class="bi bi-building me-1"></i>Origem
+            </label>
+            <input type="text" class="form-control" id="origem" name="origem" 
+                   value="{{ registro.origem if registro else '' }}" 
+                   required maxlength="100"
+                   placeholder="Ex: Empresa Certificadora Ltda">
+            <div class="form-text">Empresa ou órgão emissor</div>
+            <div class="invalid-feedback"></div>
           </div>
+          
           <div class="mb-3">
-            <label for="tipo" class="form-label">Tipo</label>
+            <label for="tipo" class="form-label">
+              <i class="bi bi-list-ul me-1"></i>Tipo
+            </label>
             <select class="form-select" id="tipo" name="tipo" required>
-              <option value="">Selecione...</option>
+              <option value="">Selecione o tipo...</option>
               <option value="certificado" {% if registro and registro.tipo == 'certificado' %}selected{% endif %}>Certificado</option>
               <option value="senha" {% if registro and registro.tipo == 'senha' %}selected{% endif %}>Senha</option>
               <option value="licenca" {% if registro and registro.tipo == 'licenca' %}selected{% endif %}>Licença</option>
             </select>
+            <div class="form-text">Categoria do documento</div>
+            <div class="invalid-feedback"></div>
           </div>
+          
           <div class="mb-3">
-            <label for="data_vencimento" class="form-label">Data de Vencimento</label>
-            <input type="date" class="form-control" id="data_vencimento" name="data_vencimento" value="{{ registro.data_vencimento.strftime('%Y-%m-%d') if registro else '' }}" required>
+            <label for="data_vencimento" class="form-label">
+              <i class="bi bi-calendar-event me-1"></i>Data de Vencimento
+            </label>
+            <input type="date" class="form-control" id="data_vencimento" name="data_vencimento" 
+                   value="{{ registro.data_vencimento.strftime('%Y-%m-%d') if registro else '' }}" 
+                   required min="{{ min_date }}">
+            <div class="form-text">Data de vencimento do documento</div>
+            <div class="invalid-feedback"></div>
           </div>
+          
           <div class="mb-3">
-            <label for="responsaveis" class="form-label">Responsáveis</label>
+            <label for="tempo_alerta" class="form-label">
+              <i class="bi bi-clock me-1"></i>Tempo de Alerta (dias)
+            </label>
+            <input type="number" class="form-control" id="tempo_alerta" name="tempo_alerta" 
+                   value="{{ registro.tempo_alerta if registro else 7 }}" 
+                   min="1" max="365" required>
+            <div class="form-text">Dias antes do vencimento para enviar alertas</div>
+            <div class="invalid-feedback"></div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="responsaveis" class="form-label">
+              <i class="bi bi-people me-1"></i>Responsáveis
+            </label>
             <select class="form-select" id="responsaveis" name="responsaveis" multiple required>
               {% for resp in todos_responsaveis %}
-                <option value="{{ resp.id }}" {% if registro and resp in registro.responsaveis %}selected{% endif %}>{{ resp.nome }}</option>
+                <option value="{{ resp.id }}" {% if registro and resp in registro.responsaveis %}selected{% endif %}>
+                  {{ resp.nome }} ({{ resp.email }})
+                </option>
               {% endfor %}
             </select>
-            <div class="form-text">Segure Ctrl para selecionar múltiplos.</div>
+            <div class="form-text">Segure Ctrl (ou Cmd) para selecionar múltiplos responsáveis</div>
+            <div class="invalid-feedback"></div>
           </div>
+          
           <div class="mb-3">
-            <label for="tempo_alerta" class="form-label">Tempo de Alerta (dias)</label>
-            <input type="number" class="form-control" id="tempo_alerta" name="tempo_alerta" value="{{ registro.tempo_alerta if registro else 7 }}" min="1" required>
+            <label for="observacoes" class="form-label">
+              <i class="bi bi-chat-text me-1"></i>Observações
+            </label>
+            <textarea class="form-control" id="observacoes" name="observacoes" 
+                      rows="3" maxlength="500"
+                      placeholder="Informações adicionais sobre o registro...">{{ registro.observacoes if registro else '' }}</textarea>
+            <div class="form-text">Observações opcionais (máximo 500 caracteres)</div>
           </div>
-          <div class="mb-3">
-            <label for="observacoes" class="form-label">Observações</label>
-            <textarea class="form-control" id="observacoes" name="observacoes" rows="2">{{ registro.observacoes if registro else '' }}</textarea>
+          
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="/registros" class="btn btn-secondary">
+              <i class="bi bi-x-circle me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <i class="bi bi-check-circle me-1"></i>Salvar
+            </button>
           </div>
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <a href="/registros" class="btn btn-secondary">Cancelar</a>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registroForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Função para validar data futura
+    function isValidFutureDate(dateStr) {
+        const inputDate = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return inputDate > today;
+    }
+    
+    // Função para validar número
+    function isValidNumber(value, min, max) {
+        const num = parseInt(value);
+        return !isNaN(num) && num >= min && num <= max;
+    }
+    
+    // Validação em tempo real
+    const nomeInput = document.getElementById('nome');
+    const origemInput = document.getElementById('origem');
+    const tipoSelect = document.getElementById('tipo');
+    const dataInput = document.getElementById('data_vencimento');
+    const tempoInput = document.getElementById('tempo_alerta');
+    const responsaveisSelect = document.getElementById('responsaveis');
+    
+    // Validar nome
+    nomeInput.addEventListener('blur', function() {
+        const nome = this.value.trim();
+        if (nome.length < 3) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Nome deve ter pelo menos 3 caracteres';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar origem
+    origemInput.addEventListener('blur', function() {
+        const origem = this.value.trim();
+        if (!origem) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Origem é obrigatória';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar tipo
+    tipoSelect.addEventListener('change', function() {
+        if (!this.value) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Tipo é obrigatório';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar data
+    dataInput.addEventListener('blur', function() {
+        const data = this.value;
+        if (!data) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Data é obrigatória';
+        } else if (!isValidFutureDate(data)) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Data deve ser futura';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar tempo de alerta
+    tempoInput.addEventListener('blur', function() {
+        const tempo = this.value;
+        if (!isValidNumber(tempo, 1, 365)) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Tempo deve ser entre 1 e 365 dias';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validar responsáveis
+    responsaveisSelect.addEventListener('change', function() {
+        if (this.selectedOptions.length === 0) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = 'Pelo menos um responsável deve ser selecionado';
+        } else {
+            this.classList.remove('is-invalid');
+            this.nextElementSibling.nextElementSibling.textContent = '';
+        }
+    });
+    
+    // Validação no submit
+    form.addEventListener('submit', function(e) {
+        let hasErrors = false;
+        
+        // Validar todos os campos
+        const nome = nomeInput.value.trim();
+        const origem = origemInput.value.trim();
+        const tipo = tipoSelect.value;
+        const data = dataInput.value;
+        const tempo = tempoInput.value;
+        const responsaveis = responsaveisSelect.selectedOptions.length;
+        
+        if (nome.length < 3) {
+            nomeInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (!origem) {
+            origemInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (!tipo) {
+            tipoSelect.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (!data || !isValidFutureDate(data)) {
+            dataInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (!isValidNumber(tempo, 1, 365)) {
+            tempoInput.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (responsaveis === 0) {
+            responsaveisSelect.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Desabilitar botão para evitar double-submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
+    });
+});
+</script>
 {% endblock %} 

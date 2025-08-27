@@ -36,11 +36,12 @@ def setup_logging():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     
-    # Handler para arquivo com rotação
+    # Handler para arquivo com rotação (UTF-8)
     file_handler = logging.handlers.RotatingFileHandler(
         'logs/app.log', 
         maxBytes=1024 * 1024,  # 1MB
-        backupCount=10
+        backupCount=10,
+        encoding='utf-8'
     )
     file_handler.setLevel(logging.INFO)
     
@@ -53,12 +54,21 @@ def setup_logging():
     # Adicionar handler ao logger
     logger.addHandler(file_handler)
     
-    # Log para console apenas em desenvolvimento
+    # Log para console apenas em desenvolvimento (UTF-8)
     if os.environ.get('FLASK_ENV') != 'production':
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
+        try:
+            # Tentar configurar console com UTF-8
+            import sys
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setLevel(logging.INFO)
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+        except Exception as e:
+            # Fallback para handler padrão se houver erro
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(logging.INFO)
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
 
 # Configurar logging
 setup_logging()
@@ -219,6 +229,7 @@ def permission_required(permission_name):
     Decorator para proteger rotas por permissão.
     Exemplo: @permission_required('manage_access')
     Checa se o usuário logado tem a permissão via seu perfil (role).
+    Admin tem bypass automático em todas as permissões.
     """
     def decorator(f):
         @wraps(f)
@@ -226,6 +237,10 @@ def permission_required(permission_name):
             # Primeiro verifica se está logado
             if not current_user.is_authenticated:
                 return redirect(url_for('login'))
+            
+            # Bypass para admin - admin tem acesso a tudo
+            if hasattr(current_user, 'role') and current_user.role and current_user.role.nome == 'admin':
+                return f(*args, **kwargs)
             
             # Depois verifica a permissão
             need = Need('permission', permission_name)
@@ -366,6 +381,7 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
+@app.route('/dashboard/')
 @login_required
 def dashboard():
     from models import Registro
@@ -545,6 +561,7 @@ def dashboard_atividade():
                          hoje=hoje)
 
 @app.route('/registros')
+@app.route('/registros/')
 @login_required
 def listar_registros():
     sort = request.args.get('sort', 'data_vencimento')
@@ -584,34 +601,97 @@ def listar_registros():
 def novo_registro():
     todos_responsaveis = Responsavel.query.order_by(Responsavel.nome).all()
     if request.method == 'POST':
-        nome = request.form['nome']
-        origem = request.form['origem']
-        tipo = request.form['tipo']
-        data_vencimento = datetime.strptime(request.form['data_vencimento'], '%Y-%m-%d').date()
-        tempo_alerta = int(request.form['tempo_alerta'])
-        observacoes = request.form['observacoes']
+        nome = request.form['nome'].strip()
+        origem = request.form['origem'].strip()
+        tipo = request.form['tipo'].strip()
+        data_vencimento_str = request.form['data_vencimento'].strip()
+        tempo_alerta_str = request.form['tempo_alerta'].strip()
+        observacoes = request.form['observacoes'].strip()
         responsaveis_ids = request.form.getlist('responsaveis')
-        responsaveis = Responsavel.query.filter(Responsavel.id.in_(responsaveis_ids)).all()
-        dias_para_vencer = (data_vencimento - date.today()).days
-        if dias_para_vencer <= tempo_alerta:
-            regularizado = False
-        else:
-            regularizado = True
-        registro = Registro(
-            nome=nome,
-            origem=origem,
-            tipo=tipo,
-            data_vencimento=data_vencimento,
-            tempo_alerta=tempo_alerta,
-            observacoes=observacoes,
-            regularizado=regularizado,
-            responsaveis=responsaveis
+        
+        # Validações usando utilitários centralizados
+        from utils.validation import (
+            validate_registro_name, validate_future_date, 
+            validate_alert_time, format_validation_errors
         )
-        db.session.add(registro)
-        db.session.commit()
-        flash('Registro criado com sucesso!', 'success')
-        return redirect(url_for('listar_registros'))
-    return render_template('registros/form.html', registro=None, todos_responsaveis=todos_responsaveis)
+        
+        errors = []
+        
+        # Validar nome
+        is_valid_name, name_error = validate_registro_name(nome)
+        if not is_valid_name:
+            errors.append(name_error)
+        
+        # Validar origem
+        if not origem:
+            errors.append("Origem é obrigatória")
+        
+        # Validar tipo
+        if not tipo:
+            errors.append("Tipo é obrigatório")
+        
+        # Validar data de vencimento
+        is_valid_date, date_error = validate_future_date(data_vencimento_str, "Data de vencimento")
+        if not is_valid_date:
+            errors.append(date_error)
+        
+        # Validar tempo de alerta
+        is_valid_alert, alert_error = validate_alert_time(tempo_alerta_str)
+        if not is_valid_alert:
+            errors.append(alert_error)
+        
+        # Validar responsáveis
+        if not responsaveis_ids:
+            errors.append("Pelo menos um responsável deve ser selecionado")
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('registros/form.html', 
+                                 registro=None, 
+                                 todos_responsaveis=todos_responsaveis,
+                                 form_data=request.form)
+        
+        try:
+            # Converter dados após validação
+            data_vencimento = datetime.strptime(data_vencimento_str, '%Y-%m-%d').date()
+            tempo_alerta = int(tempo_alerta_str)
+            responsaveis = Responsavel.query.filter(Responsavel.id.in_(responsaveis_ids)).all()
+            
+            # Calcular status de regularização
+            dias_para_vencer = (data_vencimento - date.today()).days
+            regularizado = dias_para_vencer > tempo_alerta
+            
+            registro = Registro(
+                nome=nome,
+                origem=origem,
+                tipo=tipo,
+                data_vencimento=data_vencimento,
+                tempo_alerta=tempo_alerta,
+                observacoes=observacoes,
+                regularizado=regularizado,
+                responsaveis=responsaveis
+            )
+            
+            db.session.add(registro)
+            db.session.commit()
+            flash('Registro criado com sucesso!', 'success')
+            return redirect(url_for('listar_registros'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao criar registro: {str(e)}', 'danger')
+            return render_template('registros/form.html', 
+                                 registro=None, 
+                                 todos_responsaveis=todos_responsaveis,
+                                 form_data=request.form)
+    
+    # Calcular data mínima (amanhã) para o campo de data de vencimento
+    min_date = (date.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+    return render_template('registros/form.html', 
+                         registro=None, 
+                         todos_responsaveis=todos_responsaveis,
+                         min_date=min_date)
 
 @app.route('/registros/<int:registro_id>/editar', methods=['GET', 'POST'])
 @permission_required('manage_registros')
@@ -620,23 +700,94 @@ def editar_registro(registro_id):
     registro = Registro.query.get_or_404(registro_id)
     todos_responsaveis = Responsavel.query.order_by(Responsavel.nome).all()
     if request.method == 'POST':
-        registro.nome = request.form['nome']
-        registro.origem = request.form['origem']
-        registro.tipo = request.form['tipo']
-        registro.data_vencimento = datetime.strptime(request.form['data_vencimento'], '%Y-%m-%d').date()
-        registro.tempo_alerta = int(request.form['tempo_alerta'])
-        registro.observacoes = request.form['observacoes']
+        nome = request.form['nome'].strip()
+        origem = request.form['origem'].strip()
+        tipo = request.form['tipo'].strip()
+        data_vencimento_str = request.form['data_vencimento'].strip()
+        tempo_alerta_str = request.form['tempo_alerta'].strip()
+        observacoes = request.form['observacoes'].strip()
         responsaveis_ids = request.form.getlist('responsaveis')
-        registro.responsaveis = Responsavel.query.filter(Responsavel.id.in_(responsaveis_ids)).all()
-        dias_para_vencer = (registro.data_vencimento - date.today()).days
-        if dias_para_vencer <= registro.tempo_alerta:
-            registro.regularizado = False
-        else:
-            registro.regularizado = True
-        db.session.commit()
-        flash('Registro atualizado com sucesso!', 'success')
-        return redirect(url_for('listar_registros'))
-    return render_template('registros/form.html', registro=registro, todos_responsaveis=todos_responsaveis)
+        
+        # Validações usando utilitários centralizados
+        from utils.validation import (
+            validate_registro_name, validate_future_date, 
+            validate_alert_time, format_validation_errors
+        )
+        
+        errors = []
+        
+        # Validar nome
+        is_valid_name, name_error = validate_registro_name(nome)
+        if not is_valid_name:
+            errors.append(name_error)
+        
+        # Validar origem
+        if not origem:
+            errors.append("Origem é obrigatória")
+        
+        # Validar tipo
+        if not tipo:
+            errors.append("Tipo é obrigatório")
+        
+        # Validar data de vencimento
+        is_valid_date, date_error = validate_future_date(data_vencimento_str, "Data de vencimento")
+        if not is_valid_date:
+            errors.append(date_error)
+        
+        # Validar tempo de alerta
+        is_valid_alert, alert_error = validate_alert_time(tempo_alerta_str)
+        if not is_valid_alert:
+            errors.append(alert_error)
+        
+        # Validar responsáveis
+        if not responsaveis_ids:
+            errors.append("Pelo menos um responsável deve ser selecionado")
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('registros/form.html', 
+                                 registro=registro, 
+                                 todos_responsaveis=todos_responsaveis,
+                                 form_data=request.form)
+        
+        try:
+            # Converter dados após validação
+            data_vencimento = datetime.strptime(data_vencimento_str, '%Y-%m-%d').date()
+            tempo_alerta = int(tempo_alerta_str)
+            responsaveis = Responsavel.query.filter(Responsavel.id.in_(responsaveis_ids)).all()
+            
+            # Atualizar registro
+            registro.nome = nome
+            registro.origem = origem
+            registro.tipo = tipo
+            registro.data_vencimento = data_vencimento
+            registro.tempo_alerta = tempo_alerta
+            registro.observacoes = observacoes
+            registro.responsaveis = responsaveis
+            
+            # Calcular status de regularização
+            dias_para_vencer = (registro.data_vencimento - date.today()).days
+            registro.regularizado = dias_para_vencer > registro.tempo_alerta
+            
+            db.session.commit()
+            flash('Registro atualizado com sucesso!', 'success')
+            return redirect(url_for('listar_registros'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao atualizar registro: {str(e)}', 'danger')
+            return render_template('registros/form.html', 
+                                 registro=registro, 
+                                 todos_responsaveis=todos_responsaveis,
+                                 form_data=request.form)
+    
+    # Calcular data mínima (amanhã) para o campo de data de vencimento
+    min_date = (date.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+    return render_template('registros/form.html', 
+                         registro=registro, 
+                         todos_responsaveis=todos_responsaveis,
+                         min_date=min_date)
 
 @app.route('/registros/<int:registro_id>/excluir', methods=['GET', 'POST'])
 @permission_required('manage_registros')
@@ -661,6 +812,7 @@ def regularizar_registro(registro_id):
     return redirect(url_for('listar_registros'))
 
 @app.route('/responsaveis')
+@app.route('/responsaveis/')
 @login_required
 def listar_responsaveis():
     responsaveis = Responsavel.query.order_by(Responsavel.nome).all()
@@ -671,13 +823,45 @@ def listar_responsaveis():
 @login_required
 def novo_responsavel():
     if request.method == 'POST':
-        nome = request.form['nome']
-        email = request.form['email']
+        nome = request.form['nome'].strip()
+        email = request.form['email'].strip()
+        
+        # Validações usando utilitários
+        from utils.validation import validate_name, validate_email, check_email_exists
+        
+        errors = []
+        
+        # Validar nome
+        is_valid_name, name_error = validate_name(nome, "Nome")
+        if not is_valid_name:
+            errors.append(name_error)
+        
+        # Validar email
+        is_valid_email, email_error = validate_email(email)
+        if not is_valid_email:
+            errors.append(email_error)
+        else:
+            # Verificar se email já existe
+            email_exists, email_exists_msg = check_email_exists(email, Responsavel)
+            if email_exists:
+                errors.append(email_exists_msg)
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('responsaveis/form.html', responsavel=None)
+        
+        # Criar responsável
         responsavel = Responsavel(nome=nome, email=email)
-        db.session.add(responsavel)
-        db.session.commit()
-        flash('Responsável criado com sucesso!', 'success')
-        return redirect(url_for('listar_responsaveis'))
+        try:
+            db.session.add(responsavel)
+            db.session.commit()
+            flash('Responsável criado com sucesso!', 'success')
+            return redirect(url_for('listar_responsaveis'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao criar responsável: {str(e)}', 'danger')
+            return render_template('responsaveis/form.html', responsavel=None)
     return render_template('responsaveis/form.html', responsavel=None)
 
 @app.route('/responsaveis/<int:responsavel_id>/editar', methods=['GET', 'POST'])
@@ -686,11 +870,45 @@ def novo_responsavel():
 def editar_responsavel(responsavel_id):
     responsavel = Responsavel.query.get_or_404(responsavel_id)
     if request.method == 'POST':
-        responsavel.nome = request.form['nome']
-        responsavel.email = request.form['email']
-        db.session.commit()
-        flash('Responsável atualizado com sucesso!', 'success')
-        return redirect(url_for('listar_responsaveis'))
+        nome = request.form['nome'].strip()
+        email = request.form['email'].strip()
+        
+        # Validações usando utilitários
+        from utils.validation import validate_name, validate_email, check_email_exists
+        
+        errors = []
+        
+        # Validar nome
+        is_valid_name, name_error = validate_name(nome, "Nome")
+        if not is_valid_name:
+            errors.append(name_error)
+        
+        # Validar email
+        is_valid_email, email_error = validate_email(email)
+        if not is_valid_email:
+            errors.append(email_error)
+        else:
+            # Verificar se email já existe em outro responsável
+            email_exists, email_exists_msg = check_email_exists(email, Responsavel, responsavel_id)
+            if email_exists:
+                errors.append(email_exists_msg)
+        
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('responsaveis/form.html', responsavel=responsavel)
+        
+        # Atualizar responsável
+        responsavel.nome = nome
+        responsavel.email = email
+        try:
+            db.session.commit()
+            flash('Responsável atualizado com sucesso!', 'success')
+            return redirect(url_for('listar_responsaveis'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao atualizar responsável: {str(e)}', 'danger')
+            return render_template('responsaveis/form.html', responsavel=responsavel)
     return render_template('responsaveis/form.html', responsavel=responsavel)
 
 @app.route('/responsaveis/<int:responsavel_id>/excluir', methods=['GET', 'POST'])
@@ -1307,40 +1525,54 @@ def novo_usuario():
         observacoes = request.form.get('observacoes', '').strip()
         status = request.form.get('status', 'ativo')
         
-        # Validações
+        # Validações usando utilitários centralizados
+        from utils.validation import (
+            validate_username, check_username_exists,
+            validate_name, validate_email, check_email_exists,
+            validate_password, validate_phone
+        )
+        
         erros = []
         
-        if not username:
-            erros.append('Nome de usuário é obrigatório.')
-        elif User.query.filter_by(username=username).first():
-            erros.append('Nome de usuário já existe.')
-        elif len(username) < 3:
-            erros.append('Nome de usuário deve ter pelo menos 3 caracteres.')
-            
-        if not nome:
-            erros.append('Nome completo é obrigatório.')
-        elif len(nome) < 2:
-            erros.append('Nome deve ter pelo menos 2 caracteres.')
-            
-        if not email:
-            erros.append('E-mail é obrigatório.')
-        elif User.query.filter_by(email=email).first():
-            erros.append('E-mail já está em uso.')
-        elif '@' not in email or '.' not in email:
-            erros.append('E-mail deve ter formato válido.')
-            
-        if not password:
-            erros.append('Senha é obrigatória.')
-        elif len(password) < 6:
-            erros.append('Senha deve ter pelo menos 6 caracteres.')
-            
+        # Validar username
+        is_valid_username, username_error = validate_username(username)
+        if not is_valid_username:
+            erros.append(username_error)
+        else:
+            username_exists, username_exists_msg = check_username_exists(username)
+            if username_exists:
+                erros.append(username_exists_msg)
+        
+        # Validar nome
+        is_valid_name, name_error = validate_name(nome, "Nome completo")
+        if not is_valid_name:
+            erros.append(name_error)
+        
+        # Validar email
+        is_valid_email, email_error = validate_email(email)
+        if not is_valid_email:
+            erros.append(email_error)
+        else:
+            email_exists, email_exists_msg = check_email_exists(email, User)
+            if email_exists:
+                erros.append(email_exists_msg)
+        
+        # Validar senha
+        is_valid_password, password_error = validate_password(password)
+        if not is_valid_password:
+            erros.append(password_error)
+        
+        # Validar telefone (opcional)
+        if telefone:
+            is_valid_phone, phone_error = validate_phone(telefone)
+            if not is_valid_phone:
+                erros.append(phone_error)
+        
+        # Validar perfil
         if not role_id:
             erros.append('Perfil é obrigatório.')
         elif not Role.query.get(role_id):
             erros.append('Perfil selecionado não existe.')
-            
-        if telefone and len(telefone) < 8:
-            erros.append('Telefone deve ter pelo menos 8 dígitos.')
             
         if erros:
             for erro in erros:
@@ -1474,58 +1706,73 @@ def dashboard_usuarios():
                          departamentos=departamentos)
 
 @app.route('/usuarios')
+@app.route('/usuarios/')
 @permission_required('manage_access')
 @login_required
 def listar_usuarios():
     """Listagem avançada de usuários com filtros e paginação."""
-    # Filtros
-    busca_login = request.args.get('busca_login', '', type=str)
-    busca_nome = request.args.get('busca_nome', '', type=str)
-    filtro_status = request.args.get('status', '', type=str)
-    filtro_tipo = request.args.get('tipo', '', type=str)  # ldap ou local
-    filtro_perfil = request.args.get('perfil_id', '', type=str)
-    filtro_departamento = request.args.get('departamento', '', type=str)
-    
-    # Query base
-    query = User.query
-    
-    # Aplicar filtros
-    if busca_login:
-        query = query.filter(User.username.ilike(f'%{busca_login}%'))
-    if busca_nome:
-        query = query.filter(User.nome.ilike(f'%{busca_nome}%'))
-    if filtro_status:
-        query = query.filter(User.status == filtro_status)
-    if filtro_tipo == 'ldap':
-        query = query.filter(User.ldap_user == True)
-    elif filtro_tipo == 'local':
-        query = query.filter(User.ldap_user == False)
-    if filtro_perfil:
-        query = query.filter(User.role_id == int(filtro_perfil))
-    if filtro_departamento:
-        query = query.filter(User.departamento.contains(filtro_departamento))
-    
-    # Ordenação
-    ordenacao = request.args.get('sort', 'nome')
-    if ordenacao == 'nome':
-        query = query.order_by(User.nome)
-    elif ordenacao == 'username':
-        query = query.order_by(User.username)
-    elif ordenacao == 'last_login':
-        query = query.order_by(User.last_login.desc())
-    elif ordenacao == 'created_at':
-        query = query.order_by(User.created_at.desc())
-    
-    usuarios = query.all()
-    
-    # Dados para filtros
-    perfis_para_filtro = Role.query.all()
-    departamentos_para_filtro = db.session.query(User.departamento).filter(User.departamento.isnot(None)).distinct().all()
+    try:
+        logger.info(f"Usuário {current_user.username} acessando lista de usuários")
+        
+        # Filtros
+        busca_login = request.args.get('busca_login', '', type=str)
+        busca_nome = request.args.get('busca_nome', '', type=str)
+        filtro_status = request.args.get('status', '', type=str)
+        filtro_tipo = request.args.get('tipo', '', type=str)  # ldap ou local
+        filtro_perfil = request.args.get('perfil_id', '', type=str)
+        filtro_departamento = request.args.get('departamento', '', type=str)
+        
+        logger.info(f"Filtros aplicados: busca_login={busca_login}, busca_nome={busca_nome}, status={filtro_status}, tipo={filtro_tipo}, perfil={filtro_perfil}, departamento={filtro_departamento}")
+        
+        # Query base
+        query = User.query
+        
+        # Aplicar filtros
+        if busca_login:
+            query = query.filter(User.username.ilike(f'%{busca_login}%'))
+        if busca_nome:
+            query = query.filter(User.nome.ilike(f'%{busca_nome}%'))
+        if filtro_status:
+            query = query.filter(User.status == filtro_status)
+        if filtro_tipo == 'ldap':
+            query = query.filter(User.ldap_user == True)
+        elif filtro_tipo == 'local':
+            query = query.filter(User.ldap_user == False)
+        if filtro_perfil:
+            query = query.filter(User.role_id == int(filtro_perfil))
+        if filtro_departamento:
+            query = query.filter(User.departamento.contains(filtro_departamento))
+        
+        # Ordenação
+        ordenacao = request.args.get('sort', 'nome')
+        if ordenacao == 'nome':
+            query = query.order_by(User.nome)
+        elif ordenacao == 'username':
+            query = query.order_by(User.username)
+        elif ordenacao == 'last_login':
+            query = query.order_by(User.last_login.desc())
+        elif ordenacao == 'created_at':
+            query = query.order_by(User.created_at.desc())
+        
+        logger.info(f"Executando query de usuários com ordenação: {ordenacao}")
+        usuarios = query.all()
+        logger.info(f"Encontrados {len(usuarios)} usuários")
+        
+        # Dados para filtros
+        perfis_para_filtro = Role.query.all()
+        departamentos_para_filtro = db.session.query(User.departamento).filter(User.departamento.isnot(None)).distinct().all()
+        
+        logger.info(f"Renderizando template com {len(perfis_para_filtro)} perfis e {len(departamentos_para_filtro)} departamentos")
 
-    return render_template('usuarios/list.html',
-                         usuarios=usuarios,
-                         perfis_para_filtro=perfis_para_filtro,
-                         departamentos_para_filtro=departamentos_para_filtro)
+        return render_template('usuarios/list.html',
+                             usuarios=usuarios,
+                             perfis_para_filtro=perfis_para_filtro,
+                             departamentos_para_filtro=departamentos_para_filtro)
+                             
+    except Exception as e:
+        logger.error(f"Erro ao listar usuários: {e}", exc_info=True)
+        flash('Erro ao carregar lista de usuários. Verifique os logs para mais detalhes.', 'danger')
+        return redirect(url_for('dashboard'))
 
 @app.route('/usuarios/bulk-action', methods=['POST'])
 @permission_required('manage_access')
@@ -1865,33 +2112,49 @@ def editar_usuario(usuario_id):
         status = request.form.get('status', usuario.status)
         role_id = request.form.get('role_id')
         
-        # Validações
+        # Validações usando utilitários centralizados
+        from utils.validation import (
+            validate_username, check_username_exists,
+            validate_name, validate_email, check_email_exists,
+            validate_password, validate_phone
+        )
+        
         erros = []
         
-        if not username:
-            erros.append('Nome de usuário é obrigatório.')
-        elif User.query.filter(User.username == username, User.id != usuario.id).first():
-            erros.append('Nome de usuário já existe.')
-        elif len(username) < 3:
-            erros.append('Nome de usuário deve ter pelo menos 3 caracteres.')
-            
-        if not nome:
-            erros.append('Nome completo é obrigatório.')
-        elif len(nome) < 2:
-            erros.append('Nome deve ter pelo menos 2 caracteres.')
-            
-        if not email:
-            erros.append('E-mail é obrigatório.')
-        elif User.query.filter(User.email == email, User.id != usuario.id).first():
-            erros.append('E-mail já está em uso.')
-        elif '@' not in email or '.' not in email:
-            erros.append('E-mail deve ter formato válido.')
-            
-        if password and len(password) < 6:
-            erros.append('Nova senha deve ter pelo menos 6 caracteres.')
-            
-        if telefone and len(telefone) < 8:
-            erros.append('Telefone deve ter pelo menos 8 dígitos.')
+        # Validar username
+        is_valid_username, username_error = validate_username(username)
+        if not is_valid_username:
+            erros.append(username_error)
+        else:
+            username_exists, username_exists_msg = check_username_exists(username, usuario.id)
+            if username_exists:
+                erros.append(username_exists_msg)
+        
+        # Validar nome
+        is_valid_name, name_error = validate_name(nome, "Nome completo")
+        if not is_valid_name:
+            erros.append(name_error)
+        
+        # Validar email
+        is_valid_email, email_error = validate_email(email)
+        if not is_valid_email:
+            erros.append(email_error)
+        else:
+            email_exists, email_exists_msg = check_email_exists(email, User, usuario.id)
+            if email_exists:
+                erros.append(email_exists_msg)
+        
+        # Validar senha (opcional na edição)
+        if password:
+            is_valid_password, password_error = validate_password(password)
+            if not is_valid_password:
+                erros.append(password_error)
+        
+        # Validar telefone (opcional)
+        if telefone:
+            is_valid_phone, phone_error = validate_phone(telefone)
+            if not is_valid_phone:
+                erros.append(phone_error)
             
         if erros:
             for erro in erros:
@@ -2061,6 +2324,7 @@ def resetar_senha_usuario(usuario_id):
     return render_template('usuarios/resetar_senha.html', usuario=usuario) 
 
 @app.route('/perfis')
+@app.route('/perfis/')
 @permission_required('manage_access')
 @login_required
 def listar_perfis():
@@ -2091,6 +2355,23 @@ def novo_perfil():
                 perfil.permissions.append(perm)
         db.session.add(perfil)
         db.session.commit()
+        
+        # Registrar no histórico
+        from models import RoleHistory
+        import json
+        historico = RoleHistory(
+            role_id=perfil.id,
+            acao='created',
+            detalhes=json.dumps({
+                'nome': perfil.nome,
+                'descricao': perfil.descricao,
+                'permissoes_adicionadas': len(perfil.permissions)
+            }),
+            usuario=current_user.username
+        )
+        db.session.add(historico)
+        db.session.commit()
+        
         flash('Perfil criado com sucesso!', 'success')
         return redirect(url_for('listar_perfis'))
     return render_template('perfis/form.html', permissoes=permissoes) 
@@ -2112,10 +2393,35 @@ def editar_perfil(perfil_id):
         if Role.query.filter(Role.nome == nome, Role.id != perfil.id).first():
             flash('Já existe um perfil com esse nome.', 'danger')
             return render_template('perfis/form.html', perfil=perfil, permissoes=permissoes)
+        # Salvar valores anteriores para o histórico
+        nome_anterior = perfil.nome
+        descricao_anterior = perfil.descricao
+        permissoes_anteriores = [p.nome for p in perfil.permissions]
+        
         perfil.nome = nome
         perfil.descricao = descricao
         perfil.permissions = [Permission.query.get(int(pid)) for pid in perms_ids]
         db.session.commit()
+        
+        # Registrar no histórico
+        from models import RoleHistory
+        import json
+        historico = RoleHistory(
+            role_id=perfil.id,
+            acao='updated',
+            detalhes=json.dumps({
+                'nome_anterior': nome_anterior,
+                'nome_novo': nome,
+                'descricao_anterior': descricao_anterior,
+                'descricao_nova': descricao,
+                'permissoes_anteriores': permissoes_anteriores,
+                'permissoes_novas': [p.nome for p in perfil.permissions]
+            }),
+            usuario=current_user.username
+        )
+        db.session.add(historico)
+        db.session.commit()
+        
         flash('Perfil atualizado com sucesso!', 'success')
         return redirect(url_for('listar_perfis'))
     return render_template('perfis/form.html', perfil=perfil, permissoes=permissoes) 
@@ -2133,8 +2439,30 @@ def excluir_perfil(perfil_id):
         flash('Não é possível excluir um perfil associado a usuários.', 'danger')
         return redirect(url_for('listar_perfis'))
     if request.method == 'POST':
+        # Salvar informações antes de deletar para o histórico
+        perfil_info = {
+            'nome': perfil.nome,
+            'descricao': perfil.descricao,
+            'permissoes': [p.nome for p in perfil.permissions],
+            'usuarios_afetados': [u.username for u in perfil.users]
+        }
+        
+        # Registrar no histórico ANTES de deletar o perfil
+        from models import RoleHistory
+        import json
+        historico = RoleHistory(
+            role_id=perfil.id,  # Usar o ID antes de deletar
+            acao='deleted',
+            detalhes=json.dumps(perfil_info),
+            usuario=current_user.username
+        )
+        db.session.add(historico)
+        db.session.commit()
+        
+        # Agora deletar o perfil
         db.session.delete(perfil)
         db.session.commit()
+        
         flash('Perfil excluído com sucesso!', 'success')
         return redirect(url_for('listar_perfis'))
     return render_template('perfis/confirm_delete.html', perfil=perfil) 
@@ -2396,12 +2724,20 @@ def import_perfis():
 def historico_perfil(perfil_id):
     """Visualiza histórico de alterações de um perfil."""
     from models import RoleHistory
+    from datetime import datetime
+    
     perfil = Role.query.get_or_404(perfil_id)
     historico = RoleHistory.query.filter_by(role_id=perfil_id).order_by(
         RoleHistory.timestamp.desc()
     ).all()
     
-    return render_template('perfis/historico.html', perfil=perfil, historico=historico)
+    # Calcular timestamp atual para comparação no template
+    agora_timestamp = datetime.now().timestamp()
+    
+    return render_template('perfis/historico.html', 
+                         perfil=perfil, 
+                         historico=historico,
+                         agora_timestamp=agora_timestamp)
 
 @app.route('/perfis/assistente')
 @permission_required('manage_access')

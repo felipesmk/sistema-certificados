@@ -8,20 +8,101 @@
         <h2 class="mb-0">{{ 'Editar' if responsavel else 'Novo' }} Responsável</h2>
       </div>
       <div class="card-body">
-        <form method="POST">
+        <form method="POST" id="responsavelForm">
           <div class="mb-3">
-            <label for="nome" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nome" name="nome" value="{{ responsavel.nome if responsavel else '' }}" required>
+            <label for="nome" class="form-label">
+              <i class="bi bi-person me-1"></i>Nome
+            </label>
+            <input type="text" class="form-control" id="nome" name="nome" 
+                   value="{{ responsavel.nome if responsavel else '' }}" 
+                   required minlength="2" maxlength="120"
+                   placeholder="Digite o nome completo">
+            <div class="form-text">Nome completo do responsável</div>
           </div>
           <div class="mb-3">
-            <label for="email" class="form-label">E-mail</label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ responsavel.email if responsavel else '' }}" required>
+            <label for="email" class="form-label">
+              <i class="bi bi-envelope me-1"></i>E-mail
+            </label>
+            <input type="email" class="form-control" id="email" name="email" 
+                   value="{{ responsavel.email if responsavel else '' }}" 
+                   required maxlength="120"
+                   placeholder="exemplo@empresa.com">
+            <div class="form-text">E-mail único para notificações</div>
+            <div id="emailFeedback" class="invalid-feedback"></div>
           </div>
-          <button type="submit" class="btn btn-primary">Salvar</button>
-          <a href="/responsaveis" class="btn btn-secondary">Cancelar</a>
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="/responsaveis" class="btn btn-secondary">
+              <i class="bi bi-x-circle me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <i class="bi bi-check-circle me-1"></i>Salvar
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('responsavelForm');
+    const emailInput = document.getElementById('email');
+    const emailFeedback = document.getElementById('emailFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Validação de email em tempo real
+    emailInput.addEventListener('blur', function() {
+        const email = this.value.trim();
+        
+        if (email && !isValidEmail(email)) {
+            this.classList.add('is-invalid');
+            emailFeedback.textContent = 'Digite um e-mail válido';
+        } else {
+            this.classList.remove('is-invalid');
+            emailFeedback.textContent = '';
+        }
+    });
+    
+    // Validação do formulário antes do envio
+    form.addEventListener('submit', function(e) {
+        const nome = document.getElementById('nome').value.trim();
+        const email = emailInput.value.trim();
+        
+        let hasErrors = false;
+        
+        // Validar nome
+        if (nome.length < 2) {
+            document.getElementById('nome').classList.add('is-invalid');
+            hasErrors = true;
+        } else {
+            document.getElementById('nome').classList.remove('is-invalid');
+        }
+        
+        // Validar email
+        if (!email || !isValidEmail(email)) {
+            emailInput.classList.add('is-invalid');
+            emailFeedback.textContent = 'Digite um e-mail válido';
+            hasErrors = true;
+        } else {
+            emailInput.classList.remove('is-invalid');
+            emailFeedback.textContent = '';
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Desabilitar botão para evitar duplo envio
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
+    });
+    
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+});
+</script>
 {% endblock %} 
