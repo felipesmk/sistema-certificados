@@ -3,52 +3,75 @@
 {% block content %}
 <div class="alert alert-info">
     <strong>RELATÓRIO DE ITENS CONTROLADOS</strong><br>
-    Relatório de itens sob sua responsabilidade que requerem atenção.
+    Resumo dos itens sob sua responsabilidade.
 </div>
 
 <div class="card">
     <div class="card-title">RESPONSÁVEL: {{ responsavel.nome }}</div>
-    <table class="table">
-        <tr>
-            <th>Email:</th>
-            <td>{{ responsavel.email }}</td>
-        </tr>
-        <tr>
-            <th>Total de Itens:</th>
-            <td><strong>{{ certificados|length }}</strong></td>
-        </tr>
-    </table>
+    <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+        <div style="flex: 1; text-align: center; padding: 10px; background-color: #dc3545; color: white; border-radius: 6px;">
+            <div style="font-size: 20px; font-weight: bold;">
+                {{ certificados|selectattr('regularizado', 'equalto', false)|list|length }}
+            </div>
+            <div style="font-size: 12px;">PENDENTES</div>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 10px; background-color: #28a745; color: white; border-radius: 6px;">
+            <div style="font-size: 20px; font-weight: bold;">
+                {{ certificados|selectattr('regularizado', 'equalto', true)|list|length }}
+            </div>
+            <div style="font-size: 12px;">REGULARIZADOS</div>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 10px; background-color: #ffc107; color: #212529; border-radius: 6px;">
+            <div style="font-size: 20px; font-weight: bold;">
+                {{ certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje)|list|length }}
+            </div>
+            <div style="font-size: 12px;">VENCEM EM 30 DIAS</div>
+        </div>
+    </div>
 </div>
 
 {% if certificados %}
     <div class="card">
-        <div class="card-title">ITENS QUE REQUEREM ATENÇÃO</div>
+        <div class="card-title">ITENS PENDENTES</div>
+        
+        {% set vencidos = certificados|selectattr('data_vencimento', 'lt', hoje)|list %}
+        {% set proximos_7_dias = certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=7))|selectattr('data_vencimento', 'gt', hoje)|list %}
+        {% set proximos_30_dias = certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje + timedelta(days=7))|list %}
+        
+        {% if vencidos %}
+        <div class="alert alert-danger">
+            <strong>URGENTE:</strong> {{ vencidos|length }} item(s) vencido(s)
+        </div>
+        {% endif %}
+        
+        {% if proximos_7_dias %}
+        <div class="alert alert-warning">
+            <strong>ALTA PRIORIDADE:</strong> {{ proximos_7_dias|length }} item(s) vence(m) nos próximos 7 dias
+        </div>
+        {% endif %}
+        
+        {% if proximos_30_dias %}
+        <div class="alert alert-info">
+            <strong>ATENÇÃO:</strong> {{ proximos_30_dias|length }} item(s) vence(m) nos próximos 30 dias
+        </div>
+        {% endif %}
         
         <table class="table">
             <thead>
                 <tr>
-                    <th>Nome/Descrição</th>
+                    <th>Item</th>
                     <th>Tipo</th>
                     <th>Vencimento</th>
-                    <th>Dias Restantes</th>
-                    <th>Status</th>
+                    <th>Dias</th>
                 </tr>
             </thead>
             <tbody>
                 {% for certificado in certificados %}
+                {% if not certificado.regularizado %}
                 <tr>
-                    <td>
-                        <strong>{{ certificado.nome }}</strong>
-                        {% if certificado.observacoes %}
-                            <br><small style="color: #6c757d;">{{ certificado.observacoes[:50] }}{% if certificado.observacoes|length > 50 %}...{% endif %}</small>
-                        {% endif %}
-                    </td>
+                    <td><strong>{{ certificado.nome }}</strong></td>
                     <td>{{ certificado.tipo }}</td>
-                    <td>
-                        <span class="badge badge-danger">
-                            {{ certificado.data_vencimento.strftime('%d/%m/%Y') }}
-                        </span>
-                    </td>
+                    <td>{{ certificado.data_vencimento.strftime('%d/%m/%Y') }}</td>
                     <td>
                         {% set dias = (certificado.data_vencimento - hoje).days %}
                         {% if dias < 0 %}
@@ -61,109 +84,19 @@
                             <span class="badge badge-success">{{ dias }} dias</span>
                         {% endif %}
                     </td>
-                    <td>
-                        {% if certificado.regularizado %}
-                            <span class="badge badge-success">Regularizado</span>
-                        {% else %}
-                            <span class="badge badge-danger">Pendente</span>
-                        {% endif %}
-                    </td>
                 </tr>
+                {% endif %}
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-
-    <div class="card">
-        <div class="card-title">RESUMO POR STATUS</div>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 150px;">
-                <div style="text-align: center; padding: 15px; background-color: #dc3545; color: white; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold;">
-                        {{ certificados|selectattr('regularizado', 'equalto', false)|list|length }}
-                    </div>
-                    <div style="font-size: 14px;">PENDENTES</div>
-                </div>
-            </div>
-            <div style="flex: 1; min-width: 150px;">
-                <div style="text-align: center; padding: 15px; background-color: #28a745; color: white; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold;">
-                        {{ certificados|selectattr('regularizado', 'equalto', true)|list|length }}
-                    </div>
-                    <div style="font-size: 14px;">REGULARIZADOS</div>
-                </div>
-            </div>
-            <div style="flex: 1; min-width: 150px;">
-                <div style="text-align: center; padding: 15px; background-color: #ffc107; color: #212529; border-radius: 8px;">
-                    <div style="font-size: 24px; font-weight: bold;">
-                        {{ certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje)|list|length }}
-                    </div>
-                    <div style="font-size: 14px;">VENCEM EM 30 DIAS</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">RESUMO POR TIPO DE ITEM</div>
-        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    {% set tipos = certificados|map(attribute='tipo')|list %}
-        {% set tipos_unicos = [] %}
-        {% for tipo in tipos %}
-            {% if tipo not in tipos_unicos %}
-                {% set _ = tipos_unicos.append(tipo) %}
-            {% endif %}
-        {% endfor %}
-        {% for tipo in tipos_unicos %}
-            <div style="flex: 1; min-width: 120px;">
-                <div style="text-align: center; padding: 12px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;">
-                    <div style="font-size: 18px; font-weight: bold; color: #495057;">
-                        {{ certificados|selectattr('tipo', 'equalto', tipo)|list|length }}
-                    </div>
-                    <div style="font-size: 12px; color: #6c757d; text-transform: uppercase;">{{ tipo }}</div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">PRIORIDADES DE AÇÃO</div>
-        
-        {% set vencidos = certificados|selectattr('data_vencimento', 'lt', hoje)|list %}
-        {% if vencidos %}
-        <div class="alert alert-danger">
-            <strong>URGENTE:</strong> {{ vencidos|length }} item(s) vencido(s) que requerem ação imediata.
-        </div>
-        {% endif %}
-        
-        {% set proximos_7_dias = certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=7))|selectattr('data_vencimento', 'gt', hoje)|list %}
-        {% if proximos_7_dias %}
-        <div class="alert alert-warning">
-            <strong>ALTA PRIORIDADE:</strong> {{ proximos_7_dias|length }} item(s) vence(m) nos próximos 7 dias.
-        </div>
-        {% endif %}
-        
-        {% set proximos_30_dias = certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje + timedelta(days=7))|list %}
-        {% if proximos_30_dias %}
-        <div class="alert alert-info">
-            <strong>ATENÇÃO:</strong> {{ proximos_30_dias|length }} item(s) vence(m) nos próximos 30 dias.
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="alert alert-warning" style="margin-top: 20px;">
-        <strong>IMPORTANTE:</strong> 
-        <ul style="margin-left: 20px; margin-top: 10px;">
-            <li>Itens vencidos podem causar interrupções operacionais</li>
-            <li>Priorize a regularização dos itens com vencimento mais próximo</li>
-            <li>Atualize o status no sistema após cada regularização</li>
-            <li>Mantenha as informações sempre atualizadas</li>
-        </ul>
     </div>
 {% else %}
     <div class="alert alert-success">
         <strong>PARABÉNS:</strong> Todos os itens sob sua responsabilidade estão regularizados.
     </div>
 {% endif %}
+
+<div class="alert alert-info" style="margin-top: 20px;">
+    <strong>Lembrete:</strong> Atualize o status no sistema após cada regularização.
+</div>
 {% endblock %} 
