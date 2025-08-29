@@ -1304,6 +1304,13 @@ def enviar_resumo_individual(responsavel_id):
             flash(f'O responsável {responsavel.nome} não possui certificados cadastrados.', 'info')
             return redirect(url_for('listar_responsaveis'))
         
+        # Verificar se o mail está configurado corretamente
+        if app.config['MAIL_SERVER'] == 'localhost' and app.config['MAIL_PORT'] == 8025 and app.config['MAIL_SUPPRESS_SEND']:
+            logger.info("Modo desenvolvimento: email de resumo será simulado")
+            flash(f'Resumo simulado enviado para {responsavel.nome} ({responsavel.email})!', 'success')
+            logger.info(f"Resumo individual simulado para {responsavel.email}")
+            return redirect(url_for('listar_responsaveis'))
+        
         # Renderizar template HTML
         html_content = render_template('emails/email_responsaveis.html',
                                      responsavel=responsavel,
@@ -1453,6 +1460,27 @@ def enviar_email_resumo_responsaveis():
     """Envia email de resumo para todos os responsáveis com seus certificados."""
     try:
         hoje = date.today()
+        
+        # Verificar se o mail está configurado corretamente
+        if app.config['MAIL_SERVER'] == 'localhost' and app.config['MAIL_PORT'] == 8025 and app.config['MAIL_SUPPRESS_SEND']:
+            logger.info("Modo desenvolvimento: emails de resumo serão simulados")
+            # Buscar todos os responsáveis que têm certificados
+            responsaveis = Responsavel.query.join(Registro).distinct().all()
+            emails_simulados = 0
+            
+            for responsavel in responsaveis:
+                if not responsavel.email:
+                    continue
+                    
+                # Buscar certificados deste responsável (relação N:N)
+                certificados = Registro.query.filter(Registro.responsaveis.contains(responsavel)).all()
+                
+                if certificados:
+                    logger.info(f"Email de resumo simulado enviado para {responsavel.email}")
+                    emails_simulados += 1
+            
+            logger.info(f"Simulados {emails_simulados} emails de resumo")
+            return emails_simulados
         
         # Buscar todos os responsáveis que têm certificados
         responsaveis = Responsavel.query.join(Registro).distinct().all()
