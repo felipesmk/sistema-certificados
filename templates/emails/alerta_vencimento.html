@@ -2,12 +2,12 @@
 
 {% block content %}
 <div class="alert alert-warning">
-    <strong>⚠️ Alerta de Vencimento</strong><br>
-    O certificado abaixo está próximo do vencimento e requer atenção imediata.
+    <strong>ALERTA DE VENCIMENTO</strong><br>
+    O item abaixo está próximo do vencimento e requer atenção imediata.
 </div>
 
 <div class="card">
-    <div class="card-title">📋 Detalhes do Certificado</div>
+    <div class="card-title">DETALHES DO ITEM</div>
     <table class="table">
         <tr>
             <th>Nome/Descrição:</th>
@@ -51,21 +51,53 @@
 </div>
 
 <div class="card">
-    <div class="card-title">🚨 Ações Necessárias</div>
-    <ul style="margin-left: 20px; margin-bottom: 15px;">
-        <li>Verificar se o certificado ainda é necessário</li>
-        <li>Iniciar processo de renovação se aplicável</li>
-        <li>Atualizar informações no sistema após renovação</li>
-        <li>Marcar como regularizado após conclusão</li>
-    </ul>
+    <div class="card-title">AÇÕES NECESSÁRIAS</div>
     
-    <p style="margin-bottom: 15px;">
-        <strong>Importante:</strong> Certificados vencidos podem causar interrupções nos serviços.
-    </p>
+    {% if registro.tipo.lower() in ['certificado', 'certificados'] %}
+        <ul style="margin-left: 20px; margin-bottom: 15px;">
+            <li>Verificar se o certificado ainda é necessário para os serviços</li>
+            <li>Iniciar processo de renovação junto ao fornecedor</li>
+            <li>Atualizar informações no sistema após renovação</li>
+            <li>Marcar como regularizado após conclusão</li>
+        </ul>
+        <p style="margin-bottom: 15px;">
+            <strong>Importante:</strong> Certificados vencidos podem causar interrupções nos serviços e comprometer a segurança da infraestrutura.
+        </p>
+    {% elif registro.tipo.lower() in ['senha', 'senhas'] %}
+        <ul style="margin-left: 20px; margin-bottom: 15px;">
+            <li>Verificar se a senha ainda é necessária para o serviço</li>
+            <li>Iniciar processo de alteração de senha</li>
+            <li>Atualizar a senha no sistema após alteração</li>
+            <li>Marcar como regularizado após conclusão</li>
+        </ul>
+        <p style="margin-bottom: 15px;">
+            <strong>Importante:</strong> Senhas vencidas podem comprometer o acesso aos sistemas e representar risco de segurança.
+        </p>
+    {% elif registro.tipo.lower() in ['licença', 'licenças', 'licenca', 'licencas'] %}
+        <ul style="margin-left: 20px; margin-bottom: 15px;">
+            <li>Verificar se a licença ainda é necessária para o software</li>
+            <li>Iniciar processo de renovação junto ao fornecedor</li>
+            <li>Atualizar informações da licença no sistema</li>
+            <li>Marcar como regularizado após conclusão</li>
+        </ul>
+        <p style="margin-bottom: 15px;">
+            <strong>Importante:</strong> Licenças vencidas podem resultar em interrupção do uso de software e possíveis penalidades.
+        </p>
+    {% else %}
+        <ul style="margin-left: 20px; margin-bottom: 15px;">
+            <li>Verificar se o item ainda é necessário</li>
+            <li>Iniciar processo de renovação ou atualização</li>
+            <li>Atualizar informações no sistema após conclusão</li>
+            <li>Marcar como regularizado após finalização</li>
+        </ul>
+        <p style="margin-bottom: 15px;">
+            <strong>Importante:</strong> Itens vencidos podem causar interrupções operacionais e comprometer a continuidade dos serviços.
+        </p>
+    {% endif %}
 </div>
 
 <div class="alert alert-info" style="margin-top: 20px;">
-    <strong>💡 Dica:</strong> Configure alertas automáticos no sistema para receber notificações 
+    <strong>RECOMENDAÇÃO:</strong> Configure alertas automáticos no sistema para receber notificações 
     com antecedência e evitar vencimentos inesperados.
 </div>
 {% endblock %} 

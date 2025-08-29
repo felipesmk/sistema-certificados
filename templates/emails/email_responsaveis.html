@@ -2,19 +2,19 @@
 
 {% block content %}
 <div class="alert alert-info">
-    <strong>📊 Resumo de Certificados</strong><br>
-    Relatório de certificados sob sua responsabilidade que requerem atenção.
+    <strong>RELATÓRIO DE ITENS CONTROLADOS</strong><br>
+    Relatório de itens sob sua responsabilidade que requerem atenção.
 </div>
 
 <div class="card">
-    <div class="card-title">👤 Responsável: {{ responsavel.nome }}</div>
+    <div class="card-title">RESPONSÁVEL: {{ responsavel.nome }}</div>
     <table class="table">
         <tr>
             <th>Email:</th>
             <td>{{ responsavel.email }}</td>
         </tr>
         <tr>
-            <th>Total de Certificados:</th>
+            <th>Total de Itens:</th>
             <td><strong>{{ certificados|length }}</strong></td>
         </tr>
     </table>
@@ -22,7 +22,7 @@
 
 {% if certificados %}
     <div class="card">
-        <div class="card-title">📋 Certificados que Requerem Atenção</div>
+        <div class="card-title">ITENS QUE REQUEREM ATENÇÃO</div>
         
         <table class="table">
             <thead>
@@ -75,14 +75,14 @@
     </div>
 
     <div class="card">
-        <div class="card-title">📈 Resumo por Status</div>
+        <div class="card-title">RESUMO POR STATUS</div>
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 150px;">
                 <div style="text-align: center; padding: 15px; background-color: #dc3545; color: white; border-radius: 8px;">
                     <div style="font-size: 24px; font-weight: bold;">
                         {{ certificados|selectattr('regularizado', 'equalto', false)|list|length }}
                     </div>
-                    <div style="font-size: 14px;">Pendentes</div>
+                    <div style="font-size: 14px;">PENDENTES</div>
                 </div>
             </div>
             <div style="flex: 1; min-width: 150px;">
@@ -90,7 +90,7 @@
                     <div style="font-size: 24px; font-weight: bold;">
                         {{ certificados|selectattr('regularizado', 'equalto', true)|list|length }}
                     </div>
-                    <div style="font-size: 14px;">Regularizados</div>
+                    <div style="font-size: 14px;">REGULARIZADOS</div>
                 </div>
             </div>
             <div style="flex: 1; min-width: 150px;">
@@ -98,34 +98,72 @@
                     <div style="font-size: 24px; font-weight: bold;">
                         {{ certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje)|list|length }}
                     </div>
-                    <div style="font-size: 14px;">Vencem em 30 dias</div>
+                    <div style="font-size: 14px;">VENCEM EM 30 DIAS</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="card-title">🚨 Ações Prioritárias</div>
-        <ul style="margin-left: 20px; margin-bottom: 15px;">
-            <li><strong>Urgente:</strong> Renovar certificados vencidos ou próximos do vencimento</li>
-            <li><strong>Importante:</strong> Verificar certificados que vencem nos próximos 30 dias</li>
-            <li><strong>Recomendado:</strong> Atualizar informações no sistema após renovações</li>
-            <li><strong>Preventivo:</strong> Configurar lembretes para próximos vencimentos</li>
+        <div class="card-title">RESUMO POR TIPO DE ITEM</div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    {% set tipos = certificados|map(attribute='tipo')|list %}
+        {% set tipos_unicos = [] %}
+        {% for tipo in tipos %}
+            {% if tipo not in tipos_unicos %}
+                {% set _ = tipos_unicos.append(tipo) %}
+            {% endif %}
+        {% endfor %}
+        {% for tipo in tipos_unicos %}
+            <div style="flex: 1; min-width: 120px;">
+                <div style="text-align: center; padding: 12px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;">
+                    <div style="font-size: 18px; font-weight: bold; color: #495057;">
+                        {{ certificados|selectattr('tipo', 'equalto', tipo)|list|length }}
+                    </div>
+                    <div style="font-size: 12px; color: #6c757d; text-transform: uppercase;">{{ tipo }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">PRIORIDADES DE AÇÃO</div>
+        
+        {% set vencidos = certificados|selectattr('data_vencimento', 'lt', hoje)|list %}
+        {% if vencidos %}
+        <div class="alert alert-danger">
+            <strong>URGENTE:</strong> {{ vencidos|length }} item(s) vencido(s) que requerem ação imediata.
+        </div>
+        {% endif %}
+        
+        {% set proximos_7_dias = certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=7))|selectattr('data_vencimento', 'gt', hoje)|list %}
+        {% if proximos_7_dias %}
+        <div class="alert alert-warning">
+            <strong>ALTA PRIORIDADE:</strong> {{ proximos_7_dias|length }} item(s) vence(m) nos próximos 7 dias.
+        </div>
+        {% endif %}
+        
+        {% set proximos_30_dias = certificados|selectattr('data_vencimento', 'le', hoje + timedelta(days=30))|selectattr('data_vencimento', 'gt', hoje + timedelta(days=7))|list %}
+        {% if proximos_30_dias %}
+        <div class="alert alert-info">
+            <strong>ATENÇÃO:</strong> {{ proximos_30_dias|length }} item(s) vence(m) nos próximos 30 dias.
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="alert alert-warning" style="margin-top: 20px;">
+        <strong>IMPORTANTE:</strong> 
+        <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>Itens vencidos podem causar interrupções operacionais</li>
+            <li>Priorize a regularização dos itens com vencimento mais próximo</li>
+            <li>Atualize o status no sistema após cada regularização</li>
+            <li>Mantenha as informações sempre atualizadas</li>
         </ul>
     </div>
-
-
-
 {% else %}
-    <div class="card">
-        <div class="card-title">✅ Parabéns!</div>
-        <p>Você não possui certificados que requerem atenção imediata.</p>
-        <p>Continue mantendo seus certificados atualizados para evitar surpresas.</p>
+    <div class="alert alert-success">
+        <strong>PARABÉNS:</strong> Todos os itens sob sua responsabilidade estão regularizados.
     </div>
 {% endif %}
-
-<div class="alert alert-info" style="margin-top: 20px;">
-    <strong>💡 Dica:</strong> Acesse regularmente o sistema para verificar o status de seus certificados 
-    e configure alertas automáticos para receber notificações com antecedência.
-</div>
 {% endblock %} 
