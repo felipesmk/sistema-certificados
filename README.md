@@ -542,6 +542,8 @@ sudo zypper install python3 python3-pip3 python3-virtualenv git-core
 python -c "import flask; print(flask.__version__)"
 ```
 
+
+
 ## 💡 Dicas para Desenvolvimento
 
 ### **Fluxo de Trabalho**

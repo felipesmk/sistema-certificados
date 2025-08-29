@@ -95,6 +95,8 @@ def install_postgresql():
 
 def create_postgresql_user(username, password, database):
     """Cria usuário e banco no PostgreSQL"""
+    system = platform.system().lower()
+    
     try:
         # Comandos SQL para criar usuário e banco
         sql_commands = [
@@ -104,11 +106,22 @@ def create_postgresql_user(username, password, database):
         ]
         
         for command in sql_commands:
-            result = subprocess.run(['sudo', '-u', 'postgres', 'psql', '-c', command], 
-                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if system == "windows":
+                # No Windows, conectar diretamente como postgres
+                result = subprocess.run(['psql', '-U', 'postgres', '-c', command], 
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      env=os.environ.copy())
+            else:
+                # No Linux, usar sudo
+                result = subprocess.run(['sudo', '-u', 'postgres', 'psql', '-c', command], 
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
             if result.returncode != 0:
                 print_warning(f"Comando falhou: {command}")
                 print_warning(f"Erro: {result.stderr}")
+                if system == "windows":
+                    print_info("No Windows, pode ser necessário configurar a senha do postgres:")
+                    print_info("set PGPASSWORD=sua_senha_postgres")
         
         return True
     except Exception as e:
@@ -210,15 +223,14 @@ def main():
         print_info("Configuração cancelada.")
         return False
     
-    # Criar usuário e banco (apenas no Linux)
-    if platform.system().lower() == "linux":
-        print_info("Criando usuário e banco de dados...")
-        if not create_postgresql_user(username, password, database):
-            print_warning("Não foi possível criar usuário/banco automaticamente.")
-            print_info("Crie manualmente no PostgreSQL:")
-            print(f"  CREATE USER {username} WITH PASSWORD '{password}';")
-            print(f"  CREATE DATABASE {database} OWNER {username};")
-            print(f"  GRANT ALL PRIVILEGES ON DATABASE {database} TO {username};")
+    # Criar usuário e banco (Windows e Linux)
+    print_info("Criando usuário e banco de dados...")
+    if not create_postgresql_user(username, password, database):
+        print_warning("Não foi possível criar usuário/banco automaticamente.")
+        print_info("Crie manualmente no PostgreSQL:")
+        print(f"  CREATE USER {username} WITH PASSWORD '{password}';")
+        print(f"  CREATE DATABASE {database} OWNER {username};")
+        print(f"  GRANT ALL PRIVILEGES ON DATABASE {database} TO {username};")
     
     # Criar arquivo .env
     print_info("Criando arquivo .env...")
