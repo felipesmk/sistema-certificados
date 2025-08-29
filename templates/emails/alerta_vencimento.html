@@ -34,8 +34,16 @@
             </td>
         </tr>
         <tr>
-            <th>Responsável:</th>
-            <td>{{ registro.responsavel.nome if registro.responsavel else 'Não definido' }}</td>
+            <th>Responsáveis:</th>
+            <td>
+                {% if registro.responsaveis %}
+                    {% for responsavel in registro.responsaveis %}
+                        {{ responsavel.nome }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <span style="color: #6c757d;">Não definido</span>
+                {% endif %}
+            </td>
         </tr>
         <tr>
             <th>Status:</th>
