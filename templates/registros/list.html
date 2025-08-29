@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Registros - Painel de Certificados{% endblock %}
+{% block page_title %}Gestão de Registros{% endblock %}
 
 {% block head %}
 <style>
@@ -194,9 +195,9 @@
                   </a>
                   {% set dias_para_vencer = (registro.data_vencimento - hoje).days %}
                 {% if not registro.regularizado and dias_para_vencer <= registro.tempo_alerta %}
-                  <form method="POST" action="/registros/{{ registro.id }}/regularizar" style="display:inline;">
-                    <button type="submit" class="btn btn-sm btn-success">Regularizar</button>
-                  </form>
+                  <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#regularizarModal{{ registro.id }}">
+                    Regularizar
+                  </button>
                 {% endif %}
               </td>
             </tr>
@@ -207,4 +208,61 @@
     </div>
   </div>
 </div>
+
+<!-- Modais de Regularização -->
+{% for registro in registros %}
+  {% set dias_para_vencer = (registro.data_vencimento - hoje).days %}
+  {% if not registro.regularizado and dias_para_vencer <= registro.tempo_alerta %}
+    <div class="modal fade" id="regularizarModal{{ registro.id }}" tabindex="-1" aria-labelledby="regularizarModalLabel{{ registro.id }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="regularizarModalLabel{{ registro.id }}">Regularizar {{ registro.nome }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="/registros/{{ registro.id }}/regularizar">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="nova_data_vencimento{{ registro.id }}" class="form-label">Nova Data de Vencimento</label>
+                <input type="date" class="form-control" id="nova_data_vencimento{{ registro.id }}" name="nova_data_vencimento" required>
+                <div class="form-text">
+                  <strong>Data mínima válida:</strong> {{ (hoje + timedelta(days=registro.tempo_alerta)).strftime('%d/%m/%Y') }} 
+                  (hoje + {{ registro.tempo_alerta }} dias de alerta)
+                </div>
+              </div>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Importante:</strong> A nova data deve ser maior que o tempo de alerta para evitar que o item fique pendente novamente.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-success">Regularizar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
+<script>
+// Definir data mínima para os campos de data
+document.addEventListener('DOMContentLoaded', function() {
+  {% for registro in registros %}
+    {% set dias_para_vencer = (registro.data_vencimento - hoje).days %}
+    {% if not registro.regularizado and dias_para_vencer <= registro.tempo_alerta %}
+      const dataMinima{{ registro.id }} = new Date();
+      dataMinima{{ registro.id }}.setDate(dataMinima{{ registro.id }}.getDate() + {{ registro.tempo_alerta }});
+      
+      const input{{ registro.id }} = document.getElementById('nova_data_vencimento{{ registro.id }}');
+      if (input{{ registro.id }}) {
+        input{{ registro.id }}.min = dataMinima{{ registro.id }}.toISOString().split('T')[0];
+        input{{ registro.id }}.value = dataMinima{{ registro.id }}.toISOString().split('T')[0];
+      }
+    {% endif %}
+  {% endfor %}
+});
+</script>
+
 {% endblock %} 

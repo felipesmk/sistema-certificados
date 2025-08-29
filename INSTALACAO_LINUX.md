@@ -19,11 +19,8 @@
 
 ### **Opção 1: Script Automático**
 ```bash
-# Dar permissão de execução
-chmod +x setup_vm.sh
-
 # Executar script de automação
-./setup_vm.sh
+python quick_setup.py
 ```
 
 **O que o script faz automaticamente:**
@@ -430,8 +427,7 @@ pip install -r requirements.txt
 ls -la
 
 # Corrigir permissões
-chmod +x setup_vm.sh
-chmod +x configure_network.sh
+python quick_setup.py
 ```
 
 ### **Problema: Autenticação PostgreSQL no SUSE**
@@ -515,7 +511,7 @@ Se encontrar erros de encoding, todos os scripts já incluem a declaração UTF-
 
 ### **Verificar Status Completo**
 ```bash
-python test_vm_installation.py
+python quick_setup.py status
 ```
 
 ### **Informações do Sistema**

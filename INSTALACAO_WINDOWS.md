@@ -20,7 +20,7 @@
 ### **Opção 1: Script Automático**
 ```batch
 # Execute o script de automação
-setup_vm.bat
+python quick_setup.py
 ```
 
 **O que o script faz automaticamente:**

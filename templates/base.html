@@ -138,247 +138,813 @@
       [data-bs-theme="light"] code { color: #212529 !important; }
       [data-bs-theme="dark"] code { color: #e9ecef !important; }
       
-      /* Estilos para submenu dropdown */
-      .dropdown-menu .dropdown-menu {
-        margin-left: 0;
-        margin-right: 0;
-      }
+      /* ===== LAYOUT SIDEBAR ===== */
       
-      .dropend .dropdown-toggle {
-        margin-left: 1em;
-      }
+             /* Sidebar */
+       .sidebar {
+         width: 280px;
+         background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+         color: white;
+         transition: all 0.3s ease;
+         position: fixed;
+         height: 100vh;
+         z-index: 1000;
+         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+         display: flex;
+         flex-direction: column;
+         overflow: hidden; /* Remove overflow do sidebar principal */
+         justify-content: space-between; /* Distribui o espaço entre header, nav e footer */
+       }
       
-      .dropend .dropdown-toggle::after {
-        display: inline-block;
-        margin-left: 0.255em;
-        vertical-align: 0.255em;
-        content: "";
-        border-top: 0.3em solid transparent;
-        border-right: 0;
-        border-bottom: 0.3em solid transparent;
-        border-left: 0.3em solid;
-      }
-      
-      .dropend .dropdown-toggle:empty::after {
-        margin-left: 0;
-      }
-      
-      /* Hover para submenu */
-      .dropend:hover > .dropdown-menu {
-        display: block;
-      }
-      
-      /* Posicionamento do submenu */
-      .dropend .dropdown-menu {
-        top: 0;
-        left: 100%;
-        margin-top: 0;
-        margin-left: 0;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-      }
-      
-      /* Melhorar aparência do submenu */
-      .dropdown-menu .dropdown-menu {
-        border: 1px solid rgba(0, 0, 0, 0.15);
-        background-color: #fff;
-      }
-      
-      /* Hover nos itens do submenu */
-      .dropdown-menu .dropdown-menu .dropdown-item:hover {
+      /* Conteúdo principal */
+      .main-content {
+        flex: 1;
+        margin-left: 280px;
+        transition: all 0.3s ease;
+        min-height: 100vh;
         background-color: #f8f9fa;
       }
       
-      /* Indicador visual para submenu */
-      .dropend .dropdown-toggle::after {
-        border-left-color: #6c757d;
+             /* Header do sidebar */
+       .sidebar-header {
+         padding: 1.5rem;
+         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+         text-align: center;
+         flex-shrink: 0;
+         min-height: 80px; /* Altura mínima fixa */
+         display: flex;
+         align-items: center;
+         justify-content: center;
+       }
+      
+      .sidebar-header h4 {
+        margin: 0;
+        font-weight: 600;
+        color: white;
       }
       
-      /* Ajuste para tema escuro */
-      [data-bs-theme="dark"] .dropdown-menu .dropdown-menu {
-        background-color: #212529;
-        border-color: rgba(255, 255, 255, 0.15);
+      .sidebar-header .system-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
       
-      [data-bs-theme="dark"] .dropdown-menu .dropdown-menu .dropdown-item:hover {
-        background-color: #343a40;
+                     /* Navegação do sidebar */
+        .sidebar-nav {
+          padding: 1rem 0;
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          min-height: 0; /* Permite que o flex item encolha */
+          max-height: calc(100vh - 200px); /* Altura máxima considerando header e footer */
+          margin-bottom: 120px; /* Espaço para o footer fixo */
+        }
+       
+       /* Estilização da barra de rolagem da sidebar */
+       .sidebar-nav::-webkit-scrollbar {
+         width: 6px;
+       }
+       
+       .sidebar-nav::-webkit-scrollbar-track {
+         background: rgba(255, 255, 255, 0.1);
+         border-radius: 3px;
+       }
+       
+       .sidebar-nav::-webkit-scrollbar-thumb {
+         background: rgba(255, 255, 255, 0.3);
+         border-radius: 3px;
+       }
+       
+       .sidebar-nav::-webkit-scrollbar-thumb:hover {
+         background: rgba(255, 255, 255, 0.5);
+       }
+      
+      .nav-section {
+        margin-bottom: 1.5rem;
       }
       
-      /* Cartões coerentes com tokens do tema */
-      [data-bs-theme="light"] .card { background-color: #fff; }
-      [data-bs-theme="dark"] .card { background-color: #2b3035; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); }
+      .nav-section-title {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.5px;
+      }
       
-      [data-bs-theme="light"] .table thead th { color: #495057; }
-      [data-bs-theme="dark"] .table thead th { background: linear-gradient(135deg, #495057 0%, #6c757d 100%); color: #e9ecef; }
+      .nav-item {
+        margin: 0.25rem 0;
+      }
       
-      [data-bs-theme="light"] .form-control,
-      [data-bs-theme="light"] .form-select { background-color: #fff; color: #212529; }
-      [data-bs-theme="dark"] .form-control,
-      [data-bs-theme="dark"] .form-select { background-color: #3a3f44; border-color: #6c757d; color: #e9ecef; }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-radius: 0;
+        border-left: 3px solid transparent;
+      }
       
-      [data-bs-theme="light"] .form-control:focus,
-      [data-bs-theme="light"] .form-select:focus { border-color: #667eea; }
-      [data-bs-theme="dark"] .form-control:focus,
-      [data-bs-theme="dark"] .form-select:focus { background-color: #3a3f44; border-color: #667eea; }
+             .nav-link:hover {
+         background-color: rgba(255, 255, 255, 0.1);
+         color: white;
+         border-left-color: #667eea;
+       }
       
-      /* Estilo personalizado para o dropdown de dashboards */
-      .dropdown-menu {
+      .nav-link.active {
+        background-color: rgba(102, 126, 234, 0.2);
+        color: white;
+        border-left-color: #667eea;
+      }
+      
+      .nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+      }
+      
+      /* Submenu */
+      .nav-dropdown {
+        position: relative;
+      }
+      
+      .nav-dropdown-toggle {
+        cursor: pointer;
+      }
+      
+      .nav-dropdown-toggle::after {
+        content: '\f107';
+        font-family: 'bootstrap-icons';
+        margin-left: auto;
+        transition: transform 0.3s ease;
+      }
+      
+      .nav-dropdown-toggle[aria-expanded="true"]::after {
+        transform: rotate(180deg);
+      }
+      
+      .nav-dropdown-menu {
+        background-color: rgba(0, 0, 0, 0.2);
         border: none;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        border-radius: 0.5rem;
-        margin-top: 0.5rem;
+        border-radius: 0;
+        margin: 0;
+        padding: 0.5rem 0;
       }
       
-      .dropdown-item {
-        padding: 0.75rem 1rem;
-        transition: all 0.2s ease;
-        border-radius: 0.25rem;
-        margin: 0.125rem 0.5rem;
+      .nav-dropdown-item {
+        padding: 0.5rem 1.5rem 0.5rem 3.25rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
       }
       
-      .dropdown-item:hover {
-        background-color: #e9ecef;
-        transform: translateX(5px);
+             .nav-dropdown-item:hover {
+         background-color: rgba(255, 255, 255, 0.1);
+         color: white;
+       }
+      
+                           /* Footer do sidebar */
+        .sidebar-footer {
+          padding: 1rem 1.5rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          flex-shrink: 0;
+          background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+          z-index: 10;
+          min-height: 120px; /* Altura mínima fixa */
+          max-height: 120px; /* Altura máxima fixa */
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          position: sticky;
+          bottom: 0;
+        }
+      
+      .user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
       }
       
-      /* Hover coerente por tema */
-      [data-bs-theme="light"] .dropdown-item:hover { background-color: #e9ecef; }
-      [data-bs-theme="dark"] .dropdown-item:hover { background-color: #495057; color: #fff; }
-      
-      [data-bs-theme="light"] .dropdown-menu { background-color: #fff; }
-      [data-bs-theme="dark"] .dropdown-menu { background-color: #212529; border: 1px solid #495057; }
-      
-      [data-bs-theme="light"] .dropdown-item { color: #212529; }
-      [data-bs-theme="dark"] .dropdown-item { color: #e9ecef; }
-      
-      [data-bs-theme="dark"] .dropdown-item:hover {
-        background-color: #495057;
-        color: #fff;
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.75rem;
+        font-weight: 600;
+        color: white;
       }
       
-      .dropdown-item i {
-        margin-right: 0.5rem;
-        width: 1rem;
+      .user-details {
+        flex: 1;
+      }
+      
+      .user-name {
+        font-weight: 600;
+        color: white;
+        margin: 0;
+        font-size: 0.9rem;
+      }
+      
+      .user-role {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+        margin: 0;
+      }
+      
+      /* Topbar */
+      .topbar {
+        background: white;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+      
+      .topbar-left {
+        display: flex;
+        align-items: center;
+      }
+      
+      .sidebar-toggle {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        margin-right: 1rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        display: none;
+      }
+      
+      .sidebar-toggle:hover {
+        color: #667eea;
+      }
+      
+      .page-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+      }
+      
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      
+      /* Conteúdo da página */
+      .page-content {
+        padding: 2rem;
+      }
+      
+      /* Responsividade */
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+        }
+        
+        .sidebar.show {
+          transform: translateX(0);
+        }
+        
+        .main-content {
+          margin-left: 0;
+        }
+        
+        .sidebar-toggle {
+          display: block !important;
+        }
+        
+        .topbar {
+          padding: 1rem;
+        }
+        
+        .page-content {
+          padding: 1rem;
+        }
+      }
+      
+      /* Overlay para mobile */
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+      }
+      
+      .sidebar-overlay.show {
+        display: block;
+      }
+      
+      /* Melhorias para modo escuro */
+      [data-bs-theme="dark"] .main-content {
+        background-color: #212529;
+      }
+      
+      [data-bs-theme="dark"] .topbar {
+        background-color: #2b3035;
+        border-bottom-color: #495057;
+      }
+      
+      [data-bs-theme="dark"] .page-title {
+        color: #e9ecef;
+      }
+      
+      [data-bs-theme="dark"] .sidebar-toggle {
+        color: #adb5bd;
+      }
+      
+      [data-bs-theme="dark"] .sidebar-toggle:hover {
+        color: #667eea;
+      }
+      
+      /* Estilos para login */
+      .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem;
+        position: relative;
+      }
+      
+      /* Seletor de tema para login */
+      .theme-toggle-login {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50px;
+        padding: 0.5rem;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+      
+      .theme-toggle-login:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+      
+      .login-card {
+        max-width: 400px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        margin: 0 auto;
+      }
+      
+             /* Melhorar aparência dos campos de login */
+       .login-card .form-control {
+         background: rgba(255, 255, 255, 0.1);
+         border: 1px solid rgba(255, 255, 255, 0.2);
+         color: white;
+         padding: 0.75rem 1rem;
+         border-radius: 10px;
+       }
+       
+       .login-card .form-control::placeholder {
+         color: rgba(255, 255, 255, 0.7);
+       }
+       
+       .login-card .form-control:focus {
+         background: rgba(255, 255, 255, 0.15);
+         border-color: rgba(255, 255, 255, 0.5);
+         box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+       }
+       
+       .login-card .form-label {
+         color: white;
+         font-weight: 500;
+         margin-bottom: 0.5rem;
+       }
+       
+               /* Estilos para campos com ícones */
+        .login-card .input-wrapper {
+          position: relative;
+        }
+        
+        .login-card .input-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 1.1rem;
+          z-index: 2;
+          pointer-events: none;
+        }
+        
+        .login-card .form-control {
+          padding-left: 3rem;
+        }
+        
+        .login-card .form-control:focus + .input-icon {
+          color: white;
+        }
+      
+      .login-card .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .login-card .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+      
+      .login-card h1, .login-card h2, .login-card h3, .login-card h4 {
+        color: white;
         text-align: center;
+        margin-bottom: 1rem;
       }
       
-      /* Efeito hover no botão principal */
-      .dropdown-toggle:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 0.375rem;
+      .login-card p {
+        color: rgba(255, 255, 255, 0.8);
+        text-align: center;
+        margin-bottom: 2rem;
       }
       
-      /* Animação suave para o dropdown */
-      .dropdown-menu.show {
-        animation: slideDown 0.2s ease-out;
+      /* Estilos específicos para o formulário de login */
+      .login-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
       }
       
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
+      .login-header h3 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.5rem;
+      }
+      
+      .login-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+      }
+      
+      .login-body {
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 0 0 20px 20px;
+      }
+      
+      .login-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.9;
+      }
+      
+      .btn-login {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+      
+             /* Responsivo para login */
+       @media (max-width: 576px) {
+         .login-card {
+           padding: 1.5rem;
+         }
+         
+         .login-body {
+           padding: 20px;
+         }
+         
+         .login-header {
+           padding: 20px 15px;
+         }
+         
+         .theme-toggle-login {
+           top: 0.5rem;
+           right: 0.5rem;
+           padding: 0.4rem;
+         }
+       }
+       
+       /* Modo escuro para login */
+       [data-bs-theme="dark"] .login-container {
+         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+       }
+       
+       [data-bs-theme="dark"] .login-card {
+         background: rgba(0, 0, 0, 0.3);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+       }
+       
+       [data-bs-theme="dark"] .login-header {
+         background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+       }
+       
+       [data-bs-theme="dark"] .login-body {
+         background: rgba(0, 0, 0, 0.2);
+       }
+       
+       [data-bs-theme="dark"] .login-card .form-control {
+         background: rgba(255, 255, 255, 0.05);
+         border: 1px solid rgba(255, 255, 255, 0.1);
+         color: #e9ecef;
+       }
+       
+       [data-bs-theme="dark"] .login-card .form-control:focus {
+         background: rgba(255, 255, 255, 0.1);
+         border-color: rgba(255, 255, 255, 0.3);
+       }
+       
+               [data-bs-theme="dark"] .login-card .input-icon {
+          color: rgba(255, 255, 255, 0.5);
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        
+        [data-bs-theme="dark"] .login-card .form-control:focus + .input-icon {
+          color: #e9ecef;
         }
+       
+       [data-bs-theme="dark"] .btn-login {
+         background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+       }
+       
+       /* Estilos para alertas no login */
+       .login-card .alert {
+         border: none;
+         border-radius: 10px;
+         font-weight: 500;
+         margin-bottom: 1rem;
+       }
+       
+       .login-card .alert-danger {
+         background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+         color: white;
+         box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+       }
+       
+       .login-card .alert-success {
+         background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+         color: white;
+         box-shadow: 0 5px 15px rgba(81, 207, 102, 0.3);
+       }
+       
+       .login-card .alert-warning {
+         background: linear-gradient(135deg, #ffd43b 0%, #fcc419 100%);
+         color: #212529;
+         box-shadow: 0 5px 15px rgba(255, 212, 59, 0.3);
+       }
+       
+       .login-card .alert-info {
+         background: linear-gradient(135deg, #74c0fc 0%, #4dabf7 100%);
+         color: white;
+         box-shadow: 0 5px 15px rgba(116, 192, 252, 0.3);
+       }
+      
+             /* Esconder elementos baseado na autenticação */
+       .auth-only { display: none; }
+       .non-auth-only { display: block; }
+       
+       body.authenticated .auth-only { display: block; }
+       body.authenticated .non-auth-only { display: none; }
+       
+       /* Garantir que o login apareça quando não autenticado */
+       body:not(.authenticated) .login-container {
+         display: flex !important;
+         visibility: visible !important;
+         opacity: 1 !important;
+       }
+       
+       body:not(.authenticated) .main-content {
+         display: none !important;
+       }
+       
+       /* Garantir que o card de login seja visível */
+       body:not(.authenticated) .login-card {
+         display: block !important;
+         visibility: visible !important;
+         opacity: 1 !important;
+       }
+      
+      /* Garantir que o layout de login ocupe toda a tela */
+      body:not(.authenticated) {
+        overflow: hidden;
+      }
+      
+      body:not(.authenticated) .login-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+      }
+      
+      /* Esconder alertas do conteúdo principal quando não logado */
+      body:not(.authenticated) .main-content .alert {
+        display: none !important;
       }
     </style>
     {% block head %}{% endblock %}
 </head>
-<body>
-{% if current_user.is_authenticated %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-  <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">{{ system_config.nome_sistema }}</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-                            <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Dashboard
-                          </a>
-                          <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">📊 Principal</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('dashboard_vencimentos') }}">⏰ Vencimentos</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('dashboard_responsaveis') }}">👥 Responsáveis</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('dashboard_atividade') }}">📈 Atividade</a></li>
-                          </ul>
-                        </li>
-                                                <li class="nav-item dropdown">
-                          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Controle
-                          </a>
-                          <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="{{ url_for('listar_registros') }}">📋 Registros</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('listar_responsaveis') }}">👥 Responsáveis</a></li>
-                          </ul>
-                        </li>
-        {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_access')|list) %}
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Gestão</a>
-            <ul class="dropdown-menu">
-              <!-- Gestão de Usuários (Submenu) -->
-              <li class="nav-item dropend">
-                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">👥 Gestão de Usuários</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="{{ url_for('dashboard_usuarios') }}">📊 Dashboard</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="{{ url_for('listar_usuarios') }}">📋 Listar Usuários</a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('novo_usuario') }}">➕ Novo Usuário</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="{{ url_for('import_usuarios') }}">📥 Importar</a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('export_usuarios') }}">📤 Exportar</a></li>
-                </ul>
-              </li>
-              
-              <!-- Gestão de Perfis (Submenu) -->
-              <li class="nav-item dropend">
-                <a class="dropdown-item dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">🎭 Gestão de Perfis</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="{{ url_for('dashboard_perfis') }}">📊 Dashboard</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="{{ url_for('listar_perfis') }}">📋 Listar Perfis</a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('novo_perfil') }}">➕ Novo Perfil</a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('assistente_perfil') }}">🪄 Assistente de Criação</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                                          <li><a class="dropdown-item" href="{{ url_for('listar_templates') }}">📝 Templates</a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('relatorio_permissoes') }}">📊 Relatório de Permissões</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="{{ url_for('import_perfis') }}">📥 Importar</a></li>
-                  <li><a class="dropdown-item" href="{{ url_for('export_perfis') }}">📤 Exportar</a></li>
-                </ul>
-              </li>
-              {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_config')|list) %}
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('configuracao') }}">⚙️ Configuração</a></li>
-              {% endif %}
-            </ul>
-          </li>
-        {% endif %}
-      </ul>
-      <ul class="navbar-nav ms-auto">
-        {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'send_alerts')|list) %}
-          <li class="nav-item">
-            <a href="{{ url_for('enviar_alertas_manual') }}" class="btn btn-warning me-2">Enviar alertas</a>
-          </li>
-        {% endif %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('logout') }}">Sair</a>
-        </li>
-        <li class="nav-item">
-          <button id="toggle-dark" class="btn btn-outline-light ms-2" type="button">🌙</button>
-        </li>
-      </ul>
-    </div>
+<body{% if current_user.is_authenticated %} class="authenticated"{% endif %}>
+
+<!-- Overlay para mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar (só visível quando logado) -->
+<aside class="sidebar auth-only" id="sidebar">
+  <div class="sidebar-header">
+    <h4><span class="system-name">{{ system_config.nome_sistema if system_config else 'Sistema de Certificados' }}</span></h4>
   </div>
-</nav>
-{% endif %}
-<div class="container">
-    {% if request.endpoint != 'login' %}
+  
+  <nav class="sidebar-nav">
+    <!-- Dashboard -->
+    <div class="nav-section">
+      <div class="nav-section-title">Dashboard</div>
+      <div class="nav-item">
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <i class="bi bi-speedometer2"></i>
+          Principal
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{{ url_for('dashboard_vencimentos') }}" class="nav-link {% if request.endpoint == 'dashboard_vencimentos' %}active{% endif %}">
+          <i class="bi bi-clock"></i>
+          Vencimentos
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{{ url_for('dashboard_responsaveis') }}" class="nav-link {% if request.endpoint == 'dashboard_responsaveis' %}active{% endif %}">
+          <i class="bi bi-people"></i>
+          Responsáveis
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{{ url_for('dashboard_atividade') }}" class="nav-link {% if request.endpoint == 'dashboard_atividade' %}active{% endif %}">
+          <i class="bi bi-graph-up"></i>
+          Atividade
+        </a>
+      </div>
+    </div>
+    
+    <!-- Controle -->
+    <div class="nav-section">
+      <div class="nav-section-title">Controle</div>
+      <div class="nav-item">
+        <a href="{{ url_for('listar_registros') }}" class="nav-link {% if request.endpoint == 'listar_registros' %}active{% endif %}">
+          <i class="bi bi-files"></i>
+          Registros
+        </a>
+      </div>
+      <div class="nav-item">
+        <a href="{{ url_for('listar_responsaveis') }}" class="nav-link {% if request.endpoint == 'listar_responsaveis' %}active{% endif %}">
+          <i class="bi bi-person-badge"></i>
+          Responsáveis
+        </a>
+      </div>
+    </div>
+    
+    <!-- Gestão (se tiver permissão) -->
+    {% if current_user.is_authenticated and current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_access')|list) %}
+    <div class="nav-section">
+      <div class="nav-section-title">Gestão</div>
+      
+      <!-- Gestão de Usuários -->
+      <div class="nav-item nav-dropdown">
+        <a href="#" class="nav-link nav-dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#usuariosSubmenu">
+          <i class="bi bi-people-fill"></i>
+          Gestão de Usuários
+        </a>
+        <div class="collapse" id="usuariosSubmenu">
+          <div class="nav-dropdown-menu">
+            <a href="{{ url_for('dashboard_usuarios') }}" class="nav-dropdown-item">Dashboard</a>
+            <a href="{{ url_for('listar_usuarios') }}" class="nav-dropdown-item">Listar Usuários</a>
+            <a href="{{ url_for('novo_usuario') }}" class="nav-dropdown-item">Novo Usuário</a>
+            <a href="{{ url_for('import_usuarios') }}" class="nav-dropdown-item">Importar</a>
+            <a href="{{ url_for('export_usuarios') }}" class="nav-dropdown-item">Exportar</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Gestão de Perfis -->
+      <div class="nav-item nav-dropdown">
+        <a href="#" class="nav-link nav-dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#perfisSubmenu">
+          <i class="bi bi-person-gear"></i>
+          Gestão de Perfis
+        </a>
+        <div class="collapse" id="perfisSubmenu">
+          <div class="nav-dropdown-menu">
+            <a href="{{ url_for('dashboard_perfis') }}" class="nav-dropdown-item">Dashboard</a>
+            <a href="{{ url_for('listar_perfis') }}" class="nav-dropdown-item">Listar Perfis</a>
+            <a href="{{ url_for('novo_perfil') }}" class="nav-dropdown-item">Novo Perfil</a>
+            <a href="{{ url_for('assistente_perfil') }}" class="nav-dropdown-item">Assistente</a>
+            <a href="{{ url_for('listar_templates') }}" class="nav-dropdown-item">Templates</a>
+            <a href="{{ url_for('relatorio_permissoes') }}" class="nav-dropdown-item">Relatório</a>
+            <a href="{{ url_for('import_perfis') }}" class="nav-dropdown-item">Importar</a>
+            <a href="{{ url_for('export_perfis') }}" class="nav-dropdown-item">Exportar</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Configuração -->
+      {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'manage_config')|list) %}
+      <div class="nav-item">
+        <a href="{{ url_for('configuracao') }}" class="nav-link {% if request.endpoint == 'configuracao' %}active{% endif %}">
+          <i class="bi bi-gear"></i>
+          Configuração
+        </a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </nav>
+  
+  <!-- Footer do Sidebar -->
+  <div class="sidebar-footer">
+    {% if current_user.is_authenticated %}
+    <div class="user-info">
+      <div class="user-avatar">
+        {{ current_user.nome[0].upper() if current_user.nome else 'U' }}
+      </div>
+      <div class="user-details">
+        <p class="user-name">{{ current_user.nome or current_user.username }}</p>
+        <p class="user-role">{{ current_user.role.nome if current_user.role else 'Usuário' }}</p>
+      </div>
+    </div>
+    
+    <div class="d-flex gap-2">
+      {% if current_user.role and (current_user.role.permissions|selectattr('nome', 'equalto', 'send_alerts')|list) %}
+      <a href="{{ url_for('enviar_alertas_manual') }}" class="btn btn-warning btn-sm flex-fill">
+        <i class="bi bi-bell"></i> Alertas
+      </a>
+      {% endif %}
+      <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+      <button id="toggle-dark" class="btn btn-outline-light btn-sm" type="button">
+        <i class="bi bi-moon"></i>
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</aside>
+
+<!-- Conteúdo Principal (sempre presente) -->
+<div class="main-content auth-only">
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="bi bi-list"></i>
+      </button>
+      <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+    </div>
+    <div class="topbar-right">
+      <!-- Espaço para ações adicionais se necessário -->
+    </div>
+  </header>
+  
+  <!-- Conteúdo da Página -->
+  <main class="page-content">
+    <!-- Alertas apenas para usuários logados -->
+    {% if current_user.is_authenticated %}
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
@@ -390,8 +956,40 @@
         {% endif %}
       {% endwith %}
     {% endif %}
-    {% block content %}{% endblock %}
+    
+    <!-- Este div será usado quando o usuário estiver logado -->
+    <div class="auth-content">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
 </div>
+
+ <!-- Layout simples para login (só visível quando não logado) -->
+ <div class="login-container non-auth-only">
+   <!-- Seletor de tema para login -->
+   <button class="theme-toggle-login" id="themeToggleLogin" type="button">
+     <i class="bi bi-sun-fill" id="themeIconLogin"></i>
+   </button>
+   
+   <div class="login-card">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <!-- Este div será usado quando o usuário não estiver logado -->
+    <div class="non-auth-content">
+      <!-- Conteúdo de login será renderizado aqui via JavaScript -->
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   const toggle = document.getElementById('toggle-dark');
@@ -402,111 +1000,167 @@
     html.setAttribute('data-bs-theme', 'dark');
   }
   
-  toggle.addEventListener('click', function() {
-    if (html.getAttribute('data-bs-theme') === 'dark') {
-      html.setAttribute('data-bs-theme', 'light');
-      localStorage.setItem('theme', 'light');
-    } else {
-      html.setAttribute('data-bs-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-    }
-  });
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      if (html.getAttribute('data-bs-theme') === 'dark') {
+        html.setAttribute('data-bs-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.setAttribute('data-bs-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  }
   
-  // Melhorar experiência dos dropdowns
-  document.addEventListener('DOMContentLoaded', function() {
-    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+  // Toggle do sidebar
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('show');
+      sidebarOverlay.classList.toggle('show');
+    });
     
-    dropdownToggles.forEach(function(dropdownToggle) {
-      const dropdownMenu = dropdownToggle.nextElementSibling;
-      let hideTimeout;
+    // Fechar sidebar ao clicar no overlay
+    sidebarOverlay.addEventListener('click', function() {
+      sidebar.classList.remove('show');
+      sidebarOverlay.classList.remove('show');
+    });
+    
+    // Fechar sidebar ao redimensionar para desktop
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        sidebar.classList.remove('show');
+        sidebarOverlay.classList.remove('show');
+      }
+    });
+  }
+  
+     // Verificação imediata de autenticação
+   (function() {
+     const isAuthenticated = document.body.classList.contains('authenticated');
+     if (!isAuthenticated) {
+       const loginContainer = document.querySelector('.login-container');
+       const mainContent = document.querySelector('.main-content');
+       
+       if (loginContainer) {
+         loginContainer.style.display = 'flex';
+         loginContainer.style.visibility = 'visible';
+         loginContainer.style.opacity = '1';
+       }
+       
+       if (mainContent) {
+         mainContent.style.display = 'none';
+       }
+     }
+   })();
+   
+   // Marcar item ativo no menu
+   document.addEventListener('DOMContentLoaded', function() {
+     // Verificar se há cookies de sessão antigos e limpar se necessário
+     const sessionCookie = document.cookie.split(';').find(c => c.trim().startsWith('certificados_session='));
+     const isAuthenticated = document.body.classList.contains('authenticated');
+     
+           // Se não está autenticado mas tem cookie de sessão, limpar
+      if (!isAuthenticated && sessionCookie) {
+        console.log('Limpando cookies de sessão antigos...');
+        document.cookie = 'certificados_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'remember_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      }
       
-      // Função para mostrar dropdown
-      function showDropdown() {
-        // Fechar todos os outros dropdowns do mesmo nível
-        const parentDropdown = dropdownToggle.closest('.dropdown-menu');
-        if (parentDropdown) {
-          // É um submenu - fechar apenas outros submenus do mesmo nível
-          const siblingDropdowns = parentDropdown.querySelectorAll('.dropdown-toggle');
-          siblingDropdowns.forEach(function(otherToggle) {
-            if (otherToggle !== dropdownToggle) {
-              const otherDropdown = new bootstrap.Dropdown(otherToggle);
-              otherDropdown.hide();
-            }
-          });
-        } else {
-          // É um menu principal - fechar todos os outros
-          dropdownToggles.forEach(function(otherToggle) {
-            if (otherToggle !== dropdownToggle && !otherToggle.closest('.dropdown-menu')) {
-              const otherDropdown = new bootstrap.Dropdown(otherToggle);
-              otherDropdown.hide();
-            }
-          });
+      // Garantir que o formulário de login apareça se não estiver autenticado
+      if (!isAuthenticated) {
+        const loginContainer = document.querySelector('.login-container');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (loginContainer) {
+          loginContainer.style.display = 'flex';
+          loginContainer.style.visibility = 'visible';
+          loginContainer.style.opacity = '1';
         }
         
-        clearTimeout(hideTimeout);
-        const dropdown = new bootstrap.Dropdown(dropdownToggle);
-        dropdown.show();
+        if (mainContent) {
+          mainContent.style.display = 'none';
+        }
+        
+        // Forçar redirecionamento para login se estiver em uma página protegida
+        const protectedPages = ['/dashboard', '/registros', '/responsaveis', '/usuarios', '/perfis', '/configuracao'];
+        if (protectedPages.some(page => window.location.pathname.startsWith(page))) {
+          window.location.href = '/login';
+        }
+        
+        // Garantir que o formulário de login seja visível
+        const loginCard = document.querySelector('.login-card');
+        if (loginCard) {
+          loginCard.style.display = 'block';
+          loginCard.style.visibility = 'visible';
+        }
       }
-      
-      // Função para esconder dropdown com delay
-      function hideDropdown() {
-        hideTimeout = setTimeout(function() {
-          const dropdown = new bootstrap.Dropdown(dropdownToggle);
-          dropdown.hide();
-        }, 200); // Reduzido para 200ms para melhor responsividade
+     
+     const currentPath = window.location.pathname;
+     const navLinks = document.querySelectorAll('.nav-link');
+     
+     navLinks.forEach(function(link) {
+       if (link.getAttribute('href') === currentPath) {
+         link.classList.add('active');
+       }
+     });
+     
+           // Garantir que o formulário de login apareça quando não autenticado
+      if (!isAuthenticated) {
+        // Se estamos na página de login, garantir que o conteúdo apareça
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+          const authContent = document.querySelector('.auth-content');
+          const nonAuthContent = document.querySelector('.non-auth-content');
+          
+          if (authContent && nonAuthContent) {
+            // Remove alertas duplicados do conteúdo principal
+            const mainAlerts = document.querySelectorAll('.main-content .alert');
+            mainAlerts.forEach(alert => alert.remove());
+            
+            // Move o conteúdo da seção autenticada para a seção não autenticada
+            while (authContent.firstChild) {
+              nonAuthContent.appendChild(authContent.firstChild);
+            }
+          }
+        }
       }
-      
-      // Cancelar esconder quando hover
-      function cancelHide() {
-        clearTimeout(hideTimeout);
-      }
-      
-      // Hover para abrir no toggle
-      dropdownToggle.addEventListener('mouseenter', showDropdown);
-      
-      // Hover para abrir no menu
-      if (dropdownMenu) {
-        dropdownMenu.addEventListener('mouseenter', cancelHide);
-        dropdownMenu.addEventListener('mouseleave', hideDropdown);
-      }
-      
-      // Mouse leave do toggle
-      dropdownToggle.addEventListener('mouseleave', hideDropdown);
-    });
-    
-    // Tratamento especial para submenus (dropend)
-    const dropendToggles = document.querySelectorAll('.dropend .dropdown-toggle');
-    dropendToggles.forEach(function(dropendToggle) {
-      const dropendMenu = dropendToggle.nextElementSibling;
-      let dropendHideTimeout;
-      
-      function showDropend() {
-        clearTimeout(dropendHideTimeout);
-        const dropdown = new bootstrap.Dropdown(dropendToggle);
-        dropdown.show();
-      }
-      
-      function hideDropend() {
-        dropendHideTimeout = setTimeout(function() {
-          const dropdown = new bootstrap.Dropdown(dropendToggle);
-          dropdown.hide();
-        }, 150); // Delay menor para submenus
-      }
-      
-      function cancelDropendHide() {
-        clearTimeout(dropendHideTimeout);
-      }
-      
-      dropendToggle.addEventListener('mouseenter', showDropend);
-      dropendToggle.addEventListener('mouseleave', hideDropend);
-      
-      if (dropendMenu) {
-        dropendMenu.addEventListener('mouseenter', cancelDropendHide);
-        dropendMenu.addEventListener('mouseleave', hideDropend);
-      }
-    });
-  });
+     
+     // Seletor de tema para login
+     const themeToggleLogin = document.getElementById('themeToggleLogin');
+     const themeIconLogin = document.getElementById('themeIconLogin');
+     
+     if (themeToggleLogin && themeIconLogin) {
+       // Atualizar ícone baseado no tema atual
+       function updateThemeIcon() {
+         const currentTheme = html.getAttribute('data-bs-theme');
+         if (currentTheme === 'dark') {
+           themeIconLogin.className = 'bi bi-moon-fill';
+         } else {
+           themeIconLogin.className = 'bi bi-sun-fill';
+         }
+       }
+       
+       // Atualizar ícone inicial
+       updateThemeIcon();
+       
+       // Adicionar evento de clique
+       themeToggleLogin.addEventListener('click', function() {
+         if (html.getAttribute('data-bs-theme') === 'dark') {
+           html.setAttribute('data-bs-theme', 'light');
+           localStorage.setItem('theme', 'light');
+         } else {
+           html.setAttribute('data-bs-theme', 'dark');
+           localStorage.setItem('theme', 'dark');
+         }
+         updateThemeIcon();
+       });
+     }
+   });
 </script>
 {% block scripts %}{% endblock %}
 </body>
-</html> 
+</html>

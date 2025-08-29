@@ -1,0 +1,30 @@
+warning: in the working copy of 'INSTALACAO_LINUX.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app.py', LF will be replaced by CRLF the next time Git touches it
+.cursorrules
+INSTALACAO_LINUX.md
+INSTALACAO_MACOS.md
+INSTALACAO_WINDOWS.md
+README.md
+VM_SETUP_GUIDE.md
+app.py
+configure_network.bat
+configure_network.sh
+docker-compose.yml
+env.example
+requirements.txt
+setup_vm.bat
+setup_vm.sh
+templates/Sistema-certificados.code-workspace
+templates/base.html
+templates/dashboard.html
+templates/dashboard_atividade.html
+templates/dashboard_responsaveis.html
+templates/dashboard_vencimentos.html
+templates/emails/email_responsaveis.html
+templates/login.html
+templates/perfis/relatorio.html
+templates/registros/list.html
+templates/responsaveis/list.html
+templates/usuarios/list.html
+test_validation.py
+test_vm_installation.py

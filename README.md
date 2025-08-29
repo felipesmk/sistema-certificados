@@ -10,6 +10,8 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **RBAC Completo** - Controle de acesso baseado em perfis e permissões
 - **Autenticação Dupla** - Banco de dados ou LDAP/Active Directory
 - **Sessões Seguras** - Proteção contra ataques comuns
+- **Sistema de Sessões Robusto** - Detecção de reinicialização do servidor
+- **Limpeza Automática** - Cookies e sessões invalidadas automaticamente
 - **Usuário Admin Protegido** - Não pode ser excluído ou modificado
 - **Bypass de Admin** - Usuário admin tem acesso total automático
 
@@ -31,6 +33,9 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 ### 📧 **Sistema de Notificações**
 - **Alertas Automáticos** - Envio semanal configurável
 - **Alertas Manuais** - Envio sob demanda
+- **Relatórios Completos** - Tabelas de itens pendentes e regulares
+- **Formato Excel-Friendly** - Tabelas simplificadas para copy-paste
+- **Resumo Executivo** - Visão geral personalizada por responsável
 - **Configurações SMTP** - Suporte a Gmail, Outlook, Office 365, Exchange
 - **Teste de Email** - Validação de configurações em tempo real
 - **SMTP4Dev** - Suporte para testes locais
@@ -43,13 +48,16 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Personalização Simplificada** - Nome do sistema, equipe de TI e informações de contato
 
 ### 🎨 **Interface Moderna**
+- **Layout Sidebar Responsivo** - Menu lateral moderno com navegação intuitiva
+- **Login Page Redesenhada** - Interface limpa e centralizada com modo escuro/claro
 - **Bootstrap 5** - Design responsivo e moderno com gradientes
-- **Modo Escuro** - Suporte completo com toggle
+- **Modo Escuro/Claro** - Toggle de tema com persistência
 - **Chart.js** - Gráficos interativos e dinâmicos
 - **Bootstrap Icons** - Ícones consistentes
-- **Navegação Intuitiva** - Menus dropdown organizados
-- **Design Limpo** - Interface simplificada sem configurações de cor desnecessárias
+- **Navegação Intuitiva** - Menus organizados com hover effects
+- **Design Limpo** - Interface simplificada e focada
 - **Formulários Validados** - Feedback visual em tempo real
+- **Sistema de Alertas Contextual** - Flash messages apenas onde apropriado
 
 ## 🚀 Funcionalidades Detalhadas
 
@@ -58,6 +66,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - **Categorização** - Certificados, senhas, licenças
 - **Controle de Vencimento** - Datas de vencimento com alertas
 - **Status de Regularização** - Controle de documentos regularizados
+- **Validação de Regularização** - Data mínima baseada no tempo de alerta do item
 - **Filtros Avançados** - Busca por nome, tipo, responsável, status
 - **Ordenação** - Múltiplos critérios de ordenação
 - **Validação Completa** - Nome, origem, tipo, data futura, tempo de alerta
@@ -128,6 +137,18 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 
 ## 📝 Mudanças Recentes
 
+### **v2.6.0 - Layout Responsivo e Melhorias de UX**
+- ✅ **Layout Sidebar** - Menu lateral responsivo com navegação moderna
+- ✅ **Login Page Redesenhada** - Interface limpa e centralizada com modo escuro/claro
+- ✅ **Sistema de Sessões Robusto** - Detecção de reinicialização do servidor e limpeza automática
+- ✅ **Validação de Regularização** - Data mínima baseada no tempo de alerta do item
+- ✅ **Relatórios de Email Aprimorados** - Tabelas de itens regulares e formato Excel-friendly
+- ✅ **Limpeza de Arquivos** - Remoção de scripts desnecessários e documentação atualizada
+- ✅ **Correções de Template** - Resolução de erros Jinja2 e melhorias de formatação
+- ✅ **Sistema de Alertas Otimizado** - Flash messages apenas no contexto apropriado
+- ✅ **JavaScript Aprimorado** - Validação client-side e gerenciamento de cookies
+- ✅ **Documentação Unificada** - Todos os guias atualizados para usar `quick_setup.py`
+
 ### **v2.5.0 - Configuração Segura do PostgreSQL**
 - ✅ **Configuração Interativa Segura** - `configure_postgresql.py` sem credenciais hardcoded
 - ✅ **Entrada Segura de Senhas** - Senhas não exibidas na tela durante configuração
@@ -136,7 +157,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 - ✅ **Validação de Entrada** - Confirmação antes de aplicar configurações
 - ✅ **Suporte Multi-plataforma** - Windows e Linux com detecção automática
 - ✅ **Instalação Automática** - PostgreSQL instalado automaticamente no Linux
-- ✅ **Scripts Atualizados** - `setup_vm.sh` e `setup_vm.bat` com configuração segura
+- ✅ **Scripts Atualizados** - `quick_setup.py` com configuração segura
 - ✅ **Documentação de Segurança** - Guias completos para configuração segura
 - ✅ **Guias Específicos por SO** - `INSTALACAO_WINDOWS.md`, `INSTALACAO_LINUX.md`, `INSTALACAO_MACOS.md`
 
@@ -157,7 +178,7 @@ Sistema web completo para gestão de certificados, senhas, licenças e documento
 ### **v2.3.0 - Limpeza e Scripts Unificados**
 - ✅ **Scripts Unificados para Linux** - Detecção automática de distribuição (Ubuntu/Debian/SUSE/CentOS/Fedora)
 - ✅ **Documentação Consolidada** - README único com todas as informações importantes
-- ✅ **Projeto Limpo** - Removidos 16 arquivos redundantes e 2000+ linhas desnecessárias
+- ✅ **Projeto Limpo** - Removidos 23 arquivos redundantes e 3000+ linhas desnecessárias
 - ✅ **Instalação Simplificada** - Scripts automáticos para Windows e Linux
 - ✅ **Configuração de Firewall** - Suporte automático para múltiplos firewalls
 - ✅ **Teste de Validação** - Script completo para validar instalação
@@ -197,19 +218,13 @@ Para uma instalação mais fácil e rápida, use os scripts de automação:
 #### **🖥️ Windows:**
 ```batch
 # Configuração completa automática
-setup_vm.bat
-
-# Apenas configuração de rede/firewall
-configure_network.bat
+python quick_setup.py
 ```
 
 #### **🐧 Linux (Todas as Distribuições):**
 ```bash
 # Configuração completa automática
-chmod +x setup_vm.sh && ./setup_vm.sh
-
-# Apenas configuração de rede/firewall
-chmod +x configure_network.sh && ./configure_network.sh
+python quick_setup.py
 ```
 
 **Distribuições Linux Suportadas:**
@@ -221,7 +236,7 @@ chmod +x configure_network.sh && ./configure_network.sh
 #### **🍎 macOS:**
 ```bash
 # Configuração completa automática
-chmod +x setup_vm.sh && ./setup_vm.sh
+python quick_setup.py
 
 # OU instalação manual com Homebrew
 ```
@@ -429,8 +444,7 @@ python manage_db.py restore         # Restaurar backup
 # Testes e validação
 python quick_setup.py test-users    # Testar funcionalidades de usuários
 python quick_setup.py test-suse     # Testar compatibilidade SUSE
-python test_vm_installation.py      # Teste completo da instalação VM
-python test_validation.py           # Testar sistema de validação
+# Validações integradas no sistema principal
 
 # Executar em modo desenvolvimento
 python app.py
@@ -439,19 +453,10 @@ python app.py
 ### **Scripts de VM e Instalação**
 ```bash
 # Windows - Setup completo
-setup_vm.bat                        # Instala tudo e inicia aplicação
-
-# Windows - Apenas rede
-configure_network.bat               # Configura firewall e testa conectividade
-
-# Linux - Setup completo (detecta distro automaticamente)
-chmod +x setup_vm.sh && ./setup_vm.sh
-
-# Linux - Apenas rede  
-chmod +x configure_network.sh && ./configure_network.sh
+python quick_setup.py               # Instala tudo e inicia aplicação
 
 # Teste de validação completo
-python test_vm_installation.py     # Valida instalação, dependências, banco, rede
+# Validações integradas no sistema principal
 ```
 
 ### **Verificação de Status**
@@ -459,7 +464,7 @@ python test_vm_installation.py     # Valida instalação, dependências, banco, 
 # Verificar se tudo está funcionando
 python manage_db.py status          # Status do banco de dados
 python quick_setup.py status        # Status geral do sistema
-python test_vm_installation.py      # Teste completo de validação
+# Validações integradas no sistema principal
 
 # Verificar logs
 tail -f logs/app.log                # Logs da aplicação
@@ -490,7 +495,7 @@ rmdir /s venv                       # Windows: remover venv
 python -m venv venv                 # Recriar ambiente virtual
 
 # Problema: Firewall bloqueando
-python test_vm_installation.py     # Testar conectividade
+# Validações integradas no sistema principal
 # Seguir instruções de firewall acima
 ```
 
@@ -552,6 +557,10 @@ python -c "import flask; print(flask.__version__)"
 3. **Menus e rotas** são exibidos conforme permissões
 4. **Para novas permissões** - edite `manage_db.py` e associe aos perfis
 5. **Use validação centralizada** - `utils/validation.py` para novos campos
+6. **Teste layout responsivo** - Verifique em diferentes tamanhos de tela
+7. **Valide datas de regularização** - Sempre verificar data mínima baseada no tempo de alerta
+8. **Mantenha tabelas simples** - Formato Excel-friendly para relatórios
+9. **Teste sessões** - Verifique comportamento após reinicialização do servidor
 
 ### **Boas Práticas**
 - **Ambiente virtual** sempre ativo durante desenvolvimento
@@ -560,6 +569,10 @@ python -c "import flask; print(flask.__version__)"
 - **Testes** de email com SMTP4Dev para desenvolvimento
 - **Validação dupla** - Sempre implementar server-side + client-side
 - **Tratamento de erros** - Usar mensagens amigáveis para constraints
+- **Sessões robustas** - Sistema detecta reinicializações automaticamente
+- **Layout responsivo** - Testar em diferentes tamanhos de tela
+- **Validação de datas** - Sempre validar datas mínimas para regularização
+- **Tabelas Excel-friendly** - Manter formato simples para copy-paste
 
 ## 📁 Estrutura do Projeto
 
@@ -577,12 +590,6 @@ sistema-certificados/
 ├── README.md             # Documentação principal
 ├── VM_SETUP_GUIDE.md     # Guia de configuração em VM
 ├── CHANGELOG.md          # Histórico de mudanças
-├── setup_vm.bat          # Script de automação Windows
-├── configure_network.bat # Configuração de rede Windows
-├── setup_vm.sh           # Script unificado Linux (Ubuntu/Debian/SUSE/CentOS/Fedora)
-├── configure_network.sh  # Rede unificada Linux
-├── test_vm_installation.py # Teste de validação da VM
-├── test_validation.py    # Testes do sistema de validação
 ├── configure_postgresql.py # Configuração segura do PostgreSQL
 ├── INSTALACAO_WINDOWS.md # Guia detalhado para Windows
 ├── INSTALACAO_LINUX.md   # Guia detalhado para Linux
@@ -593,14 +600,15 @@ sistema-certificados/
 │   ├── cache.py          # Sistema de cache
 │   └── pagination.py     # Sistema de paginação
 ├── templates/            # Templates HTML
-│   ├── base.html         # Template base
-│   ├── login.html        # Página de login
+│   ├── base.html         # Template base com sidebar
+│   ├── login.html        # Página de login redesenhada
 │   ├── dashboard*.html   # Dashboards
 │   ├── registros/        # CRUD de registros (com validação)
 │   ├── responsaveis/     # CRUD de responsáveis (com validação)
 │   ├── usuarios/         # CRUD de usuários (com validação)
 │   ├── perfis/           # CRUD de perfis (com histórico)
-│   └── configuracao/     # Configurações do sistema
+│   ├── configuracao/     # Configurações do sistema
+│   └── emails/           # Templates de email (Excel-friendly)
 ├── routes/               # Blueprints de rotas (auth.py)
 ├── logs/                 # Logs da aplicação (UTF-8)
 └── instance/             # Banco SQLite (legado, não versionado)

@@ -21,7 +21,7 @@
 
 ### **1. Script de Automação Completa**
 
-Crie o arquivo `setup_vm.bat` na raiz do projeto:
+Use o script `quick_setup.py` na raiz do projeto:
 
 ```batch
 @echo off
@@ -124,7 +124,7 @@ echo Pronto! Execute: python app.py
 
 ### **1. Script de Automação Linux (Unificado)**
 
-O arquivo `setup_vm.sh` detecta automaticamente a distribuição Linux:
+O script `quick_setup.py` detecta automaticamente a distribuição Linux:
 
 ```bash
 #!/bin/bash
@@ -189,8 +189,7 @@ python app.py
 ### **2. Tornar Executável e Executar:**
 
 ```bash
-chmod +x setup_vm.sh
-./setup_vm.sh
+python quick_setup.py
 ```
 
 ---
@@ -199,7 +198,7 @@ chmod +x setup_vm.sh
 
 ### **1. Script de Automação Unificado**
 
-O arquivo `setup_vm.sh` funciona em todas as distribuições Linux:
+O script `quick_setup.py` funciona em todas as distribuições Linux:
 
 ```bash
 #!/bin/bash
@@ -290,8 +289,7 @@ python app.py
 ### **2. Tornar Executável e Executar:**
 
 ```bash
-chmod +x setup_vm.sh
-./setup_vm.sh
+python quick_setup.py
 ```
 
 ---

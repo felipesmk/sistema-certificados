@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, g
+from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, g, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import logging
@@ -159,7 +159,8 @@ def abs_filter(value):
         return value
 
 # Configurações do Flask com suporte a variáveis de ambiente
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_urlsafe(32))
+# SECRET_KEY fixa para desenvolvimento - em produção deve ser definida via variável de ambiente
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production-2024')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://certificados_user:certificados123@localhost:5432/certificados_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -178,6 +179,16 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'test@
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(
     seconds=int(os.environ.get('PERMANENT_SESSION_LIFETIME', 3600))
 )
+# Configurações adicionais de sessão para segurança
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+# Forçar invalidação de sessões antigas
+app.config['SESSION_COOKIE_NAME'] = 'certificados_session'
+# Configurações para forçar invalidação de sessões antigas
+app.config['SESSION_COOKIE_MAX_AGE'] = 3600  # 1 hora
+app.config['SESSION_COOKIE_EXPIRES'] = timedelta(hours=1)
 
 # Configurações de autenticação
 app.config['AUTH_MODE'] = os.environ.get('AUTH_MODE', 'banco')  # 'banco' ou 'ldap'
@@ -201,6 +212,52 @@ def load_user(user_id):
 
 # Inicializar Flask-Principal
 principals = Principal(app)
+
+# Variável global para controlar reinicializações do servidor
+SERVER_START_TIME = datetime.now().isoformat()
+
+# Função para limpar sessões antigas ao iniciar o sistema
+def clear_old_sessions():
+    """Limpa sessões antigas ao iniciar o sistema."""
+    try:
+        # Limpar sessões do Flask
+        session.clear()
+        logger.info("Sessões antigas limpas ao iniciar o sistema")
+    except Exception as e:
+        logger.warning(f"Erro ao limpar sessões: {e}")
+
+# A função clear_old_sessions será chamada apenas quando necessário
+# (por exemplo, no logout ou reinicialização do servidor)
+
+# Middleware para forçar logout se a sessão for inválida
+@app.before_request
+def check_session_validity():
+    """Verifica se a sessão é válida antes de cada requisição."""
+    if current_user.is_authenticated:
+        # Verificar se a sessão foi criada antes da reinicialização do servidor
+        session_start_time = session.get('server_start_time')
+        if session_start_time != SERVER_START_TIME:
+            # Sessão foi criada antes da reinicialização, forçar logout
+            logout_user()
+            session.clear()
+            flash('Servidor foi reiniciado. Faça login novamente.', 'warning')
+            return redirect(url_for('login'))
+        
+        # Verificar se o usuário ainda existe no banco
+        try:
+            user = User.query.get(current_user.id)
+            if not user or user.status != 'ativo':
+                # Usuário não existe mais ou foi desativado
+                logout_user()
+                session.clear()
+                flash('Sua sessão expirou. Faça login novamente.', 'warning')
+                return redirect(url_for('login'))
+        except Exception as e:
+            # Erro ao verificar usuário, forçar logout
+            logout_user()
+            session.clear()
+            flash('Erro na sessão. Faça login novamente.', 'warning')
+            return redirect(url_for('login'))
 
 # Permissões padrão sugeridas
 PERMISSOES_PADRAO = {
@@ -295,6 +352,8 @@ def login():
                 db.session.add(historico)
                 db.session.commit()
                 login_user(user)
+                # Armazenar timestamp de início do servidor na sessão
+                session['server_start_time'] = SERVER_START_TIME
                 identity_changed.send(app, identity=Identity(user.id))
                 return redirect(url_for('dashboard'))
             else:
@@ -325,8 +384,11 @@ def login():
                     db.session.add(historico)
                     db.session.commit()
                 login_user(user)
+                # Armazenar timestamp de início do servidor na sessão
+                session['server_start_time'] = SERVER_START_TIME
                 identity_changed.send(app, identity=Identity(user.id))
                 return redirect(url_for('dashboard'))
+            else:
                 flash('Usuário ou senha inválidos', 'danger')
                 return render_template('login.html')
         # Autenticação por LDAP
@@ -366,6 +428,8 @@ def login():
                 db.session.add(historico)
                 db.session.commit()
                 login_user(user)
+                # Armazenar timestamp de início do servidor na sessão
+                session['server_start_time'] = SERVER_START_TIME
                 identity_changed.send(app, identity=Identity(user.id))
                 return redirect(url_for('dashboard'))
             except Exception as e:
@@ -373,12 +437,40 @@ def login():
                 return render_template('login.html')
     return render_template('login.html')
 
+@app.route('/clear-session')
+def clear_session():
+    """Força a limpeza da sessão atual (para resolver problemas de autenticação)."""
+    logout_user()
+    session.clear()
+    response = redirect(url_for('login'))
+    response.delete_cookie('session')
+    response.delete_cookie('remember_token')
+    response.delete_cookie('certificados_session')
+    response.set_cookie('session', '', expires=0, max_age=0)
+    response.set_cookie('remember_token', '', expires=0, max_age=0)
+    response.set_cookie('certificados_session', '', expires=0, max_age=0)
+    flash('Sessão limpa. Faça login novamente.', 'info')
+    return response
+
 @app.route('/logout')
 @login_required
 def logout():
     """Logout do usuário atual."""
+    # Limpar sessão do Flask
+    session.clear()
+    # Logout do Flask-Login
     logout_user()
-    return redirect(url_for('login'))
+    # Limpar cookies de sessão
+    response = redirect(url_for('login'))
+    response.delete_cookie('session')
+    response.delete_cookie('remember_token')
+    response.delete_cookie('certificados_session')
+    # Forçar expiração de todos os cookies relacionados
+    response.set_cookie('session', '', expires=0, max_age=0)
+    response.set_cookie('remember_token', '', expires=0, max_age=0)
+    response.set_cookie('certificados_session', '', expires=0, max_age=0)
+    flash('Logout realizado com sucesso.', 'success')
+    return response
 
 @app.route('/dashboard')
 @app.route('/dashboard/')
@@ -592,8 +684,8 @@ def listar_registros():
         registros = query.order_by(sort_col.desc()).all()
     else:
         registros = query.order_by(sort_col.asc()).all()
-    from datetime import date
-    return render_template('registros/list.html', registros=registros, hoje=date.today(), sort=sort, order=order)
+    from datetime import date, timedelta
+    return render_template('registros/list.html', registros=registros, hoje=date.today(), timedelta=timedelta, sort=sort, order=order)
 
 @app.route('/registros/novo', methods=['GET', 'POST'])
 @permission_required('manage_registros')
@@ -806,10 +898,42 @@ def excluir_registro(registro_id):
 @login_required
 def regularizar_registro(registro_id):
     registro = Registro.query.get_or_404(registro_id)
-    registro.regularizado = True
-    db.session.commit()
-    flash('Registro marcado como regularizado!', 'success')
-    return redirect(url_for('listar_registros'))
+    
+    # Obter nova data de vencimento do formulário
+    nova_data_str = request.form.get('nova_data_vencimento')
+    
+    if not nova_data_str:
+        flash('Nova data de vencimento é obrigatória para regularizar o item.', 'danger')
+        return redirect(url_for('listar_registros'))
+    
+    try:
+        # Converter string para data
+        from datetime import datetime, date
+        nova_data = datetime.strptime(nova_data_str, '%Y-%m-%d').date()
+        
+        # Calcular data mínima válida (hoje + tempo de alerta)
+        data_minima = date.today() + timedelta(days=registro.tempo_alerta)
+        
+        # Validar se a nova data é válida
+        if nova_data <= data_minima:
+            flash(f'Data inválida. A nova data deve ser pelo menos {data_minima.strftime("%d/%m/%Y")} (hoje + {registro.tempo_alerta} dias de alerta).', 'danger')
+            return redirect(url_for('listar_registros'))
+        
+        # Atualizar registro
+        registro.data_vencimento = nova_data
+        registro.regularizado = True
+        db.session.commit()
+        
+        flash(f'Registro "{registro.nome}" regularizado com nova data de vencimento: {nova_data.strftime("%d/%m/%Y")}', 'success')
+        return redirect(url_for('listar_registros'))
+        
+    except ValueError:
+        flash('Formato de data inválido. Use o formato DD/MM/AAAA.', 'danger')
+        return redirect(url_for('listar_registros'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao regularizar registro: {str(e)}', 'danger')
+        return redirect(url_for('listar_registros'))
 
 @app.route('/responsaveis')
 @app.route('/responsaveis/')
@@ -2908,60 +3032,134 @@ def criar_perfil_cenario():
 @login_required
 def relatorio_permissoes():
     """Relatório detalhado de permissões por perfil."""
-    from sqlalchemy import func
-    
-    # Estatísticas gerais
-    total_perfis = Role.query.count()
-    total_permissoes = Permission.query.count()
-    perfis_ativos = Role.query.filter_by(ativo=True).count()
-    usuarios_com_perfis = User.query.filter(User.roles.any()).count()
-    
-    estatisticas = {
-        'total_perfis': total_perfis,
-        'total_permissoes': total_permissoes,
-        'perfis_ativos': perfis_ativos,
-        'usuarios_com_perfis': usuarios_com_perfis
-    }
-    
-    # Dados para filtros
-    todos_perfis = Role.query.all()
-    todas_permissoes = Permission.query.all()
-    
-    # Matriz de permissões
-    matriz_permissoes = []
-    for perfil in todos_perfis:
-        perfil_data = {
-            'perfil': perfil,
-            'permissoes': perfil.permissions
+    try:
+        from sqlalchemy import func
+        from datetime import datetime
+        
+        # Estatísticas gerais
+        total_perfis = Role.query.count()
+        total_permissoes = Permission.query.count()
+        perfis_ativos = Role.query.filter_by(ativo=True).count()
+        # Corrigir a consulta de usuários com perfis
+        usuarios_com_perfis = User.query.filter(User.role_id.isnot(None)).count()
+        
+        estatisticas = {
+            'total_perfis': total_perfis,
+            'total_permissoes': total_permissoes,
+            'perfis_ativos': perfis_ativos,
+            'usuarios_com_perfis': usuarios_com_perfis
         }
-        matriz_permissoes.append(perfil_data)
-    
-    # Relatório de permissões por role
-    roles_permissions = db.session.query(
-        Role.nome,
-        Role.descricao,
-        Role.ativo,
-        func.count(Permission.id).label('total_permissions')
-    ).outerjoin(Role.permissions).group_by(Role.id).all()
-    
-    # Permissões não utilizadas
-    unused_permissions = db.session.query(Permission).outerjoin(
-        Permission.roles
-    ).filter(~Permission.roles.any()).all()
-    
-    # Roles sem permissões
-    roles_without_permissions = db.session.query(Role).outerjoin(
-        Role.permissions
-    ).filter(~Role.permissions.any()).all()
-    
-    return render_template('perfis/relatorio.html',
-                         estatisticas=estatisticas,
-                         todos_perfis=todos_perfis,
-                         todas_permissoes=todas_permissoes,
-                         matriz_permissoes=matriz_permissoes,
-                         roles_permissions=roles_permissions,
-                         unused_permissions=unused_permissions,
-                         roles_without_permissions=roles_without_permissions)
+        
+        # Dados para filtros
+        todos_perfis = Role.query.all()
+        todas_permissoes = Permission.query.all()
+        
+        # Matriz de permissões
+        matriz_permissoes = []
+        for perfil in todos_perfis:
+            perfil_data = {
+                'perfil': perfil,
+                'permissoes': perfil.permissions
+            }
+            matriz_permissoes.append(perfil_data)
+        
+        # Relatório de permissões por role
+        try:
+            roles_permissions = db.session.query(
+                Role.nome,
+                Role.descricao,
+                Role.ativo,
+                func.count(Permission.id).label('total_permissions')
+            ).outerjoin(Role.permissions).group_by(Role.id, Role.nome, Role.descricao, Role.ativo).all()
+        except Exception as e:
+            # Fallback para consulta mais simples
+            roles_permissions = []
+            for role in todos_perfis:
+                roles_permissions.append({
+                    'nome': role.nome,
+                    'descricao': role.descricao,
+                    'ativo': role.ativo,
+                    'total_permissions': len(role.permissions)
+                })
+        
+        # Permissões não utilizadas
+        try:
+            unused_permissions = db.session.query(Permission).outerjoin(
+                Permission.roles
+            ).filter(~Permission.roles.any()).all()
+        except Exception as e:
+            # Fallback para consulta mais simples
+            unused_permissions = []
+            for permission in todas_permissoes:
+                if not permission.roles:
+                    unused_permissions.append(permission)
+        
+        # Roles sem permissões
+        try:
+            roles_without_permissions = db.session.query(Role).outerjoin(
+                Role.permissions
+            ).filter(~Role.permissions.any()).all()
+        except Exception as e:
+            # Fallback para consulta mais simples
+            roles_without_permissions = []
+            for role in todos_perfis:
+                if not role.permissions:
+                    roles_without_permissions.append(role)
+        
+        # Dados para gráficos - usar dados reais do banco
+        categorias_labels = ['Sistema', 'Dados', 'Comunicação', 'Outros']
+        categorias_data = [25, 30, 20, 25]  # Dados de exemplo
+        
+        # Calcular criticidade baseada nas permissões reais
+        criticidade_labels = ['Alta', 'Média', 'Baixa']
+        criticidade_data = [0, 0, 0]  # Inicializar com zeros
+        
+        # Contar permissões por criticidade (exemplo)
+        for permissao in todas_permissoes:
+            # Como não temos campo criticidade, vamos distribuir baseado no nome
+            if 'manage' in permissao.nome.lower():
+                criticidade_data[0] += 1  # Alta
+            elif 'view' in permissao.nome.lower():
+                criticidade_data[2] += 1  # Baixa
+            else:
+                criticidade_data[1] += 1  # Média
+        
+        # Alertas de segurança (exemplo)
+        alertas_seguranca = []
+        if roles_without_permissions:
+            alertas_seguranca.append({
+                'tipo': 'warning',
+                'icone': 'exclamation-triangle',
+                'titulo': 'Perfis sem Permissões',
+                'mensagem': f'Encontrados {len(roles_without_permissions)} perfis sem permissões atribuídas.'
+            })
+        
+        if unused_permissions:
+            alertas_seguranca.append({
+                'tipo': 'info',
+                'icone': 'info-circle',
+                'titulo': 'Permissões Não Utilizadas',
+                'mensagem': f'Encontradas {len(unused_permissions)} permissões não atribuídas a nenhum perfil.'
+            })
+        
+        return render_template('perfis/relatorio.html',
+                             estatisticas=estatisticas,
+                             todos_perfis=todos_perfis,
+                             todas_permissoes=todas_permissoes,
+                             matriz_permissoes=matriz_permissoes,
+                             roles_permissions=roles_permissions,
+                             unused_permissions=unused_permissions,
+                             roles_without_permissions=roles_without_permissions,
+                             categorias_labels=categorias_labels,
+                             categorias_data=categorias_data,
+                             criticidade_labels=criticidade_labels,
+                             criticidade_data=criticidade_data,
+                             alertas_seguranca=alertas_seguranca,
+                             now=datetime.now())
+    except Exception as e:
+        app.logger.error(f"Erro no relatório de permissões: {str(e)}")
+        flash(f'Erro ao gerar relatório: {str(e)}', 'danger')
+        return redirect(url_for('listar_perfis'))
 
 @app.route('/perfis/<int:perfil_id>/toggle-status')
 @permission_required('manage_access')

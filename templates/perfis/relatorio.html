@@ -169,17 +169,27 @@
           </div>
         </div>
 
-        <!-- Análise por Categoria -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <h6><i class="bi bi-pie-chart"></i> Permissões por Categoria</h6>
-            <canvas id="categoriasChart" width="400" height="200"></canvas>
-          </div>
-          <div class="col-md-6">
-            <h6><i class="bi bi-bar-chart"></i> Criticidade das Permissões</h6>
-            <canvas id="criticidadeChart" width="400" height="200"></canvas>
-          </div>
-        </div>
+                 <!-- Análise por Categoria -->
+         <div class="row mb-4">
+           <div class="col-md-6">
+             <h6><i class="bi bi-pie-chart"></i> Permissões por Categoria</h6>
+             <div class="alert alert-info">
+               <strong>Dados de Categoria:</strong><br>
+               {% for i in range(categorias_labels|length) %}
+                 {{ categorias_labels[i] }}: {{ categorias_data[i] }}<br>
+               {% endfor %}
+             </div>
+           </div>
+           <div class="col-md-6">
+             <h6><i class="bi bi-bar-chart"></i> Criticidade das Permissões</h6>
+             <div class="alert alert-warning">
+               <strong>Dados de Criticidade:</strong><br>
+               {% for i in range(criticidade_labels|length) %}
+                 {{ criticidade_labels[i] }}: {{ criticidade_data[i] }}<br>
+               {% endfor %}
+             </div>
+           </div>
+         </div>
 
         <!-- Detalhamento por Perfil -->
         <div class="row mb-4">
@@ -214,11 +224,8 @@
                       <h6>Permissões:</h6>
                       {% if perfil_data.permissoes %}
                         {% for permissao in perfil_data.permissoes %}
-                          <span class="badge me-1 mb-1 
-                            {% if permissao.criticidade == 'alta' %}bg-danger
-                            {% elif permissao.criticidade == 'média' %}bg-warning
-                            {% else %}bg-success{% endif %}"
-                            title="{{ permissao.descricao }}">
+                          <span class="badge me-1 mb-1 bg-primary"
+                            title="{{ permissao.descricao or permissao.nome }}">
                             {{ permissao.nome }}
                           </span>
                         {% endfor %}
@@ -281,48 +288,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Gráfico de Categorias
-const ctxCategorias = document.getElementById('categoriasChart').getContext('2d');
-new Chart(ctxCategorias, {
-  type: 'pie',
-  data: {
-    labels: {{ categorias_labels|tojson }},
-    datasets: [{
-      data: {{ categorias_data|tojson }},
-      backgroundColor: ['#dc3545', '#ffc107', '#28a745', '#17a2b8']
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false
-  }
-});
-
-// Gráfico de Criticidade
-const ctxCriticidade = document.getElementById('criticidadeChart').getContext('2d');
-new Chart(ctxCriticidade, {
-  type: 'bar',
-  data: {
-    labels: {{ criticidade_labels|tojson }},
-    datasets: [{
-      label: 'Quantidade',
-      data: {{ criticidade_data|tojson }},
-      backgroundColor: ['#dc3545', '#ffc107', '#28a745']
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
-  }
-});
-
 function exportarRelatorio() {
   // Implementar exportação para Excel/PDF
   window.print();
@@ -332,15 +298,18 @@ function imprimirRelatorio() {
   window.print();
 }
 
-// CSS para impressão
-const style = document.createElement('style');
-style.textContent = `
-  @media print {
-    .btn, .card-header .btn, nav, .no-print { display: none !important; }
-    .card { border: 1px solid #000 !important; box-shadow: none !important; }
-    body { -webkit-print-color-adjust: exact; }
-  }
-`;
-document.head.appendChild(style);
+// CSS para impressão - só adicionar uma vez
+if (!document.getElementById('print-style')) {
+  const style = document.createElement('style');
+  style.id = 'print-style';
+  style.textContent = `
+    @media print {
+      .btn, .card-header .btn, nav, .no-print { display: none !important; }
+      .card { border: 1px solid #000 !important; box-shadow: none !important; }
+      body { -webkit-print-color-adjust: exact; }
+    }
+  `;
+  document.head.appendChild(style);
+}
 </script>
 {% endblock %}

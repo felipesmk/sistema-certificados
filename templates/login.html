@@ -1,212 +1,51 @@
 {% extends 'base.html' %}
 {% block title %}Login - Painel de Certificados{% endblock %}
 
-{% block head %}
-<style>
-  body {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .login-container {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  
-  .login-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-  }
-  
-  .login-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 30px 20px;
-    text-align: center;
-    margin: 0;
-  }
-  
-  .login-header h3 {
-    margin: 0;
-    font-weight: 600;
-    font-size: 1.5rem;
-  }
-  
-  .login-header p {
-    margin: 10px 0 0 0;
-    opacity: 0.9;
-    font-size: 0.9rem;
-  }
-  
-  .login-body {
-    padding: 30px;
-  }
-  
-  .form-floating {
-    margin-bottom: 20px;
-  }
-  
-  .form-floating input {
-    border-radius: 10px;
-    border: 2px solid #e9ecef;
-    transition: all 0.3s ease;
-  }
-  
-  .form-floating input:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-  }
-  
-  .btn-login {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 10px;
-    padding: 12px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-  }
-  
-  .btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-  }
-  
-  .login-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    opacity: 0.9;
-  }
-  
-  /* Modo escuro */
-  [data-bs-theme="dark"] .login-card {
-    background: rgba(33, 37, 41, 0.95);
-    color: #e9ecef;
-  }
-  
-  [data-bs-theme="dark"] .form-floating input {
-    background-color: #495057;
-    border-color: #6c757d;
-    color: #e9ecef;
-  }
-  
-  [data-bs-theme="dark"] .form-floating input:focus {
-    background-color: #495057;
-    border-color: #667eea;
-  }
-  
-  [data-bs-theme="dark"] .form-floating label {
-    color: #adb5bd;
-  }
-  
-  /* Estilos para alertas no login */
-  .alert {
-    border-radius: 10px;
-    border: none;
-    font-weight: 500;
-  }
-  
-  .alert-danger {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-  }
-  
-  .alert-success {
-    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(81, 207, 102, 0.3);
-  }
-  
-  .alert-warning {
-    background: linear-gradient(135deg, #ffd43b 0%, #fcc419 100%);
-    color: #212529;
-    box-shadow: 0 5px 15px rgba(255, 212, 59, 0.3);
-  }
-  
-  .alert-info {
-    background: linear-gradient(135deg, #74c0fc 0%, #4dabf7 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(116, 192, 252, 0.3);
-  }
-  
-  /* Modo escuro para alertas */
-  [data-bs-theme="dark"] .alert-danger {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    color: white;
-  }
-  
-  [data-bs-theme="dark"] .alert-warning {
-    background: linear-gradient(135deg, #ffd43b 0%, #fcc419 100%);
-    color: #212529;
-  }
-  
-  /* Responsivo */
-  @media (max-width: 576px) {
-    .login-container {
-      padding: 10px;
-    }
-    
-    .login-body {
-      padding: 20px;
-    }
-    
-    .login-header {
-      padding: 20px 15px;
-    }
-  }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="login-container">
-  <div class="card login-card">
-    <div class="login-header">
-      <div class="login-icon">
-        <i class="bi bi-shield-lock"></i>
-      </div>
-      <h3>Painel de Certificados</h3>
-      <p>Faça login para acessar o sistema</p>
+<div class="card login-card">
+  <div class="login-header">
+    <div class="login-icon">
+      <i class="bi bi-shield-lock"></i>
     </div>
-    <div class="login-body">
-      <!-- Mensagens de erro/sucesso -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'danger' else category }} alert-dismissible fade show mb-3" role="alert">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-      
-      <form method="POST">
-        <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="username" name="username" placeholder="Usuário" required autofocus>
-          <label for="username">
-            <i class="bi bi-person me-2"></i>Usuário
-          </label>
-        </div>
-        <div class="form-floating mb-4">
-          <input type="password" class="form-control" id="password" name="password" placeholder="Senha" required>
-          <label for="password">
-            <i class="bi bi-lock me-2"></i>Senha
-          </label>
-        </div>
-        <button type="submit" class="btn btn-primary btn-login w-100">
-          <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
-        </button>
-      </form>
+    <h3>Painel de Certificados</h3>
+    <p>Faça login para acessar o sistema</p>
+  </div>
+  <div class="login-body">
+    <!-- Mensagens de erro/sucesso -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else category }} alert-dismissible fade show mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+         <form method="POST">
+       <div class="form-group mb-3">
+         <div class="input-wrapper">
+           <i class="bi bi-person input-icon"></i>
+           <input type="text" class="form-control" id="username" name="username" placeholder="Usuário" required autofocus>
+         </div>
+       </div>
+       <div class="form-group mb-4">
+         <div class="input-wrapper">
+           <i class="bi bi-lock input-icon"></i>
+           <input type="password" class="form-control" id="password" name="password" placeholder="Senha" required>
+         </div>
+       </div>
+      <button type="submit" class="btn btn-primary btn-login w-100">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+      </button>
+    </form>
+    
+    <div class="text-center mt-3">
+      <a href="{{ url_for('clear_session') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-clockwise me-2"></i>Limpar Sessão
+      </a>
     </div>
   </div>
 </div>

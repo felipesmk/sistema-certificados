@@ -20,11 +20,8 @@
 
 ### **Opção 1: Script Automático**
 ```bash
-# Dar permissão de execução
-chmod +x setup_vm.sh
-
 # Executar script de automação
-./setup_vm.sh
+python quick_setup.py
 ```
 
 **O que o script faz automaticamente:**
@@ -350,9 +347,8 @@ tail -f /opt/homebrew/var/log/postgresql@15.log
 # Verificar permissões
 ls -la
 
-# Corrigir permissões
-chmod +x setup_vm.sh
-chmod +x configure_network.sh
+# Executar setup
+python quick_setup.py
 ```
 
 ### **Problema: Dependências não instalam**
@@ -399,7 +395,7 @@ source ~/.zprofile
 
 ### **Verificar Status Completo**
 ```bash
-python test_vm_installation.py
+python quick_setup.py status
 ```
 
 ### **Informações do Sistema**

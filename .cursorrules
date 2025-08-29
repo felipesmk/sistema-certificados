@@ -127,7 +127,7 @@ class Modelo(db.Model):
 - `manage_db.py` - Gerenciamento do banco
 - `quick_setup.py` - Setup rápido
 - `configure_postgresql.py` - Configuração segura do PostgreSQL
-- `test_validation.py` - Testes de validação
+- Validações integradas no sistema principal
 
 ### **Utilitários de Validação**
 - `utils/validation.py` - Funções de validação centralizadas
@@ -210,7 +210,7 @@ class Modelo(db.Model):
 7. **Documentar mudanças** no CHANGELOG.md
 8. **Validar dados** antes de salvar no banco
 9. **Usar funções centralizadas** para validações
-10. **Testar validações** com `test_validation.py`
+10. **Testar validações** integradas no sistema
 
 ## 🔄 **Fluxo de Desenvolvimento**
 
@@ -220,7 +220,7 @@ class Modelo(db.Model):
 4. **Implementar validações** (server-side + client-side)
 5. Testar permissões
 6. Verificar templates
-7. Testar validações com `test_validation.py`
+7. Testar validações integradas
 8. Testar email (se aplicável)
 9. Commit e push
 
@@ -240,7 +240,7 @@ python manage_db.py init
 python run_production.py
 
 # Testes
-python test_validation.py
+# Validações integradas no sistema
 
 # Git
 git status
