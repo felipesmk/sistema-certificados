@@ -126,7 +126,7 @@ class Modelo(db.Model):
 - `run_production.py` - Execução em produção
 - `manage_db.py` - Gerenciamento do banco
 - `quick_setup.py` - Setup rápido
-- `migrate_to_postgres.py` - Migração de dados
+- `configure_postgresql.py` - Configuração segura do PostgreSQL
 - `test_validation.py` - Testes de validação
 
 ### **Utilitários de Validação**
